@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    
+    <!-- NuGet Package Properties -->
+    <PackageId>Posty5.Core</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Posty5</Authors>
+    <Company>Posty5</Company>
+    <Description>Core library for Posty5 .NET SDK - HTTP client, base classes, and common types</Description>
+    <PackageTags>posty5;api;sdk;http;core</PackageTags>
+    <PackageProjectUrl>https://posty5.com</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/posty5/posty5-dotnet-sdk</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Polly" Version="8.3.0" />
+    <PackageReference Include="System.Text.Json" Version="9.0.1" />
+  </ItemGroup>
+
+</Project>
