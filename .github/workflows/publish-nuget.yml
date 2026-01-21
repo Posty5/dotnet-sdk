@@ -1,0 +1,44 @@
+name: Publish to NuGet
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build solution
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Create NuGet packages
+        run: |
+          dotnet pack src/Posty5.Core/Posty5.Core.csproj --configuration Release --output ./nupkg --no-build
+          dotnet pack src/Posty5.QRCode/Posty5.QRCode.csproj --configuration Release --output ./nupkg --no-build
+          dotnet pack src/Posty5.ShortLink/Posty5.ShortLink.csproj --configuration Release --output ./nupkg --no-build
+          dotnet pack src/Posty5.HtmlHosting/Posty5.HtmlHosting.csproj --configuration Release --output ./nupkg --no-build
+          dotnet pack src/Posty5.SocialPublisher/Posty5.SocialPublisher.csproj --configuration Release --output ./nupkg --no-build
+
+      - name: List created packages
+        run: ls -lh ./nupkg/*.nupkg
+
+      - name: Publish to NuGet.org
+        run: |
+          dotnet nuget push ./nupkg/*.nupkg \
+            --api-key ${{ secrets.NUGET_API_KEY }} \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate
