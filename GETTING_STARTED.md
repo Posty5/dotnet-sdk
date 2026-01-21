@@ -147,4 +147,4 @@ In your `appsettings.json`:
 
 - Email: support@posty5.com
 - Documentation: https://docs.posty5.com
-- GitHub Issues: https://github.com/posty5/posty5-dotnet-sdk/issues
+- GitHub Issues: https://github.com/posty5/dotnet-sdk/issues

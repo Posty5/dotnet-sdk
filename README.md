@@ -296,7 +296,7 @@ For detailed API documentation, visit [https://docs.posty5.com](https://docs.pos
 ## 🛠️ Building from Source
 
 ```bash
-git clone https://github.com/posty5/posty5-dotnet-sdk.git
+git clone https://github.com/posty5/dotnet-sdk.git
 cd posty5-dotnet-sdk
 dotnet restore
 dotnet build
@@ -325,7 +325,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - [Website](https://posty5.com)
 - [API Documentation](https://docs.posty5.com)
-- [GitHub Repository](https://github.com/posty5/posty5-dotnet-sdk)
+- [GitHub Repository](https://github.com/posty5/dotnet-sdk)
 - [NuGet Gallery](https://www.nuget.org/packages/Posty5.Core)
 
 ## 💬 Support

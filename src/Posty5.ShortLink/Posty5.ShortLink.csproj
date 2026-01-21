@@ -14,7 +14,7 @@
     <Description>Short Link management client for Posty5 .NET SDK</Description>
     <PackageTags>posty5;shortlink;url-shortener;api;sdk</PackageTags>
     <PackageProjectUrl>https://posty5.com</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/posty5/posty5-dotnet-sdk</RepositoryUrl>
+    <RepositoryUrl>https://github.com/posty5/dotnet-sdk</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>

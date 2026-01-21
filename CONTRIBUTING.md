@@ -10,7 +10,7 @@ By participating in this project, you agree to maintain a respectful and inclusi
 
 ### Reporting Bugs
 
-1. Check if the bug has already been reported in [Issues](https://github.com/posty5/posty5-dotnet-sdk/issues)
+1. Check if the bug has already been reported in [Issues](https://github.com/posty5/dotnet-sdk/issues)
 2. If not, create a new issue with:
    - Clear title and description
    - Steps to reproduce
@@ -47,7 +47,7 @@ By participating in this project, you agree to maintain a respectful and inclusi
 ### Building the Project
 
 ```bash
-git clone https://github.com/posty5/posty5-dotnet-sdk.git
+git clone https://github.com/posty5/dotnet-sdk.git
 cd posty5-dotnet-sdk
 dotnet restore
 dotnet build
