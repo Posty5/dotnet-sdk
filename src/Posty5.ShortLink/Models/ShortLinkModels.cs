@@ -1,18 +1,122 @@
+using System.Text.Json.Serialization;
+
 namespace Posty5.ShortLink.Models;
 
 /// <summary>
-/// Short link model
+/// Page information for landing page customization
 /// </summary>
+public class PageInfo
+{
+    /// <summary>
+    /// Landing page title
+    /// </summary>
+    public string? Title { get; set; }
+    
+    /// <summary>
+    /// Landing page description
+    /// </summary>
+    public string? Description { get; set; }
+    
+    /// <summary>
+    /// Whether description is an HTML file
+    /// </summary>
+    public bool? DescriptionIsHtmlFile { get; set; }
+}
+
 public class ShortLinkModel
 {
+    /// <summary>
+    /// MongoDB document ID
+    /// </summary>
+    [JsonPropertyName("_id")]
     public string? Id { get; set; }
+    
     public string Name { get; set; } = string.Empty;
-    public string? ShortUrl { get; set; }
-    public string TargetUrl { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Shorter link URL - the actual short URL (primary field from API)
+    /// Corresponds to 'shorterLink' in npm SDK
+    /// </summary>
+    public string? ShorterLink { get; set; }
+    
+    /// <summary>
+    /// Short link ID - unique short code identifier
+    /// Corresponds to 'shortLinkId' in npm SDK
+    /// </summary>
+    public string? ShortLinkId { get; set; }
+    
+    /// <summary>
+    /// Base URL - the target URL to redirect to
+    /// Corresponds to 'baseUrl' in npm SDK
+    /// </summary>
+    public string? BaseUrl { get; set; }
+    
     public string? TemplateId { get; set; }
-    public string? CustomSlug { get; set; }
+    
+    /// <summary>
+    /// Custom landing ID for branded short links
+    /// Corresponds to 'customLandingId' in npm SDK
+    /// </summary>
+    public string? CustomLandingId { get; set; }
+    
+    /// <summary>
+    /// Status of the short link (new, pending, approved, rejected)
+    /// </summary>
+    public string? Status { get; set; }
+    
+    /// <summary>
+    /// External reference ID for filtering/tracking
+    /// </summary>
+    public string? RefId { get; set; }
+    
+    /// <summary>
+    /// Custom tag for filtering/categorization
+    /// </summary>
+    public string? Tag { get; set; }
+    
+    /// <summary>
+    /// Number of visitors/clicks
+    /// Corresponds to 'numberOfVisitors' in npm SDK
+    /// </summary>
+    public int? NumberOfVisitors { get; set; }
+    
+    /// <summary>
+    /// Last visitor date
+    /// Corresponds to 'lastVisitorDate' in npm SDK
+    /// </summary>
+    public string? LastVisitorDate { get; set; }
+    
+    /// <summary>
+    /// QR code landing page URL
+    /// Corresponds to 'qrCodeLandingPage' in npm SDK
+    /// </summary>
+    public string? QrCodeLandingPage { get; set; }
+    
+    /// <summary>
+    /// QR code download URL
+    /// Corresponds to 'qrCodeDownloadURL' in npm SDK
+    /// </summary>
+    public string? QrCodeDownloadURL { get; set; }
+    
+    /// <summary>
+    /// Landing page information
+    /// </summary>
+    public PageInfo? PageInfo { get; set; }
+    
+    /// <summary>
+    /// Created timestamp
+    /// </summary>
     public DateTime? CreatedAt { get; set; }
+    
+    /// <summary>
+    /// Updated timestamp
+    /// </summary>
     public DateTime? UpdatedAt { get; set; }
+    
+    /// <summary>
+    /// Click count (deprecated, use NumberOfVisitors)
+    /// </summary>
+    [Obsolete("Use NumberOfVisitors instead")]
     public int? ClickCount { get; set; }
 }
 
@@ -22,9 +126,36 @@ public class ShortLinkModel
 public class CreateShortLinkRequest
 {
     public string Name { get; set; } = string.Empty;
-    public string TargetUrl { get; set; } = string.Empty;
+    /// <summary>
+    /// Base URL (the target URL to redirect to)
+    /// </summary>
+    public string BaseUrl { get; set; } = string.Empty;
     public string? TemplateId { get; set; }
-    public string? CustomSlug { get; set; }
+    
+    /// <summary>
+    /// External reference ID for filtering/tracking
+    /// </summary>
+    public string? RefId { get; set; }
+    
+    /// <summary>
+    /// Custom tag for filtering/categorization
+    /// </summary>
+    public string? Tag { get; set; }
+    
+    /// <summary>
+    /// Custom landing page ID (max 32 characters, paid plans only)
+    /// </summary>
+    public string? CustomLandingId { get; set; }
+    
+    /// <summary>
+    /// Enable monetization for this short link
+    /// </summary>
+    public bool? IsEnableMonetization { get; set; }
+    
+    /// <summary>
+    /// Landing page information
+    /// </summary>
+    public PageInfo? PageInfo { get; set; }
 }
 
 /// <summary>
@@ -33,9 +164,36 @@ public class CreateShortLinkRequest
 public class UpdateShortLinkRequest
 {
     public string? Name { get; set; }
-    public string? TargetUrl { get; set; }
+    /// <summary>
+    /// Base URL (the target URL to redirect to)
+    /// </summary>
+    public string? BaseUrl { get; set; }
     public string? TemplateId { get; set; }
-    public string? CustomSlug { get; set; }
+    
+    /// <summary>
+    /// External reference ID for filtering/tracking
+    /// </summary>
+    public string? RefId { get; set; }
+    
+    /// <summary>
+    /// Custom tag for filtering/categorization
+    /// </summary>
+    public string? Tag { get; set; }
+    
+    /// <summary>
+    /// Enable landing page
+    /// </summary>
+    public bool? IsEnableLandingPage { get; set; }
+    
+    /// <summary>
+    /// Enable monetization for this short link
+    /// </summary>
+    public bool? IsEnableMonetization { get; set; }
+    
+    /// <summary>
+    /// Landing page information
+    /// </summary>
+    public PageInfo? PageInfo { get; set; }
 }
 
 /// <summary>
@@ -43,7 +201,73 @@ public class UpdateShortLinkRequest
 /// </summary>
 public class ListShortLinksParams
 {
+    /// <summary>
+    /// Search by full or partial target URL
+    /// </summary>
+    public string? BaseUrl { get; set; }
+    
+    /// <summary>
+    /// Search by name
+    /// </summary>
+    public string? Name { get; set; }
+    
+    /// <summary>
+    /// Search by page title
+    /// </summary>
+    public string? PageInfoTitle { get; set; }
+    
+    /// <summary>
+    /// Filter by created from source
+    /// </summary>
+    public string? CreatedFrom { get; set; }
+    
+    /// <summary>
+    /// Filter by short link ID
+    /// </summary>
+    public string? ShortLinkId { get; set; }
+    
+    /// <summary>
+    /// Filter by external reference ID
+    /// </summary>
+    public string? RefId { get; set; }
+    
+    /// <summary>
+    /// Filter by custom tag
+    /// </summary>
+    public string? Tag { get; set; }
+    
+    /// <summary>
+    /// Filter by template ID
+    /// </summary>
+    public string? TemplateId { get; set; }
+    
+    /// <summary>
+    /// Filter by status (new, pending, approved, rejected)
+    /// </summary>
+    public string? Status { get; set; }
+    
+    /// <summary>
+    /// Filter by deep link flag
+    /// </summary>
+    public bool? IsForDeepLink { get; set; }
+    
+    /// <summary>
+    /// Filter by monetization flag
+    /// </summary>
+    public bool? IsEnableMonetization { get; set; }
+    
+    /// <summary>
+    /// Generic search term
+    /// </summary>
     public string? Search { get; set; }
+    
+    /// <summary>
+    /// Filter from date
+    /// </summary>
     public DateTime? FromDate { get; set; }
+    
+    /// <summary>
+    /// Filter to date
+    /// </summary>
     public DateTime? ToDate { get; set; }
 }

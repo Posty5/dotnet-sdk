@@ -8,7 +8,7 @@ public class PaginationParams
     /// <summary>
     /// Page number (starts from 0)
     /// </summary>
-    public int PageNumber { get; set; } = 0;
+    public int Page { get; set; } = 0;
 
     /// <summary>
     /// Number of items per page

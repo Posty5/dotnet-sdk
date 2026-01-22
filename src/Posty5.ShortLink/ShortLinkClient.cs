@@ -37,6 +37,28 @@ public class ShortLinkClient
 
         if (listParams != null)
         {
+            if (!string.IsNullOrEmpty(listParams.BaseUrl))
+                queryParams["baseUrl"] = listParams.BaseUrl;
+            if (!string.IsNullOrEmpty(listParams.Name))
+                queryParams["name"] = listParams.Name;
+            if (!string.IsNullOrEmpty(listParams.PageInfoTitle))
+                queryParams["pageinfo.title"] = listParams.PageInfoTitle;
+            if (!string.IsNullOrEmpty(listParams.CreatedFrom))
+                queryParams["createdFrom"] = listParams.CreatedFrom;
+            if (!string.IsNullOrEmpty(listParams.ShortLinkId))
+                queryParams["shortLinkId"] = listParams.ShortLinkId;
+            if (!string.IsNullOrEmpty(listParams.RefId))
+                queryParams["refId"] = listParams.RefId;
+            if (!string.IsNullOrEmpty(listParams.Tag))
+                queryParams["tag"] = listParams.Tag;
+            if (!string.IsNullOrEmpty(listParams.TemplateId))
+                queryParams["templateId"] = listParams.TemplateId;
+            if (!string.IsNullOrEmpty(listParams.Status))
+                queryParams["status"] = listParams.Status;
+            if (listParams.IsForDeepLink.HasValue)
+                queryParams["isForDeepLink"] = listParams.IsForDeepLink.Value;
+            if (listParams.IsEnableMonetization.HasValue)
+                queryParams["isEnableMonetization"] = listParams.IsEnableMonetization.Value;
             if (!string.IsNullOrEmpty(listParams.Search))
                 queryParams["search"] = listParams.Search;
             if (listParams.FromDate.HasValue)
@@ -47,7 +69,7 @@ public class ShortLinkClient
 
         if (pagination != null)
         {
-            queryParams["pageNumber"] = pagination.PageNumber;
+            queryParams["pageNumber"] = pagination.Page;
             queryParams["pageSize"] = pagination.PageSize;
         }
 
@@ -84,9 +106,9 @@ public class ShortLinkClient
         var data = new
         {
             request.Name,
-            request.TargetUrl,
+            request.BaseUrl,
             request.TemplateId,
-            request.CustomSlug,
+            request.CustomLandingId,
             TemplateType = "user",
             CreatedFrom = "dotnetPackage"
         };
@@ -116,10 +138,8 @@ public class ShortLinkClient
     /// </summary>
     /// <param name="id">Short link ID</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>True if deleted successfully</returns>
-    public async Task<bool> DeleteAsync(string id, CancellationToken cancellationToken = default)
+    public async Task DeleteAsync(string id, CancellationToken cancellationToken = default)
     {
-        var response = await _http.DeleteAsync<object>($"{BasePath}/{id}", cancellationToken);
-        return response.IsSuccess;
+        await _http.DeleteAsync<object>($"{BasePath}/{id}", cancellationToken);
     }
 }

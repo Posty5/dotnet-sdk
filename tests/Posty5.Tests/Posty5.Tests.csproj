@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -24,10 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Posty5.Core\Posty5.Core.csproj" />
-    <ProjectReference Include="..\..\src\Posty5.QRCode\Posty5.QRCode.csproj" />
     <ProjectReference Include="..\..\src\Posty5.ShortLink\Posty5.ShortLink.csproj" />
-    <ProjectReference Include="..\..\src\Posty5.HtmlHosting\Posty5.HtmlHosting.csproj" />
-    <ProjectReference Include="..\..\src\Posty5.SocialPublisher\Posty5.SocialPublisher.csproj" />
   </ItemGroup>
 
   <ItemGroup>
