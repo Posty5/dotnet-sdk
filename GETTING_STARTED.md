@@ -48,7 +48,6 @@ using Posty5.QRCode.Models;
 // Configure the SDK
 var options = new Posty5Options
 {
-    BaseUrl = "https://api.posty5.com",
     ApiKey = "your-api-key-here" // Replace with your actual API key
 };
 
@@ -86,7 +85,6 @@ Instead of hardcoding your API key, use environment variables:
 ```csharp
 var options = new Posty5Options
 {
-    BaseUrl = "https://api.posty5.com",
     ApiKey = Environment.GetEnvironmentVariable("POSTY5_API_KEY")
 };
 ```
@@ -118,7 +116,6 @@ In your `Program.cs`:
 ```csharp
 builder.Services.AddSingleton<Posty5Options>(new Posty5Options
 {
-    BaseUrl = "https://api.posty5.com",
     ApiKey = builder.Configuration["Posty5:ApiKey"]
 });
 

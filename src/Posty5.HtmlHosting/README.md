@@ -80,7 +80,6 @@ using Posty5.HtmlHosting.Models;
 var options = new Posty5Options
 {
     ApiKey = "your-api-key", // Get from https://studio.posty5.com/account/settings?tab=APIKeys
-    BaseUrl = "https://api.posty5.com"
 };
 
 var httpClient = new Posty5HttpClient(options);

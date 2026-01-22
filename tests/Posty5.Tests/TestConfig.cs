@@ -10,8 +10,8 @@ public static class TestConfig
 {
     public static Posty5Options GetOptions()
     {
-        var apiKey = Environment.GetEnvironmentVariable("POSTY5_API_KEY");
-        var baseUrl = Environment.GetEnvironmentVariable("POSTY5_BASE_URL") ?? "https://api.posty5.com";
+        var apiKey = Environment.GetEnvironmentVariable("POSTY5_API_KEY", EnvironmentVariableTarget.User);
+        var baseUrl = Environment.GetEnvironmentVariable("POSTY5_BASE_URL",EnvironmentVariableTarget.User) ?? "https://api.posty5.com";
 
         if (string.IsNullOrEmpty(apiKey))
         {

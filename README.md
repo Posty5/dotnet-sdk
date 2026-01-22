@@ -44,7 +44,6 @@ using Posty5.Core.Http;
 
 var options = new Posty5Options
 {
-    BaseUrl = "https://api.posty5.com",
     ApiKey = "your-api-key-here",
     Debug = false // Set to true for debugging
 };
@@ -211,11 +210,7 @@ var tasks = await taskClient.ListAsync(
 ```csharp
 var options = new Posty5Options
 {
-    BaseUrl = "https://api.posty5.com",
     ApiKey = "your-api-key",
-    TimeoutSeconds = 60,
-    MaxRetries = 5,
-    RetryDelayMilliseconds = 2000,
     Debug = true
 };
 ```
@@ -257,7 +252,6 @@ catch (Posty5Exception ex)
 // In Program.cs or Startup.cs
 services.AddSingleton<Posty5Options>(new Posty5Options
 {
-    BaseUrl = "https://api.posty5.com",
     ApiKey = configuration["Posty5:ApiKey"]
 });
 

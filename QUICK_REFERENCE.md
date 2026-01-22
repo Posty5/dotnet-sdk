@@ -19,7 +19,6 @@ using Posty5.Core.Http;
 var options = new Posty5Options
 {
     ApiKey = "your-api-key",
-    BaseUrl = "https://api.posty5.com"
 };
 var httpClient = new Posty5HttpClient(options);
 ```

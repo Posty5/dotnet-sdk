@@ -110,7 +110,6 @@ using Posty5.Core.Http;
 // Initialize the HTTP client with your API key
 var options = new Posty5Options
 {
-    BaseUrl = "https://api.posty5.com",
     ApiKey = "your-api-key", // Get from https://studio.posty5.com/account/settings?tab=APIKeys
     Debug = false // Set to true for debugging
 };
@@ -134,10 +133,7 @@ services.AddSingleton(sp =>
 {
     var options = new Posty5Options
     {
-        BaseUrl = "https://api.posty5.com",
         ApiKey = Environment.GetEnvironmentVariable("POSTY5_API_KEY") ?? "",
-        TimeoutSeconds = 30,
-        MaxRetries = 3
     };
     return new Posty5HttpClient(options);
 });
@@ -155,9 +151,6 @@ var httpClient = serviceProvider.GetRequiredService<Posty5HttpClient>();
 | Property         | Type     | Default                    | Description                      |
 | ---------------- | -------- | -------------------------- | -------------------------------- |
 | `ApiKey`         | `string` | `""`                       | Your Posty5 API key (required)   |
-| `BaseUrl`        | `string` | `"https://api.posty5.com"` | Base URL for the API             |
-| `TimeoutSeconds` | `int`    | `30`                       | Request timeout in seconds       |
-| `MaxRetries`     | `int`    | `3`                        | Maximum number of retry attempts |
 | `Debug`          | `bool`   | `false`                    | Enable debug logging             |
 
 ---

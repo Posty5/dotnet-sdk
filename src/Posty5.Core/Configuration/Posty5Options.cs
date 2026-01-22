@@ -23,15 +23,15 @@ public class Posty5Options
     /// <summary>
     /// Request timeout in seconds
     /// </summary>
-    public int TimeoutSeconds { get; set; } = 30;
+    public readonly int TimeoutSeconds = 30;
 
     /// <summary>
     /// Maximum number of retry attempts
     /// </summary>
-    public int MaxRetries { get; set; } = 3;
+    public readonly int MaxRetries = 3;
 
     /// <summary>
     /// Retry delay in milliseconds
     /// </summary>
-    public int RetryDelayMilliseconds { get; set; } = 1000;
+    public readonly int RetryDelayMilliseconds = 1000;
 }
