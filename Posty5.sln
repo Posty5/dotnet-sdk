@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Posty5.Tests", "tests\Posty
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Posty5.QRCode", "src\Posty5.QRCode\Posty5.QRCode.csproj", "{24344015-D5C8-E939-0F88-24BA7175AB48}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Posty5.HtmlHosting", "src\Posty5.HtmlHosting\Posty5.HtmlHosting.csproj", "{35455126-E6D9-FA4A-1099-35CB8286BC59}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,6 +34,10 @@ Global
 		{24344015-D5C8-E939-0F88-24BA7175AB48}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{24344015-D5C8-E939-0F88-24BA7175AB48}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{24344015-D5C8-E939-0F88-24BA7175AB48}.Release|Any CPU.Build.0 = Release|Any CPU
+		{35455126-E6D9-FA4A-1099-35CB8286BC59}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{35455126-E6D9-FA4A-1099-35CB8286BC59}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{35455126-E6D9-FA4A-1099-35CB8286BC59}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{35455126-E6D9-FA4A-1099-35CB8286BC59}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
