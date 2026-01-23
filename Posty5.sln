@@ -14,6 +14,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Posty5.HtmlHosting", "src\P
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Posty5.HtmlHostingVariables", "src\Posty5.HtmlHostingVariables\Posty5.HtmlHostingVariables.csproj", "{46566237-F7EA-0B5B-20AA-46DC9397CD6A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Posty5.SocialPublisherWorkspace", "src\Posty5.SocialPublisherWorkspace\Posty5.SocialPublisherWorkspace.csproj", "{57677348-08FB-1C6C-31BB-57ED0408DE7B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,6 +46,10 @@ Global
 		{46566237-F7EA-0B5B-20AA-46DC9397CD6A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{46566237-F7EA-0B5B-20AA-46DC9397CD6A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{46566237-F7EA-0B5B-20AA-46DC9397CD6A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{57677348-08FB-1C6C-31BB-57ED0408DE7B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{57677348-08FB-1C6C-31BB-57ED0408DE7B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{57677348-08FB-1C6C-31BB-57ED0408DE7B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{57677348-08FB-1C6C-31BB-57ED0408DE7B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
