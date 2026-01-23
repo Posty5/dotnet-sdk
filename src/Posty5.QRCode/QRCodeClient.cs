@@ -56,7 +56,7 @@ public class QRCodeClient
     ///     TemplateId = "template_123",
     ///     Text = "Any custom text you want to encode"
     /// });
-    /// Console.WriteLine($"QR Code URL: {qrCode.QrCodeLandingPage}");
+    /// Console.WriteLine($"QR Code URL: {qrCode.QrCodeLandingPageURL}");
     /// </code>
     /// </example>
     public async Task<QRCodeModel> CreateFreeTextAsync(

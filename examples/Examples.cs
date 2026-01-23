@@ -53,7 +53,7 @@ public class Examples
             Name = "Website QR Code",
             QrCodeTarget = new UrlQRTarget { Url = "https://posty5.com" }
         });
-        Console.WriteLine($"Created URL QR Code: {urlQr.QrCodeLandingPage}");
+        Console.WriteLine($"Created URL QR Code: {urlQr.QrCodeLandingPageURL}");
         
         // Create a WiFi QR code
         var wifiQr = await qrCodeClient.CreateWifiAsync(new CreateWifiQRCodeRequest
@@ -67,7 +67,7 @@ public class Examples
                 Hidden = false
             }
         });
-        Console.WriteLine($"Created WiFi QR Code: {wifiQr.QrCodeLandingPage}");
+        Console.WriteLine($"Created WiFi QR Code: {wifiQr.QrCodeLandingPageURL}");
         
         // Create an Email QR code
         var emailQr = await qrCodeClient.CreateEmailAsync(new CreateEmailQRCodeRequest
@@ -80,7 +80,7 @@ public class Examples
                 Body = "I'd like to get in touch"
             }
         });
-        Console.WriteLine($"Created Email QR Code: {emailQr.QrCodeLandingPage}");
+        Console.WriteLine($"Created Email QR Code: {emailQr.QrCodeLandingPageURL}");
         
         // List QR codes
         var qrCodes = await qrCodeClient.ListAsync(

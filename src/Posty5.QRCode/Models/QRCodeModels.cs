@@ -245,7 +245,7 @@ public class QRCodeModel
     /// <summary>
     /// QR code landing page URL
     /// </summary>
-    public string? QrCodeLandingPage { get; set; }
+    public string? QrCodeLandingPageURL { get; set; }
     
     
     /// <summary>

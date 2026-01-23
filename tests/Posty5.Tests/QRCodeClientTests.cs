@@ -37,7 +37,7 @@ public class QRCodeClientTests : IDisposable
         Assert.NotNull(result);
         Assert.NotNull(result.Id);
         Assert.NotNull(result.QrCodeId);
-        Assert.NotNull(result.QrCodeLandingPage);
+        Assert.NotNull(result.QrCodeLandingPageURL);
         Assert.Equal(request.Name, result.Name);
 
         _createdId = result.Id;
@@ -98,7 +98,7 @@ public class QRCodeClientTests : IDisposable
         // Assert
         Assert.NotNull(result);
         Assert.NotNull(result.Id);
-        Assert.NotNull(result.QrCodeLandingPage);
+        Assert.NotNull(result.QrCodeLandingPageURL);
         Assert.Equal(request.Name, result.Name);
 
         TestConfig.CreatedResources.QRCodes.Add(result.Id!);
@@ -167,7 +167,7 @@ public class QRCodeClientTests : IDisposable
         // Assert
         Assert.NotNull(result);
         Assert.NotNull(result.Id);
-        Assert.NotNull(result.QrCodeLandingPage);
+        Assert.NotNull(result.QrCodeLandingPageURL);
         Assert.Equal(request.Name, result.Name);
 
         TestConfig.CreatedResources.QRCodes.Add(result.Id!);
@@ -234,7 +234,7 @@ public class QRCodeClientTests : IDisposable
         // Assert
         Assert.NotNull(result);
         Assert.NotNull(result.Id);
-        Assert.NotNull(result.QrCodeLandingPage);
+        Assert.NotNull(result.QrCodeLandingPageURL);
         Assert.Equal(request.Name, result.Name);
 
         TestConfig.CreatedResources.QRCodes.Add(result.Id!);
@@ -298,7 +298,7 @@ public class QRCodeClientTests : IDisposable
         // Assert
         Assert.NotNull(result);
         Assert.NotNull(result.Id);
-        Assert.NotNull(result.QrCodeLandingPage);
+        Assert.NotNull(result.QrCodeLandingPageURL);
         Assert.Equal(request.Name, result.Name);
 
         TestConfig.CreatedResources.QRCodes.Add(result.Id!);
@@ -365,7 +365,7 @@ public class QRCodeClientTests : IDisposable
         // Assert
         Assert.NotNull(result);
         Assert.NotNull(result.Id);
-        Assert.NotNull(result.QrCodeLandingPage);
+        Assert.NotNull(result.QrCodeLandingPageURL);
         Assert.Equal(request.Name, result.Name);
         Assert.Equal(request.Tag, result.Tag);
         Assert.Equal(request.RefId, result.RefId);
@@ -395,7 +395,7 @@ public class QRCodeClientTests : IDisposable
         // Assert
         Assert.NotNull(result);
         Assert.NotNull(result.Id);
-        Assert.Contains(customSlug, result.QrCodeLandingPage);
+        Assert.Contains(customSlug, result.QrCodeLandingPageURL);
 
         TestConfig.CreatedResources.QRCodes.Add(result.Id!);
     }
@@ -458,7 +458,7 @@ public class QRCodeClientTests : IDisposable
         // Assert
         Assert.NotNull(result);
         Assert.NotNull(result.Id);
-        Assert.NotNull(result.QrCodeLandingPage);
+        Assert.NotNull(result.QrCodeLandingPageURL);
         Assert.Equal(request.Name, result.Name);
 
         TestConfig.CreatedResources.QRCodes.Add(result.Id!);
@@ -522,7 +522,7 @@ public class QRCodeClientTests : IDisposable
         // Assert
         Assert.NotNull(result);
         Assert.Equal(created.Id, result.Id);
-        Assert.NotNull(result.QrCodeLandingPage);
+        Assert.NotNull(result.QrCodeLandingPageURL);
         Assert.NotNull(result.QrCodeId);
     }
 

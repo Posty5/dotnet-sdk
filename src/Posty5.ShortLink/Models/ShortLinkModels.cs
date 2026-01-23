@@ -88,9 +88,9 @@ public class ShortLinkModel
     
     /// <summary>
     /// QR code landing page URL
-    /// Corresponds to 'qrCodeLandingPage' in npm SDK
+    /// Corresponds to 'qrCodeLandingPageURL' in npm SDK
     /// </summary>
-    public string? QrCodeLandingPage { get; set; }
+    public string? QrCodeLandingPageURL { get; set; }
     
     /// <summary>
     /// QR code download URL

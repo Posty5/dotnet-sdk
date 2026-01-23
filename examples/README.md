@@ -83,7 +83,7 @@ var result = await qrCodeClient.CreateUrlAsync(new CreateUrlQRCodeRequest
 });
 
 // 4. Use the result
-Console.WriteLine($"Created: {result.QrCodeLandingPage}");
+Console.WriteLine($"Created: {result.QrCodeLandingPageURL}");
 ```
 
 ## Additional Resources

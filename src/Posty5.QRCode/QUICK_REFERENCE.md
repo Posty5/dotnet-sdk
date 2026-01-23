@@ -147,7 +147,7 @@ var result = await qrCodeClient.ListAsync(
 
 foreach (var qr in result.Items)
 {
-    Console.WriteLine($"{qr.Name}: {qr.QrCodeLandingPage}");
+    Console.WriteLine($"{qr.Name}: {qr.QrCodeLandingPageURL}");
 }
 ```
 
@@ -220,7 +220,7 @@ All QR code requests support:
 All responses include:
 - `Id` - Database ID
 - `QrCodeId` - Unique QR code identifier
-- `QrCodeLandingPage` - Scannable URL
+- `QrCodeLandingPageURL` - Scannable URL
 - `ShorterLink` - Short URL
 - `NumberOfVisitors` - Scan count
 - `Status` - Approval status

@@ -69,7 +69,7 @@ var qrCode = await qrCodeClient.CreateUrlAsync(new CreateUrlQRCodeRequest
     }
 });
 
-Console.WriteLine($"QR Code URL: {qrCode.QrCodeLandingPage}");
+Console.WriteLine($"QR Code URL: {qrCode.QrCodeLandingPageURL}");
 
 // Create a WiFi QR code
 var wifiQr = await qrCodeClient.CreateWifiAsync(new CreateWifiQRCodeRequest
