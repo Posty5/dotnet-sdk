@@ -27,6 +27,7 @@
     <ProjectReference Include="..\..\src\Posty5.ShortLink\Posty5.ShortLink.csproj" />
     <ProjectReference Include="..\..\src\Posty5.QRCode\Posty5.QRCode.csproj" />
     <ProjectReference Include="..\..\src\Posty5.HtmlHosting\Posty5.HtmlHosting.csproj" />
+    <ProjectReference Include="..\..\src\Posty5.HtmlHostingVariables\Posty5.HtmlHostingVariables.csproj" />
   </ItemGroup>
 
   <ItemGroup>
