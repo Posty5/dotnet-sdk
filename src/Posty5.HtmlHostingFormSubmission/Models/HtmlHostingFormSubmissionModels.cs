@@ -118,7 +118,7 @@ public class FormSubmissionModel
     /// <summary>
     /// Submission numbering
     /// </summary>
-    public int Numbering { get; set; }
+    public string Numbering { get; set; }
     
     /// <summary>
     /// Form data as key-value pairs (dynamic form fields)
