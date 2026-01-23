@@ -18,6 +18,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Posty5.SocialPublisherWorks
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Posty5.SocialPublisherTask", "src\Posty5.SocialPublisherTask\Posty5.SocialPublisherTask.csproj", "{1B6DEA68-7267-4208-8CCC-017FDCA94937}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Posty5.HtmlHostingFormSubmission", "src\Posty5.HtmlHostingFormSubmission\Posty5.HtmlHostingFormSubmission.csproj", "{2C7EFB79-8378-5319-9DDD-128FE0629FE9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -56,6 +58,10 @@ Global
 		{1B6DEA68-7267-4208-8CCC-017FDCA94937}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1B6DEA68-7267-4208-8CCC-017FDCA94937}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1B6DEA68-7267-4208-8CCC-017FDCA94937}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2C7EFB79-8378-5319-9DDD-128FE0629FE9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2C7EFB79-8378-5319-9DDD-128FE0629FE9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2C7EFB79-8378-5319-9DDD-128FE0629FE9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2C7EFB79-8378-5319-9DDD-128FE0629FE9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

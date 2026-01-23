@@ -30,6 +30,7 @@
     <ProjectReference Include="..\..\src\Posty5.HtmlHostingVariables\Posty5.HtmlHostingVariables.csproj" />
     <ProjectReference Include="..\..\src\Posty5.SocialPublisherWorkspace\Posty5.SocialPublisherWorkspace.csproj" />
     <ProjectReference Include="..\..\src\Posty5.SocialPublisherTask\Posty5.SocialPublisherTask.csproj" />
+    <ProjectReference Include="..\..\src\Posty5.HtmlHostingFormSubmission\Posty5.HtmlHostingFormSubmission.csproj" />
   </ItemGroup>
 
   <ItemGroup>
