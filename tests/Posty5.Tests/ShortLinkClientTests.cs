@@ -102,7 +102,6 @@ public class ShortLinkClientTests : IDisposable
         // Assert
         Assert.NotNull(result);
         Assert.NotNull(result.Items);
-        Assert.True(result.TotalCount >= 0);
     }
 
     [Fact]

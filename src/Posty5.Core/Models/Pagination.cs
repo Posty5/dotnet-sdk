@@ -28,6 +28,15 @@ public class PaginationResponse<T>
     public List<T> Items { get; set; } = new();
 
     /// <summary>
+    /// Pagination Meta
+    /// </summary>
+    public PaginationMeta Pagination { get; set; }
+}
+
+public class PaginationMeta
+{
+
+           /// <summary>
     /// Total count of items
     /// </summary>
     public int TotalCount { get; set; }
@@ -35,15 +44,13 @@ public class PaginationResponse<T>
     /// <summary>
     /// Current page number
     /// </summary>
-    public int PageNumber { get; set; }
+    public int Page { get; set; }
 
     /// <summary>
     /// Page size
     /// </summary>
     public int PageSize { get; set; }
-
-    /// <summary>
-    /// Indicates if there are more pages available
-    /// </summary>
-    public bool HasNextPage => (PageNumber + 1) * PageSize < TotalCount;
+  
+    public int TotalPages { get; set; }
+    public bool NoMoreOfResults { get; set; }
 }
