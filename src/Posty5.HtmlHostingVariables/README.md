@@ -1,487 +1,383 @@
 # Posty5.HtmlHostingVariables
 
-HTML Hosting Variables management client for Posty5 .NET SDK. This package allows you to create, manage, and organize environment variables for your hosted HTML pages.
+Manage dynamic variables for your Posty5-hosted HTML pages with the .NET SDK. This package provides a client for creating, updating, and managing key-value variables that can be used across all your hosted HTML content for dynamic content injection and configuration management.
 
-## Features
+---
 
-- 🔑 **Variable Management**: Create, read, update, and delete variables
-- ✅ **Key Validation**: Automatic validation of variable key prefixes
-- 🔍 **Advanced Filtering**: Search and filter variables by multiple criteria
-- 🏷️ **Tagging Support**: Organize variables with custom tags
-- 📊 **Pagination**: Efficient pagination for large variable lists
-- 🔗 **Reference Tracking**: Link variables to external systems with RefId
+## 🌟 What is Posty5?
 
-## Installation
+**Posty5** is a comprehensive suite of free online tools designed to enhance your digital marketing and social media presence. With over 4+ powerful tools and counting, Posty5 provides everything you need to:
+
+- 🔗 **Shorten URLs** - Create memorable, trackable short links
+- 📱 **Generate QR Codes** - Transform URLs, WiFi credentials, contact cards, and more into scannable codes
+- 🌐 **Host HTML Pages** - Deploy static HTML pages with dynamic variables and form submission handling
+- 📢 **Automate Social Media** - Schedule and manage social media posts across multiple platforms
+- 📊 **Track Performance** - Monitor and analyze your digital marketing efforts
+
+Posty5 empowers businesses, marketers, and developers to streamline their online workflows—all from a unified control panel.
+
+**Learn more:** [https://posty5.com](https://posty5.com)
+
+---
+
+## 📦 About This Package
+
+`Posty5.HtmlHostingVariables` is a **specialized tool package** for managing dynamic variables that can be injected into HTML pages hosted on the Posty5 platform. It enables developers to build content management systems with centralized configuration and dynamic content replacement.
+
+### Key Capabilities
+
+- **🔑 Key-Value Storage** - Store dynamic values (API keys, configuration, content) as reusable variables
+- **🔄 Real-Time Updates** - Modify variables instantly via API; changes reflect immediately on hosted pages
+- **🎯 Variable Injection** - Use variables in HTML pages via `{{variable_key}}` syntax for dynamic content
+- **🏷️ Tag & Reference Support** - Organize variables with custom tags and reference IDs
+- **🔍 Advanced Filtering** - Search and filter variables by name, key, value, tag, or reference ID
+- **⚡ Prefix Validation** - Automatic enforcement of `pst5_` prefix for namespace consistency
+- **📝 CRUD Operations** - Complete create, read, update, delete operations for variable management
+- **🎨 Use Cases** - Perfect for configuration management, A/B testing, feature flags, multi-language content
+
+### Role in the Posty5 Ecosystem
+
+This package works seamlessly with other Posty5 SDK packages:
+
+- Use `Posty5.HtmlHosting` to create HTML pages that reference variables
+- Combine with configuration management systems for centralized settings
+- Build dynamic landing pages, promotional banners, or multi-tenant applications
+
+---
+
+## 📥 Installation
+
+Install via NuGet Package Manager:
 
 ```bash
 dotnet add package Posty5.HtmlHostingVariables
 ```
 
-## Quick Start
+Or via Package Manager Console:
+
+```powershell
+Install-Package Posty5.HtmlHostingVariables
+```
+
+---
+
+## 🚀 Quick Start
+
+Here's a minimal example to get you started:
 
 ```csharp
-using Posty5.Core;
+using Posty5.Core.Configuration;
+using Posty5.Core.Http;
 using Posty5.HtmlHostingVariables;
+using Posty5.HtmlHostingVariables.Models;
 
-// Initialize the client
-var config = new Posty5Config("your-api-key");
-var httpClient = new Posty5HttpClient(config);
-var client = new HtmlHostingVariablesClient(httpClient);
-
-// Create a variable
-await client.CreateAsync(new CreateHtmlHostingVariableRequest
+// Initialize the HTTP client with your API key
+var options = new Posty5Options
 {
-    Name = "API Key",
-    Key = "pst5_api_key",      // MUST start with pst5_
-    Value = "sk_test_123456",
-    Tag = "production"
+    ApiKey = "your-api-key" // Get from https://studio.posty5.com/account/settings?tab=APIKeys
+};
+var httpClient = new Posty5HttpClient(options);
+
+// Create the Variables client
+var variables = new HtmlHostingVariablesClient(httpClient);
+
+// Create a new variable
+await variables.CreateAsync(new CreateHtmlHostingVariableRequest
+{
+    Name = "Company Name", // Human-readable name
+    Key = "pst5_company_name", // Key used in HTML (must start with pst5_)
+    Value = "Acme Corporation" // The actual value
 });
+
+// List all variables
+var allVariables = await variables.ListAsync(
+    null,
+    new PaginationParams { PageNumber = 1, PageSize = 10 }
+);
+
+Console.WriteLine($"Total variables: {allVariables.Pagination.TotalItems}");
+foreach (var variable in allVariables.Data)
+{
+    Console.WriteLine($"{variable.Key} = {variable.Value}");
+}
+
+// Get a specific variable
+var companyName = await variables.GetAsync("variable-id-123");
+Console.WriteLine($"Company: {companyName.Value}");
+
+// Update variable value
+await variables.UpdateAsync("variable-id-123", new CreateHtmlHostingVariableRequest
+{
+    Name = "Company Name",
+    Key = "pst5_company_name",
+    Value = "Acme Corp (Updated)",
+    Tag = "",
+    RefId = ""
+});
+
+// Use in HTML page: {{pst5_company_name}} will be replaced with "Acme Corp (Updated)"
 ```
 
-## Important: Key Prefix Requirement
+---
 
-⚠️ **All variable keys MUST start with `pst5_`**
-
-This prefix is enforced by the SDK and the API for security and namespacing purposes.
-
-```csharp
-// ✅ CORRECT - Key starts with pst5_
-Key = "pst5_api_key"
-Key = "pst5_database_url"
-Key = "pst5_stripe_secret"
-
-// ❌ WRONG - Missing pst5_ prefix (will throw ArgumentException)
-Key = "api_key"
-Key = "database_url"
-```
-
-## Usage Examples
+## 📚 API Reference & Examples
 
 ### Creating Variables
 
-#### Basic Variable Creation
+#### CreateAsync
+
+Create a new HTML hosting variable with a name, key, and value. The key must start with `pst5_` prefix for namespace consistency.
+
+**Parameters:**
+
+- `data` (CreateHtmlHostingVariableRequest): Variable data
+  - `Name` (string, **required**): Human-readable variable name
+  - `Key` (string, **required**): Variable key for HTML injection (must start with `pst5_`)
+  - `Value` (string, **required**): Variable value
+  - `Tag` (string?, optional): Custom tag for grouping/filtering
+  - `RefId` (string?, optional): External reference ID from your system
+
+**Returns:** `Task`
+
+**Example:**
 
 ```csharp
-await client.CreateAsync(new CreateHtmlHostingVariableRequest
+// Basic variable creation
+await variables.CreateAsync(new CreateHtmlHostingVariableRequest
 {
-    Name = "API Key",
-    Key = "pst5_api_key",
-    Value = "sk_test_123456"
+    Name = "Support Email",
+    Key = "pst5_support_email",
+    Value = "support@acme.com"
 });
 ```
 
-#### With Tags and RefId
-
 ```csharp
-await client.CreateAsync(new CreateHtmlHostingVariableRequest
+// Variable with tag and reference ID
+await variables.CreateAsync(new CreateHtmlHostingVariableRequest
 {
-    Name = "Database URL",
-    Key = "pst5_database_url",
-    Value = "postgresql://user:pass@host:5432/db",
-    Tag = "production",
-    RefId = "env-prod-001"
+    Name = "Production API URL",
+    Key = "pst5_api_url",
+    Value = "https://api.acme.com",
+    Tag = "production", // Group by environment
+    RefId = "env-prod-001" // Your system's identifier
 });
 ```
 
-#### Handling Key Validation Errors
+**Important:** Keys must start with `pst5_`. If you provide a key without this prefix, an `ArgumentException` will be thrown.
 
-```csharp
-try
-{
-    await client.CreateAsync(new CreateHtmlHostingVariableRequest
-    {
-        Name = "Bad Key Example",
-        Key = "api_key",  // ❌ Missing pst5_ prefix
-        Value = "value"
-    });
-}
-catch (ArgumentException ex)
-{
-    // Error message: "Key must start with 'pst5_', change to pst5_api_key"
-    Console.WriteLine(ex.Message);
-}
-```
+---
 
 ### Retrieving Variables
 
-#### Get Single Variable
+#### GetAsync
+
+Retrieve complete details of a specific variable by ID.
+
+**Parameters:**
+
+- `id` (string): The unique variable ID
+
+**Returns:** `Task<HtmlHostingVariableModel>` - Variable details
+
+**Example:**
 
 ```csharp
-var variable = await client.GetAsync("variable_id_123");
+var variable = await variables.GetAsync("variable-id-123");
 
-Console.WriteLine($"Name: {variable.Name}");
-Console.WriteLine($"Key: {variable.Key}");
-Console.WriteLine($"Value: {variable.Value}");
-Console.WriteLine($"Tag: {variable.Tag}");
-Console.WriteLine($"Created: {variable.CreatedAt}");
+Console.WriteLine("Variable Details:");
+Console.WriteLine($"  Name: {variable.Name}");
+Console.WriteLine($"  Key: {variable.Key}");
+Console.WriteLine($"  Value: {variable.Value}");
+Console.WriteLine($"  Created: {variable.CreatedAt}");
 ```
 
-#### List All Variables
+---
+
+#### ListAsync
+
+Search and filter variables with advanced pagination and filtering options.
+
+**Parameters:**
+
+- `listParams` (ListHtmlHostingVariablesParams?, optional): Filter criteria
+  - `Name` (string?): Filter by variable name
+  - `Key` (string?): Filter by variable key
+  - `Value` (string?): Filter by variable value
+  - `Tag` (string?): Filter by tag
+  - `RefId` (string?): Filter by reference ID
+- `pagination` (PaginationParams?, optional): Pagination options
+  - `PageNumber` (int): Page number (default: 1)
+  - `PageSize` (int): Items per page (default: 10)
+
+**Returns:** `Task<PaginationResponse<HtmlHostingVariableModel>>`
+
+**Example:**
 
 ```csharp
-var result = await client.ListAsync(
-    pagination: new PaginationParams
-    {
-        Page = 1,
-        PageSize = 20
-    }
+// Get all variables
+var allVariables = await variables.ListAsync(
+    null,
+    new PaginationParams { PageNumber = 1, PageSize = 50 }
 );
 
-Console.WriteLine($"Total Variables: {result.Total}");
-foreach (var variable in result.Items)
+Console.WriteLine($"Total: {allVariables.Pagination.TotalItems}");
+foreach (var variable in allVariables.Data)
 {
-    Console.WriteLine($"{variable.Key}: {variable.Value}");
+    Console.WriteLine($"{variable.Name} ({variable.Key}) = {variable.Value}");
 }
 ```
 
-### Filtering Variables
-
-#### Filter by Tag
-
 ```csharp
-var prodVariables = await client.ListAsync(
-    new ListHtmlHostingVariablesParams
-    {
-        Tag = "production"
-    }
-);
-```
-
-#### Filter by Key Pattern
-
-```csharp
-var apiVariables = await client.ListAsync(
-    new ListHtmlHostingVariablesParams
-    {
-        Key = "pst5_api"  // Partial match
-    }
-);
-```
-
-#### Filter by Name
-
-```csharp
-var dbVariables = await client.ListAsync(
-    new ListHtmlHostingVariablesParams
-    {
-        Name = "Database"  // Partial match
-    }
-);
-```
-
-#### Multiple Filters
-
-```csharp
-var result = await client.ListAsync(
-    new ListHtmlHostingVariablesParams
-    {
-        Tag = "production",
-        Key = "pst5_",
-        RefId = "env-prod"
-    },
-    new PaginationParams { Page = 1, PageSize = 10 }
-);
-```
-
-### Updating Variables
-
-```csharp
-await client.UpdateAsync("variable_id_123", new CreateHtmlHostingVariableRequest
+// Filter by tag
+var prodVars = await variables.ListAsync(new ListHtmlHostingVariablesParams
 {
-    Name = "Updated API Key",
-    Key = "pst5_api_key",        // Must still have pst5_ prefix
-    Value = "sk_live_new_value",
-    Tag = "production-updated"
-});
-```
-
-### Deleting Variables
-
-```csharp
-await client.DeleteAsync("variable_id_123");
-Console.WriteLine("Variable deleted successfully");
-```
-
-## Common Use Cases
-
-### Environment Configuration
-
-Manage different environment configurations:
-
-```csharp
-// Development environment
-await client.CreateAsync(new CreateHtmlHostingVariableRequest
-{
-    Name = "API Base URL",
-    Key = "pst5_api_base_url",
-    Value = "https://api-dev.example.com",
-    Tag = "development"
-});
-
-// Production environment
-await client.CreateAsync(new CreateHtmlHostingVariableRequest
-{
-    Name = "API Base URL",
-    Key = "pst5_api_base_url",
-    Value = "https://api.example.com",
     Tag = "production"
 });
 ```
 
-### API Keys Management
+---
 
-Store and manage API keys for third-party services:
+### Managing Variables
 
-```csharp
-var apiKeys = new[]
-{
-    new { Name = "Stripe API Key", Key = "pst5_stripe_key", Value = "sk_test_..." },
-    new { Name = "SendGrid API Key", Key = "pst5_sendgrid_key", Value = "SG...." },
-    new { Name = "Google Maps API Key", Key = "pst5_google_maps_key", Value = "AIza..." }
-};
+#### UpdateAsync
 
-foreach (var apiKey in apiKeys)
-{
-    await client.CreateAsync(new CreateHtmlHostingVariableRequest
-    {
-        Name = apiKey.Name,
-        Key = apiKey.Key,
-        Value = apiKey.Value,
-        Tag = "api-keys"
-    });
-}
-```
+Update an existing variable's name, key, or value. The key must still start with `pst5_` prefix.
 
-### Feature Flags
+**Parameters:**
 
-Manage feature flags:
+- `id` (string): Variable ID to update
+- `data` (CreateHtmlHostingVariableRequest): Updated variable data
+  - `Name` (string): Updated variable name
+  - `Key` (string): Updated variable key (must start with `pst5_`)
+  - `Value` (string): Updated variable value
+  - `Tag` (string?, optional): Updated tag
+  - `RefId` (string?, optional): Updated reference ID
+
+**Returns:** `Task`
+
+**Example:**
 
 ```csharp
-await client.CreateAsync(new CreateHtmlHostingVariableRequest
+// Update variable value
+await variables.UpdateAsync("variable-id-123", new CreateHtmlHostingVariableRequest
 {
-    Name = "Enable New UI",
-    Key = "pst5_feature_new_ui",
-    Value = "true",
-    Tag = "feature-flags"
+    Name = "Support Email",
+    Key = "pst5_support_email",
+    Value = "help@acme.com", // Changed from support@acme.com
+    Tag = "",
+    RefId = ""
 });
 ```
 
-### Database Credentials
+---
 
-Store database connection strings:
+#### DeleteAsync
+
+Permanently delete a variable. Once deleted, the variable key will no longer be replaced in HTML pages.
+
+**Parameters:**
+
+- `id` (string): Variable ID to delete
+
+**Returns:** `Task`
+
+**Example:**
 
 ```csharp
-await client.CreateAsync(new CreateHtmlHostingVariableRequest
-{
-    Name = "PostgreSQL Connection",
-    Key = "pst5_db_connection",
-    Value = "postgresql://user:pass@localhost:5432/mydb",
-    Tag = "database",
-    RefId = "db-main-001"
-});
+await variables.DeleteAsync("variable-id-123");
+Console.WriteLine("Variable deleted");
 ```
 
-## Pagination
+---
 
-Handle large variable lists with pagination:
+## 🔒 Error Handling
 
-```csharp
-int currentPage = 1;
-int pageSize = 50;
-int totalProcessed = 0;
-
-while (true)
-{
-    var result = await client.ListAsync(
-        pagination: new PaginationParams
-        {
-            Page = currentPage,
-            PageSize = pageSize
-        }
-    );
-
-    foreach (var variable in result.Items)
-    {
-        Console.WriteLine($"Processing: {variable.Key}");
-        totalProcessed++;
-    }
-
-    if (result.Items.Count < pageSize || totalProcessed >= result.Total)
-    {
-        break;
-    }
-
-    currentPage++;
-}
-
-Console.WriteLine($"Processed {totalProcessed} variables");
-```
-
-## API Reference
-
-### Methods
-
-| Method | Description | Returns |
-|--------|-------------|---------|
-| `CreateAsync()` | Create variable with key validation | `Task` |
-| `GetAsync()` | Get variable by ID | `HtmlHostingVariableModel` |
-| `UpdateAsync()` | Update variable with key validation | `Task` |
-| `DeleteAsync()` | Delete variable | `Task` |
-| `ListAsync()` | List/search variables | `PaginationResponse<HtmlHostingVariableModel>` |
-
-### Models
-
-**`HtmlHostingVariableModel`** - Full variable details
-- `Id` - MongoDB document ID
-- `Name` - Human-readable name
-- `Key` - Variable key (must start with pst5_)
-- `Value` - Variable value
-- `UserId` - Owner user ID
-- `Tag` - Custom tag for filtering
-- `RefId` - External reference ID
-- `CreatedAt` - Creation timestamp
-- `UpdatedAt` - Last update timestamp
-
-**`CreateHtmlHostingVariableRequest`** - Create/Update request
-- `Name` - Variable name (required)
-- `Key` - Variable key (required, must start with pst5_)
-- `Value` - Variable value (required)
-- `Tag` - Custom tag (optional)
-- `RefId` - External reference ID (optional)
-
-**`ListHtmlHostingVariablesParams`** - Filter parameters
-- `Name` - Filter by name
-- `Key` - Filter by key
-- `Value` - Filter by value
-- `Tag` - Filter by tag
-- `RefId` - Filter by reference ID
-
-## Error Handling
-
-### Key Validation Errors
+All methods may throw exceptions from `Posty5.Core.Exceptions` or `System.ArgumentException` (for invalid keys).
 
 ```csharp
+using Posty5.Core.Exceptions;
+
 try
 {
-    await client.CreateAsync(new CreateHtmlHostingVariableRequest
+    await variables.CreateAsync(new CreateHtmlHostingVariableRequest
     {
-        Name = "Test",
-        Key = "invalid_key",  // Missing pst5_ prefix
-        Value = "value"
+        Name = "Test Variable",
+        Key = "invalid_key", // Missing pst5_ prefix
+        Value = "test"
     });
 }
-catch (ArgumentException ex)
+catch (ArgumentException ex) {
+    Console.WriteLine($"Invalid argument: {ex.Message}");
+    // Key must start with 'pst5_', change to pst5_invalid_key
+}
+catch (Posty5AuthenticationException ex)
 {
-    Console.WriteLine($"Validation error: {ex.Message}");
-    // Output: "Key must start with 'pst5_', change to pst5_invalid_key"
+    Console.WriteLine("Invalid API key");
+}
+catch (Posty5Exception ex)
+{
+    Console.WriteLine($"API Error: {ex.Message}");
 }
 ```
 
-### Not Found Errors
+---
 
-```csharp
-try
-{
-    var variable = await client.GetAsync("non_existent_id");
-}
-catch (InvalidOperationException ex)
-{
-    Console.WriteLine($"Error: {ex.Message}");
-    // Output: "Variable not found"
-}
-```
+## 📖 Resources
 
-### Network Errors
+- **Official Guides**: [https://guide.posty5.com](https://guide.posty5.com)
+- **API Reference**: [https://docs.posty5.com](https://docs.posty5.com)
+- **Source Code**: [https://github.com/Posty5/dotnet-sdk](https://github.com/Posty5/dotnet-sdk)
 
-```csharp
-try
-{
-    await client.ListAsync();
-}
-catch (HttpRequestException ex)
-{
-    Console.WriteLine($"Network error: {ex.Message}");
-}
-```
+---
 
-## Best Practices
+## 📦 Packages
 
-### 1. Use Meaningful Key Names
+This SDK ecosystem contains the following tool packages:
 
-```csharp
-// ✅ Good
-Key = "pst5_stripe_api_key"
-Key = "pst5_database_connection_string"
-Key = "pst5_feature_enable_analytics"
+| Package | Description | Version | NuGet |
+| --- | --- | --- | --- |
+| [Posty5.Core](../Posty5.Core) | Core HTTP client and models | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.Core) |
+| [Posty5.ShortLink](../Posty5.ShortLink) | URL shortener client | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.ShortLink) |
+| [Posty5.QRCode](../Posty5.QRCode) | QR code generator client | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.QRCode) |
+| [Posty5.HtmlHosting](../Posty5.HtmlHosting) | HTML hosting client | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHosting) |
+| [Posty5.HtmlHostingVariables](../Posty5.HtmlHostingVariables) | Variable management | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHostingVariables) |
+| [Posty5.HtmlHostingFormSubmission](../Posty5.HtmlHostingFormSubmission) | Form submission management | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHostingFormSubmission) |
+| [Posty5.SocialPublisherWorkspace](../Posty5.SocialPublisherWorkspace) | Social workspace management | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.SocialPublisherWorkspace) |
+| [Posty5.SocialPublisherTask](../Posty5.SocialPublisherTask) | Social publishing task client | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.SocialPublisherTask) |
 
-// ❌ Avoid
-Key = "pst5_var1"
-Key = "pst5_x"
-```
+---
 
-### 2. Organize with Tags
+## 🆘 Support
 
-```csharp
-// Group related variables
-Tag = "production"
-Tag = "api-keys"
-Tag = "feature-flags"
-Tag = "database"
-```
+We're here to help you succeed with Posty5!
 
-### 3. Use RefId for External Systems
+### Get Help
 
-```csharp
-// Link to your deployment system
-RefId = "deployment-prod-v1.2.3"
+- **Documentation**: [https://guide.posty5.com](https://guide.posty5.com)
+- **Contact Us**: [https://posty5.com/contact-us](https://posty5.com/contact-us)
+- **GitHub Issues**: [Report bugs or request features](https://github.com/Posty5/npm-sdk/issues)
+- **API Status**: Check API status and uptime at [https://status.posty5.com](https://status.posty5.com)
 
-// Link to your config management
-RefId = "config-group-frontend"
-```
+### Common Issues
 
-### 4. Implement Proper Error Handling
+1. **Authentication Errors**
+   - Ensure your API key is valid and active
+   - Get your API key from [studio.posty5.com/account/settings?tab=APIKeys](studio.posty5.com/account/settings?tab=APIKeys)
 
-```csharp
-public async Task<bool> CreateVariableSafe(string name, string key, string value)
-{
-    try
-    {
-        await client.CreateAsync(new CreateHtmlHostingVariableRequest
-        {
-            Name = name,
-            Key = key.StartsWith("pst5_") ? key : $"pst5_{key}",
-            Value = value
-        });
-        return true;
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Failed to create variable: {ex.Message}");
-        return false;
-    }
-}
-```
+2. **Network Errors**
+   - Check your internet connection
+   - Verify firewall settings allow connections to `api.posty5.com`
 
-## Security Considerations
+3. **Rate Limiting**
+   - The SDK includes automatic retry logic
+   - Check your API plan limits in the dashboard
 
-- **Never commit API keys**: Use environment variables or secure key vaults
-- **Rotate credentials regularly**: Update variable values periodically
-- **Use tags for access control**: Organize sensitive variables with specific tags
-- **Audit variable access**: Track who creates and modifies variables using RefId
+---
 
-## Related Packages
+## 📄 License
 
-- **Posty5.Core** - Core functionality and HTTP client
-- **Posty5.HtmlHosting** - HTML page hosting management
-- **Posty5.ShortLink** - Short link management
-- **Posty5.QRCode** - QR code generation and management
+MIT License - see [LICENSE](../../LICENSE) file for details.
 
-## Support
+---
 
-- **Documentation**: [https://posty5.com/docs](https://posty5.com/docs)
-- **API Reference**: [https://posty5.com/api](https://posty5.com/api)
-- **GitHub**: [https://github.com/posty5/dotnet-sdk](https://github.com/posty5/dotnet-sdk)
-
-## License
-
-MIT License - see LICENSE file for details
+Made with ❤️ by the Posty5 team

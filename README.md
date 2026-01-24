@@ -311,20 +311,56 @@ dotnet test
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
+## 📖 Resources
+
+- **Official Guides**: [https://guide.posty5.com](https://guide.posty5.com)
+- **API Reference**: [https://docs.posty5.com](https://docs.posty5.com)
+- **Source Code**: [https://github.com/Posty5/dotnet-sdk](https://github.com/Posty5/dotnet-sdk)
+
+---
+
+## 📦 Packages
+
+This SDK ecosystem contains the following tool packages:
+
+| Package | Description | Version | NuGet |
+| --- | --- | --- | --- |
+| [Posty5.Core](./src/Posty5.Core) | Core HTTP client and models | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.Core) |
+| [Posty5.ShortLink](./src/Posty5.ShortLink) | URL shortener client | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.ShortLink) |
+| [Posty5.QRCode](./src/Posty5.QRCode) | QR code generator client | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.QRCode) |
+| [Posty5.HtmlHosting](./src/Posty5.HtmlHosting) | HTML hosting client | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHosting) |
+| [Posty5.HtmlHostingVariables](./src/Posty5.HtmlHostingVariables) | Variable management | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHostingVariables) |
+| [Posty5.HtmlHostingFormSubmission](./src/Posty5.HtmlHostingFormSubmission) | Form submission management | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHostingFormSubmission) |
+| [Posty5.SocialPublisherWorkspace](./src/Posty5.SocialPublisherWorkspace) | Social workspace management | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.SocialPublisherWorkspace) |
+| [Posty5.SocialPublisherTask](./src/Posty5.SocialPublisherTask) | Social publishing task client | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.SocialPublisherTask) |
+
+---
+
+## 🆘 Support
+
+We're here to help you succeed with Posty5!
+
+### Get Help
+
+- **Documentation**: [https://guide.posty5.com](https://guide.posty5.com)
+- **Contact Us**: [https://posty5.com/contact-us](https://posty5.com/contact-us)
+- **GitHub Issues**: [Report bugs or request features](https://github.com/Posty5/dotnet-sdk/issues)
+- **API Status**: Check API status and uptime at [https://status.posty5.com](https://status.posty5.com)
+
+---
+
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🔗 Links
+---
 
-- [Website](https://posty5.com)
-- [API Documentation](https://docs.posty5.com)
-- [GitHub Repository](https://github.com/posty5/dotnet-sdk)
-- [NuGet Gallery](https://www.nuget.org/packages/Posty5.Core)
+## 🔗 Useful Links
 
-## 💬 Support
-
-For support, email support@posty5.com or join our [Discord community](https://discord.gg/posty5).
+- **Website**: [https://posty5.com](https://posty5.com)
+- **API Documentation**: [https://docs.posty5.com](https://docs.posty5.com)
+- **GitHub Repository**: [https://github.com/posty5/dotnet-sdk](https://github.com/posty5/dotnet-sdk)
+- **NuGet Gallery**: [https://www.nuget.org/packages/Posty5.Core](https://www.nuget.org/packages/Posty5.Core)
 
 ---
 

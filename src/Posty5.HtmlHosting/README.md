@@ -1,425 +1,573 @@
 # Posty5.HtmlHosting
 
-HTML Hosting management client for Posty5 .NET SDK. This package allows you to create, manage, and deploy static HTML pages through the Posty5 platform with R2 storage or GitHub integration.
+Deploy and manage static HTML pages with the Posty5 .NET SDK. This package provides a complete C# client for creating, updating, and managing hosted HTML pages with features like GitHub integration, form submission tracking, monetization, and analytics.
 
-## Features
+---
 
-- 📤 **File Upload**: Upload HTML files directly to R2 storage
-- 🐙 **GitHub Integration**: Deploy HTML pages from GitHub repositories
-- 🔍 **Search & Filter**: Advanced search and filtering capabilities
-- 📊 **Analytics**: Track visitors and form submissions
-- 💰 **Monetization**: Optional monetization for hosted pages
-- 🔄 **Auto-sync**: Automatic Google Sheets integration for form data
+## 🌟 What is Posty5?
 
-## Installation
+**Posty5** is a comprehensive suite of free online tools designed to enhance your digital marketing and social media presence. With over 4+ powerful tools and counting, Posty5 provides everything you need to:
+
+- 🔗 **Shorten URLs** - Create memorable, trackable short links
+- 📱 **Generate QR Codes** - Transform URLs, WiFi credentials, contact cards, and more into scannable codes
+- 🌐 **Host HTML Pages** - Deploy static HTML pages with dynamic variables and form submission handling
+- 📢 **Automate Social Media** - Schedule and manage social media posts across multiple platforms
+- 📊 **Track Performance** - Monitor and analyze your digital marketing efforts
+
+Posty5 empowers businesses, marketers, and developers to streamline their online workflows—all from a unified control panel.
+
+**Learn more:** [https://posty5.com](https://posty5.com)
+
+---
+
+## 📦 About This Package
+
+`Posty5.HtmlHosting` is a **specialized tool package** for deploying and managing static HTML pages through the Posty5 platform. It enables developers to quickly host landing pages, product pages, portfolios, and any static HTML content with professional features.
+
+### Key Capabilities
+
+- **📁 File Upload Hosting** - Upload HTML files directly to high-performance cloud storage
+- **🐙 GitHub Integration** - Deploy HTML files directly from GitHub repositories
+- **📊 Analytics & Tracking** - Monitor page views, visitor locations, devices, and more
+- **💰 Monetization** - Generate revenue through embedded advertisements
+- **📝 Form Submission Tracking** - Capture and track form submissions automatically
+- **🔄 Dynamic Variables** - Inject real-time data into your static pages
+- **📱 Google Sheets Integration** - Auto-save form data to Google Sheets
+- **🔐 API Key Filtering** - Scope resources by API key for multi-tenant applications
+- **⚡ High Performance** - Fast global CDN delivery with caching
+- **🔒 Secure Hosting** - HTTPS enabled with 24/7 security monitoring
+
+### Role in the Posty5 Ecosystem
+
+This package works seamlessly with other Posty5 SDK packages:
+
+- Use `Posty5.HtmlHostingVariables` to manage dynamic variables
+- Use `Posty5.HtmlHostingFormSubmission` to handle form submissions
+- Use `Posty5.ShortLink` to create shortened URLs for your pages
+- Use `Posty5.QRCode` to generate QR codes linking to your pages
+
+Perfect for **developers**, **marketers**, **designers**, and **entrepreneurs** who need fast, reliable HTML hosting with built-in tracking and monetization capabilities.
+
+---
+
+## 📥 Installation
+
+Install via NuGet Package Manager:
 
 ```bash
 dotnet add package Posty5.HtmlHosting
 ```
 
-## Quick Start
+Or via Package Manager Console:
+
+```powershell
+Install-Package Posty5.HtmlHosting
+```
+
+---
+
+## 🚀 Quick Start
+
+Here's a minimal example to get you started:
 
 ```csharp
-using Posty5.Core;
+using System.Text;
+using Posty5.Core.Configuration;
+using Posty5.Core.Http;
 using Posty5.HtmlHosting;
+using Posty5.HtmlHosting.Models;
 
-// Initialize the client
-var config = new Posty5Config("your-api-key");
-var httpClient = new Posty5HttpClient(config);
-var client = new HtmlHostingClient(httpClient);
+// Initialize the HTTP client with your API key
+var options = new Posty5Options
+{
+    ApiKey = "your-api-key" // Get from https://studio.posty5.com/account/settings?tab=APIKeys
+};
+var httpClient = new Posty5HttpClient(options);
 
-// Create a page from a file
-using var fileStream = File.OpenRead("index.html");
-var result = await client.CreateWithFileAsync(
-    new CreateHtmlPageFileRequest 
-    { 
-        Name = "My Landing Page",
-        FileName = "index.html"
-    },
-    fileStream
-);
+// Create the HTML Hosting client
+var htmlHosting = new HtmlHostingClient(httpClient);
 
-Console.WriteLine($"Page created: {result.ShorterLink}");
-```
-
-## Usage Examples
-
-### Creating Pages
-
-#### 1. Create from File (File Upload)
-
-```csharp
-// From a file on disk
-using var fileStream = File.OpenRead("landing-page.html");
-var result = await client.CreateWithFileAsync(
-    new CreateHtmlPageFileRequest 
-    { 
-        Name = "Product Landing Page",
-        FileName = "landing-page.html",
-        IsEnableMonetization = true,
-        Tag = "product-pages",
-        RefId = "product-123"
-    },
-    fileStream,
-    "text/html"
-);
-
-Console.WriteLine($"ID: {result.Id}");
-Console.WriteLine($"Shorter Link: {result.ShorterLink}");
-Console.WriteLine($"File URL: {result.FileUrl}");
-```
-
-#### 2. Create from String Content
-
-```csharp
+// Create and deploy an HTML page
 var htmlContent = @"
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Welcome</title>
+  <title>My Landing Page</title>
 </head>
 <body>
-    <h1>Hello from Posty5!</h1>
+  <h1>Welcome to My Page!</h1>
+  <p>This page is hosted on Posty5.</p>
 </body>
 </html>";
 
-using var memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(htmlContent));
-var result = await client.CreateWithFileAsync(
-    new CreateHtmlPageFileRequest 
-    { 
-        Name = "Simple Welcome Page",
-        FileName = "index.html"
-    },
-    memoryStream,
-    "text/html"
-);
-```
+using var fileStream = new MemoryStream(Encoding.UTF8.GetBytes(htmlContent));
 
-#### 3. Create from GitHub Repository
-
-```csharp
-var result = await client.CreateWithGithubFileAsync(
-    new CreateHtmlPageGithubRequest
+var page = await htmlHosting.CreateWithFileAsync(
+    new CreateHtmlPageFileRequest
     {
-        Name = "GitHub Hosted Page",
-        GithubInfo = new GithubInfo
-        {
-            // Supports multiple GitHub URL formats
-            FileURL = "https://raw.githubusercontent.com/owner/repo/main/index.html"
-            // Also supports:
-            // "https://github.com/owner/repo/blob/main/index.html"
-            // "https://raw.githubusercontent.com/owner/repo/commit-sha/index.html"
-        },
-        AutoSaveInGoogleSheet = true,
-        Tag = "github-pages"
-    }
-);
-
-Console.WriteLine($"GitHub Page: {result.ShorterLink}");
-```
-
-### Updating Pages
-
-#### 1. Update with New File
-
-```csharp
-var pageId = "existing-page-id";
-
-using var fileStream = File.OpenRead("updated-page.html");
-var result = await client.UpdateWithFileAsync(
-    pageId,
-    new UpdateHtmlPageFileRequest 
-    { 
-        Name = "Updated Landing Page",
-        FileName = "updated-page.html"
+        Name = "My First Landing Page", // Page name for your dashboard
+        FileName = "landing.html" // File name
     },
     fileStream
 );
 
-Console.WriteLine($"Updated: {result.ShorterLink}");
+Console.WriteLine($"Page URL: {page.ShorterLink}");
+Console.WriteLine($"Page ID: {page.Id}");
 ```
 
-#### 2. Update from GitHub
+---
+
+## 📚 API Reference & Examples
+
+### Creating HTML Pages
+
+#### CreateWithFileAsync
+
+Upload an HTML file to create a hosted page.
+
+**Parameters:**
+
+- `data` (CreateHtmlPageFileRequest): Configuration for the page
+  - `Name` (string): Display name for the page in your dashboard
+  - `FileName` (string): Name of the HTML file
+  - `CustomLandingId` (string?, optional): Custom URL identifier
+  - `IsEnableMonetization` (bool?, optional): Enable ad monetization
+  - `AutoSaveInGoogleSheet` (bool?, optional): Auto-save form data to Google Sheets
+  - `Tag` (string?, optional): Tag for categorization
+  - `RefId` (string?, optional): Your custom reference ID
+- `fileStream` (Stream): The HTML file content stream
+- `contentType` (string, optional): Content type (default: "text/html")
+
+**Returns:** `Task<HtmlPageFileResponse>`
+
+- `Id` (string): Unique page ID
+- `ShorterLink` (string): Public URL to access the page
+- `FileUrl` (string): Direct URL to the uploaded file
+
+**Example:**
 
 ```csharp
-var pageId = "existing-page-id";
+// Basic page creation
+var htmlContent = "<html><body><h1>Hello World</h1></body></html>";
+using var fileStream = new MemoryStream(Encoding.UTF8.GetBytes(htmlContent));
 
-var result = await client.UpdateWithGithubFileAsync(
-    pageId,
-    new UpdateHtmlPageGithubRequest
+var page = await htmlHosting.CreateWithFileAsync(
+    new CreateHtmlPageFileRequest
     {
-        Name = "Updated GitHub Page",
-        GithubInfo = new GithubInfo
-        {
-            FileURL = "https://raw.githubusercontent.com/owner/repo/develop/new-page.html"
-        }
-    }
+        Name = "Simple Page",
+        FileName = "index.html"
+    },
+    fileStream
+);
+
+Console.WriteLine($"Live URL: {page.ShorterLink}");
+```
+
+```csharp
+// Page with custom URL and monetization
+var page = await htmlHosting.CreateWithFileAsync(
+    new CreateHtmlPageFileRequest
+    {
+        Name = "Product Launch Page",
+        FileName = "product.html",
+        CustomLandingId = "product-2024", // Custom URL: posty5.com/product-2024
+        IsEnableMonetization = true, // Enable ads for revenue
+        Tag = "marketing",
+        RefId = "campaign-spring-2024"
+    },
+    fileStream
 );
 ```
 
-### Retrieving Pages
+```csharp
+// Page with form submission tracking
+var page = await htmlHosting.CreateWithFileAsync(
+    new CreateHtmlPageFileRequest
+    {
+        Name = "Contact Form",
+        FileName = "contact.html",
+        AutoSaveInGoogleSheet = true, // Auto-save form data to Google Sheets
+        Tag = "forms"
+    },
+    fileStream
+);
+```
 
-#### 1. Get Single Page
+---
+
+#### CreateWithGithubFileAsync
+
+Deploy an HTML file directly from a GitHub repository.
+
+**Parameters:**
+
+- `data` (CreateHtmlPageGithubRequest): Configuration for the page
+  - `Name` (string): Display name for the page
+  - `GithubInfo` (GithubInfo): GitHub file information
+    - `FileURL` (string): Full GitHub file URL (e.g., `https://github.com/user/repo/blob/main/index.html`)
+  - `CustomLandingId` (string?, optional): Custom URL identifier
+  - `IsEnableMonetization` (bool?, optional): Enable monetization
+  - `AutoSaveInGoogleSheet` (bool?, optional): Auto-save form data
+  - `Tag` (string?, optional): Tag for categorization
+  - `RefId` (string?, optional): Your custom reference ID
+
+**Returns:** `Task<HtmlPageGithubResponse>`
+
+- `Id` (string): Unique page ID
+- `ShorterLink` (string): Public URL to access the page
+- `GithubInfo` (GithubInfo): GitHub file information
+
+**Example:**
 
 ```csharp
-var page = await client.GetAsync("page-id");
-
-Console.WriteLine($"Name: {page.Name}");
-Console.WriteLine($"Visitors: {page.NumberOfVisitors}");
-Console.WriteLine($"Source Type: {page.SourceType}"); // "file" or "github"
-Console.WriteLine($"Status: {page.Status}");
-
-if (page.FormSubmission != null)
+// Deploy from GitHub
+var page = await htmlHosting.CreateWithGithubFileAsync(new CreateHtmlPageGithubRequest
 {
-    Console.WriteLine($"Form Submissions: {page.FormSubmission.NumberOfFormSubmission}");
+    Name = "Portfolio Site",
+    GithubInfo = new GithubInfo
+    {
+        FileURL = "https://github.com/username/portfolio/blob/main/index.html"
+    }
+});
+
+Console.WriteLine($"Deployed URL: {page.ShorterLink}");
+```
+
+```csharp
+// GitHub deployment with all options
+var page = await htmlHosting.CreateWithGithubFileAsync(new CreateHtmlPageGithubRequest
+{
+    Name = "Open Source Landing Page",
+    GithubInfo = new GithubInfo
+    {
+        FileURL = "https://github.com/Netflix/netflix.github.com/blob/master/index.html"
+    },
+    CustomLandingId = "oss-project",
+    IsEnableMonetization = false, // No ads on this page
+    Tag = "open-source",
+    RefId = "github-deploy-001"
+});
+```
+
+---
+
+### Retrieving HTML Pages
+
+#### GetAsync
+
+Retrieve details of a specific HTML page by ID.
+
+**Parameters:**
+
+- `id` (string): The unique page ID
+
+**Returns:** `Task<HtmlPageModel>` - Complete page details
+
+**Example:**
+
+```csharp
+var page = await htmlHosting.GetAsync("page-id-123");
+
+Console.WriteLine($"Page Name: {page.Name}");
+Console.WriteLine($"URL: {page.ShorterLink}");
+Console.WriteLine($"Created: {page.CreatedAt}");
+
+if (page.SourceType == "github")
+{
+    Console.WriteLine($"GitHub URL: {page.GithubInfo?.FileURL}");
 }
 ```
 
-#### 2. List Pages with Filters
+---
+
+#### ListAsync
+
+Search and filter HTML pages with pagination.
+
+**Parameters:**
+
+- `listParams` (ListHtmlPagesParams, optional): Filter criteria
+  - `Name` (string): Search by page name
+  - `SourceType` (string): Filter by source type ('file' or 'github')
+  - `Tag` (string): Filter by tag
+  - `RefId` (string): Filter by reference ID
+  - `IsEnableMonetization` (bool?): Filter by monetization status
+  - `AutoSaveInGoogleSheet` (bool?): Filter by Google Sheets integration
+  - `IsTemp` (bool?): Filter temporary pages
+- `pagination` (PaginationParams, optional): Pagination options
+  - `PageNumber` (int): Page number (default: 1) -- *Note: C# uses PageNumber vs TS 'page'*
+  - `PageSize` (int): Items per page (default: 10)
+
+**Returns:** `Task<PaginationResponse<HtmlPageModel>>`
+
+**Example:**
 
 ```csharp
-var pages = await client.ListAsync(
-    new ListHtmlPagesParams
-    {
-        Tag = "product-pages",
-        SourceType = "file",
-        IsEnableMonetization = true
-    },
-    new PaginationParams
-    {
-        Page = 1,
-        PageSize = 20
-    }
+// Get all pages with pagination
+var result = await htmlHosting.ListAsync(
+    null,
+    new PaginationParams { PageNumber = 1, PageSize = 20 }
 );
 
-Console.WriteLine($"Total: {pages.Total}");
-foreach (var page in pages.Data)
+Console.WriteLine($"Found {result.Pagination.TotalItems} pages");
+foreach (var page in result.Data)
 {
     Console.WriteLine($"- {page.Name}: {page.ShorterLink}");
 }
 ```
 
-#### 3. Search by Name
+```csharp
+// Search by name
+var result = await htmlHosting.ListAsync(
+    new ListHtmlPagesParams { Name = "landing" },
+    new PaginationParams { PageNumber = 1, PageSize = 10 }
+);
+```
 
 ```csharp
-var pages = await client.ListAsync(
-    new ListHtmlPagesParams
+// Filter by multiple criteria
+var filtered = await htmlHosting.ListAsync(new ListHtmlPagesParams
+{
+    SourceType = "file", // Only uploaded files
+    IsEnableMonetization = true, // Only monetized pages
+    Tag = "marketing" // Tagged as 'marketing'
+});
+```
+
+```csharp
+// Get pages by your reference ID
+var myPages = await htmlHosting.ListAsync(new ListHtmlPagesParams
+{
+    RefId = "campaign-2024-q1"
+});
+```
+
+---
+
+#### LookupAsync
+
+Get a simplified list of pages (ID and name only). Useful for dropdowns and selection lists.
+
+**Returns:** `Task<List<HtmlPageLookupItem>>` - List of objects with Id and Name.
+
+**Example:**
+
+```csharp
+var pages = await htmlHosting.LookupAsync();
+
+// Use in a dropdown or list
+foreach (var page in pages)
+{
+    Console.WriteLine($"ID: {page.Id}, Name: {page.Name}");
+}
+```
+
+---
+
+#### LookupFormsAsync
+
+Get form IDs detected in an HTML page (useful for form submission tracking).
+
+**Parameters:**
+
+- `id` (string): HTML page ID
+
+**Returns:** `Task<List<FormLookupItem>>` - List of form information
+
+**Example:**
+
+```csharp
+var forms = await htmlHosting.LookupFormsAsync("page-id-123");
+
+Console.WriteLine($"Found {forms.Count} forms on this page");
+foreach (var form in forms)
+{
+    Console.WriteLine($"Form ID: {form.Id}, Name: {form.Name}");
+}
+```
+
+---
+
+### Updating HTML Pages
+
+#### UpdateWithFileAsync
+
+Update an existing page with a new HTML file.
+
+**Parameters:**
+
+- `id` (string): Page ID to update
+- `data` (UpdateHtmlPageFileRequest): Update configuration
+  - `Name` (string?): New page name
+  - `FileName` (string): New file name
+  - `CustomLandingId` (string?): New custom URL
+  - `IsEnableMonetization` (bool?): Toggle monetization
+  - `AutoSaveInGoogleSheet` (bool?): Toggle Google Sheets
+  - `Tag` (string?): New tag
+  - `RefId` (string?): New reference ID
+- `fileStream` (Stream): New HTML file content stream
+
+**Returns:** `Task<HtmlPageFileResponse>`
+
+**Example:**
+
+```csharp
+var updatedContent = "<html><body><h1>Content has been updated!</h1></body></html>";
+using var fileStream = new MemoryStream(Encoding.UTF8.GetBytes(updatedContent));
+
+var updated = await htmlHosting.UpdateWithFileAsync(
+    "page-id-123",
+    new UpdateHtmlPageFileRequest
     {
-        Name = "Landing"
+        Name = "Updated Landing Page",
+        FileName = "landing-v2.html"
+    },
+    fileStream
+);
+
+Console.WriteLine($"Updated URL: {updated.ShorterLink}");
+```
+
+---
+
+#### UpdateWithGithubFileAsync
+
+Update a page to use a different GitHub file or update GitHub settings.
+
+**Parameters:**
+
+- `id` (string): Page ID to update
+- `data` (UpdateHtmlPageGithubRequest): Update configuration
+  - `Name` (string?): New page name
+  - `GithubInfo` (GithubInfo): New GitHub file information
+  - ... other optional fields same as create
+
+**Returns:** `Task<HtmlPageGithubResponse>`
+
+**Example:**
+
+```csharp
+var updated = await htmlHosting.UpdateWithGithubFileAsync(
+    "page-id-123",
+    new UpdateHtmlPageGithubRequest
+    {
+        Name = "Updated from GitHub",
+        GithubInfo = new GithubInfo
+        {
+            FileURL = "https://github.com/username/repo/blob/main/updated.html"
+        },
+        IsEnableMonetization = false
     }
 );
 ```
 
-#### 4. Get Lookup List (for Dropdowns)
+---
+
+### Page Operations
+
+#### CleanCacheAsync
+
+Clear the cache for a page to force fresh content delivery. Useful after updating content.
+
+**Parameters:**
+
+- `id` (string): HTML page ID
+
+**Returns:** `Task`
+
+**Example:**
 
 ```csharp
-var lookupItems = await client.LookupAsync();
-
-foreach (var item in lookupItems)
-{
-    Console.WriteLine($"{item.Id}: {item.Name}");
-}
-```
-
-#### 5. Get Form IDs
-
-```csharp
-var forms = await client.LookupFormsAsync("page-id");
-
-foreach (var form in forms)
-{
-    Console.WriteLine($"Form ID: {form.FormId}");
-    Console.WriteLine($"Fields: {string.Join(", ", form.FormFields)}");
-}
-```
-
-### Deleting and Cache Management
-
-#### 1. Delete a Page
-
-```csharp
-await client.DeleteAsync("page-id");
-Console.WriteLine("Page deleted successfully");
-```
-
-#### 2. Clear Cache
-
-```csharp
-await client.CleanCacheAsync("page-id");
+// Clear cache after updating external content
+await htmlHosting.CleanCacheAsync("page-id-123");
 Console.WriteLine("Cache cleared - fresh content will be served");
 ```
 
-## Advanced Usage
+---
 
-### Custom Landing IDs (Branded URLs)
+#### DeleteAsync
+
+Permanently delete an HTML page.
+
+**Parameters:**
+
+- `id` (string): HTML page ID to delete
+
+**Returns:** `Task`
+
+**Example:**
 
 ```csharp
-var result = await client.CreateWithFileAsync(
-    new CreateHtmlPageFileRequest 
-    { 
-        Name = "Premium Page",
-        FileName = "index.html",
-        CustomLandingId = "my-custom-id" // Max 32 characters, paid plans only
-    },
-    fileStream
-);
-
-// Results in URL like: https://posty5.com/my-custom-id
+await htmlHosting.DeleteAsync("page-id-123");
+Console.WriteLine("Page deleted successfully");
 ```
 
-### Monetization Support
+---
+
+## 🔒 Error Handling
+
+All methods may throw exceptions from `Posty5.Core.Exceptions`. Handle them appropriately:
 
 ```csharp
-var result = await client.CreateWithFileAsync(
-    new CreateHtmlPageFileRequest 
-    { 
-        Name = "Monetized Page",
-        FileName = "index.html",
-        IsEnableMonetization = true // Enable revenue sharing
-    },
-    fileStream
-);
-```
+using Posty5.Core.Exceptions;
 
-### Google Sheets Auto-Save
-
-```csharp
-var result = await client.CreateWithFileAsync(
-    new CreateHtmlPageFileRequest 
-    { 
-        Name = "Form Page",
-        FileName = "contact-form.html",
-        AutoSaveInGoogleSheet = true // Form submissions auto-saved to Google Sheets
-    },
-    fileStream
-);
-```
-
-### Tracking with RefId and Tags
-
-```csharp
-// Use RefId to link to your internal system
-// Use Tag for categorization and filtering
-var result = await client.CreateWithFileAsync(
-    new CreateHtmlPageFileRequest 
-    { 
-        Name = "Campaign Page",
-        FileName = "index.html",
-        RefId = "campaign-2024-Q1",
-        Tag = "marketing-campaigns"
-    },
-    fileStream
-);
-
-// Later, filter by tag
-var campaignPages = await client.ListAsync(
-    new ListHtmlPagesParams { Tag = "marketing-campaigns" }
-);
-```
-
-## API Reference
-
-### Methods
-
-| Method | Description | Returns |
-|--------|-------------|---------|
-| `CreateWithFileAsync()` | Create page with file upload | `HtmlPageFileResponse` |
-| `CreateWithGithubFileAsync()` | Create page from GitHub | `HtmlPageGithubResponse` |
-| `GetAsync()` | Get page by ID | `HtmlPageModel` |
-| `ListAsync()` | List/search pages | `PaginationResponse<HtmlPageModel>` |
-| `LookupAsync()` | Get simplified list | `List<HtmlPageLookupItem>` |
-| `LookupFormsAsync()` | Get form IDs | `List<FormLookupItem>` |
-| `UpdateWithFileAsync()` | Update with new file | `HtmlPageFileResponse` |
-| `UpdateWithGithubFileAsync()` | Update from GitHub | `HtmlPageGithubResponse` |
-| `DeleteAsync()` | Delete page | `Task` |
-| `CleanCacheAsync()` | Clear page cache | `Task` |
-
-### Models
-
-- **`HtmlPageModel`** - Full page details with all fields
-- **`CreateHtmlPageFileRequest`** - Request for file-based creation
-- **`CreateHtmlPageGithubRequest`** - Request for GitHub-based creation
-- **`UpdateHtmlPageFileRequest`** - Request for file-based update
-- **`UpdateHtmlPageGithubRequest`** - Request for GitHub-based update
-- **`ListHtmlPagesParams`** - Filter parameters for listing
-- **`HtmlPageFileResponse`** - Simplified response for file operations
-- **`HtmlPageGithubResponse`** - Simplified response for GitHub operations
-- **`HtmlPageLookupItem`** - Lightweight model for dropdowns
-- **`FormLookupItem`** - Form information
-
-## Stream Handling
-
-The SDK uses `Stream` for file uploads, giving you flexibility in how you provide content:
-
-```csharp
-// From file
-using var fileStream = File.OpenRead("page.html");
-
-// From string
-var content = "<html>...</html>";
-using var memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(content));
-
-// From byte array
-var bytes = GetHtmlBytes();
-using var byteStream = new MemoryStream(bytes);
-
-// From HTTP response
-var httpContent = await httpClient.GetAsync("https://example.com/page.html");
-using var stream = await httpContent.Content.ReadAsStreamAsync();
-
-// All work with CreateWithFileAsync
-await client.CreateWithFileAsync(request, stream);
-```
-
-## Error Handling
-
-```csharp
 try
 {
-    var result = await client.CreateWithFileAsync(request, fileStream);
+    var page = await htmlHosting.GetAsync("invalid-id");
 }
-catch (InvalidOperationException ex)
+catch (Posty5AuthenticationException ex)
 {
-    // Handle API errors (e.g., page not found, invalid upload config)
-    Console.WriteLine($"Operation failed: {ex.Message}");
+    Console.WriteLine("Invalid API key");
 }
-catch (HttpRequestException ex)
+catch (Posty5NotFoundException ex)
 {
-    // Handle network errors
-    Console.WriteLine($"Network error: {ex.Message}");
+    Console.WriteLine("Page not found");
+}
+catch (Posty5ValidationException ex)
+{
+    Console.WriteLine($"Invalid data: {ex.Message}");
+}
+catch (Posty5RateLimitException ex)
+{
+    Console.WriteLine("Rate limit exceeded");
+}
+catch (Posty5Exception ex)
+{
+    Console.WriteLine($"Unexpected error: {ex.Message}");
 }
 ```
 
-## Source Types
+---
 
-The SDK supports two source types:
+## 📖 Resources
 
-- **`file`** - HTML files uploaded to R2 storage
-- **`github`** - HTML files fetched from GitHub repositories
+- **Official Guides**: [https://guide.posty5.com](https://guide.posty5.com)
+- **API Reference**: [https://docs.posty5.com](https://docs.posty5.com)
+- **Source Code**: [https://github.com/Posty5/dotnet-sdk](https://github.com/Posty5/dotnet-sdk)
 
-Pages maintain their source type throughout their lifecycle.
+---
 
-## Status Values
+## 📦 Packages
 
-Pages can have various status values:
-- `new` - Newly created
-- `pending` - Under review
-- `approved` - Live and accessible
-- `rejected` - Not approved for publication
-- `fileIsNotFound` - Source file not found (GitHub only)
+This SDK ecosystem contains the following tool packages:
 
-## Related Packages
+| Package | Description | Version | NuGet |
+| --- | --- | --- | --- |
+| [Posty5.Core](../Posty5.Core) | Core HTTP client and models | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.Core) |
+| [Posty5.ShortLink](../Posty5.ShortLink) | URL shortener client | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.ShortLink) |
+| [Posty5.QRCode](../Posty5.QRCode) | QR code generator client | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.QRCode) |
+| [Posty5.HtmlHosting](../Posty5.HtmlHosting) | HTML hosting client | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHosting) |
+| [Posty5.HtmlHostingVariables](../Posty5.HtmlHostingVariables) | Variable management | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHostingVariables) |
+| [Posty5.HtmlHostingFormSubmission](../Posty5.HtmlHostingFormSubmission) | Form submission management | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHostingFormSubmission) |
+| [Posty5.SocialPublisherWorkspace](../Posty5.SocialPublisherWorkspace) | Social workspace management | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.SocialPublisherWorkspace) |
+| [Posty5.SocialPublisherTask](../Posty5.SocialPublisherTask) | Social publishing task client | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.SocialPublisherTask) |
 
-- **Posty5.Core** - Core functionality and HTTP client
-- **Posty5.ShortLink** - Short link management
-- **Posty5.QRCode** - QR code generation and management
+---
 
-## Support
+## 🆘 Support
 
-- **Documentation**: [https://posty5.com/docs](https://posty5.com/docs)
-- **API Reference**: [https://posty5.com/api](https://posty5.com/api)
-- **GitHub**: [https://github.com/posty5/dotnet-sdk](https://github.com/posty5/dotnet-sdk)
+MIT License - see [LICENSE](../../LICENSE) file for details.
 
-## License
+---
 
-MIT License - see LICENSE file for details
+Made with ❤️ by the Posty5 team

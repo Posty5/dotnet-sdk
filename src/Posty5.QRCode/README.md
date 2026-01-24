@@ -1,160 +1,328 @@
 # Posty5.QRCode
 
-QR Code management client for the Posty5 .NET SDK. Create and manage dynamic QR codes for email, WiFi, phone calls, SMS, URLs, geolocation, and free text.
+Generate and manage customizable QR codes for multiple use cases with the .NET SDK. This package provides a complete C# client for creating professional QR codes with template support, analytics tracking, and dynamic content management.
 
-## Features
+---
 
-- ✅ Create and manage QR codes for multiple content types
-- ✅ Full async/await support with cancellation tokens
-- ✅ Strongly typed request and response models
-- ✅ Comprehensive XML documentation
-- ✅ Support for custom templates and landing pages
-- ✅ Built-in monetization support
-- ✅ Filtering and pagination for QR code listings
+## 🌟 What is Posty5?
 
-## Installation
+**Posty5** is a comprehensive suite of free online tools designed to enhance your digital marketing and social media presence. With over 4+ powerful tools and counting, Posty5 provides everything you need to:
+
+- 🔗 **Shorten URLs** - Create memorable, trackable short links
+- 📱 **Generate QR Codes** - Transform URLs, WiFi credentials, contact cards, and more into scannable codes
+- 🌐 **Host HTML Pages** - Deploy static HTML pages with dynamic variables and form submission handling
+- 📢 **Automate Social Media** - Schedule and manage social media posts across multiple platforms
+- 📊 **Track Performance** - Monitor and analyze your digital marketing efforts
+
+Posty5 empowers businesses, marketers, and developers to streamline their online workflows—all from a unified control panel.
+
+**Learn more:** [https://posty5.com](https://posty5.com)
+
+---
+
+## 📦 About This Package
+
+`Posty5.QRCode` is a **specialized tool package** for generating and managing QR codes on the Posty5 platform. It enables developers to build QR code solutions for marketing campaigns, contactless interactions, WiFi sharing, and more.
+
+### Key Capabilities
+
+- **📱 7 QR Code Types** - URL, Free Text, Email, WiFi, SMS, Phone Call, and Geolocation
+- **🎨 Template Support** - Apply professional templates for branded QR codes
+- **🔄 Dynamic QR Codes** - Update QR code content without changing the code itself
+- **📊 Analytics Tracking** - Monitor scans, visitor counts, and last visitor dates
+- **🏷️ Tag & Reference Support** - Organize QR codes with custom tags and reference IDs
+- **🎯 Landing Pages** - Each QR code gets a custom landing page URL
+- **🔗 Short Links** - Automatic short URL generation for easy sharing
+- **🔍 Advanced Filtering** - Search and filter by name, status, tag, or reference ID
+- **📝 CRUD Operations** - Complete create, read, update, delete operations
+- **🔐 API Key Filtering** - Scope resources by API key for multi-tenant applications
+- **📈 Pagination Support** - Efficiently handle large QR code collections
+
+### Role in the Posty5 Ecosystem
+
+This package works seamlessly with other Posty5 SDK packages:
+
+- Generate QR codes that link to `Posty5.ShortLink` shortened URLs
+- Create QR codes pointing to `Posty5.HtmlHosting` hosted pages
+- Build comprehensive marketing campaigns with tracking and analytics
+
+---
+
+## 📥 Installation
+
+Install via NuGet Package Manager:
 
 ```bash
 dotnet add package Posty5.QRCode
 ```
 
-## Quick Start
+Or via Package Manager Console:
+
+```powershell
+Install-Package Posty5.QRCode
+```
+
+---
+
+## 🚀 Quick Start
+
+Here's a minimal example to get you started:
 
 ```csharp
+using Posty5.Core.Configuration;
 using Posty5.Core.Http;
 using Posty5.QRCode;
 using Posty5.QRCode.Models;
 
-// Initialize HTTP client
-var httpClient = new Posty5HttpClient(new Posty5HttpClientOptions
+// Initialize the HTTP client with your API key
+var options = new Posty5Options
 {
-    BaseUrl = "https://api.posty5.com",
-    ApiKey = "your-api-key"
-});
+    ApiKey = "your-api-key" // Get from https://studio.posty5.com/account/settings?tab=APIKeys
+};
+var httpClient = new Posty5HttpClient(options);
 
-// Create QR Code client
-var qrCodeClient = new QRCodeClient(httpClient);
+// Create the QR Code client
+var qrCodes = new QRCodeClient(httpClient);
 
 // Create a URL QR code
-var qrCode = await qrCodeClient.CreateURLAsync(new CreateURLQRCodeRequest
+var qrCode = await qrCodes.CreateURLAsync(new CreateURLQRCodeRequest
 {
-    Name = "My Website",
-    TemplateId = "template_123",
+    Name = "Website QR Code",
+    TemplateId = "template-123", // Optional: Use a template for branding
+    Url = new QRCodeUrlTarget
+    {
+        Url = "https://posty5.com"
+    },
+    Tag = "marketing", // Optional: For organization
+    RefId = "CAMPAIGN-001" // Optional: External reference
+});
+
+Console.WriteLine($"QR Code Landing Page: {qrCode.QrCodeLandingPageURL}");
+Console.WriteLine($"Short Link: {qrCode.ShorterLink}");
+Console.WriteLine($"QR Code ID: {qrCode.Id}");
+
+// List all QR codes
+var allQRCodes = await qrCodes.ListAsync(
+    null,
+    new PaginationParams { PageNumber = 1, PageSize = 20 }
+);
+
+Console.WriteLine($"Total QR codes: {allQRCodes.Pagination.TotalCount}");
+foreach (var qr in allQRCodes.Data)
+{
+    Console.WriteLine($"{qr.Name}: {qr.NumberOfVisitors} scans");
+}
+```
+
+---
+
+## 📚 API Reference & Examples
+
+### Creating QR Codes
+
+The SDK supports 7 different QR code types. Each type has its own creation method with type-specific parameters.
+
+---
+
+#### CreateURLAsync
+
+Create a URL QR code that redirects users to a website when scanned.
+
+**Parameters:**
+
+- `data` (CreateURLQRCodeRequest): QR code data
+  - `Name` (string, **required**): Human-readable name
+  - `TemplateId` (string, **required**): Template ID for styling
+  - `Url` (QRCodeUrlTarget, **required**):
+    - `Url` (string): Target website URL
+  - `Tag` (string?): Custom tag
+  - `RefId` (string?): External reference ID
+
+**Returns:** `Task<QRCodeModel>` - Created QR code details
+
+**Example:**
+
+```csharp
+var qrCode = await qrCodes.CreateURLAsync(new CreateURLQRCodeRequest
+{
+    Name = "Company Website",
+    TemplateId = "template-123",
     Url = new QRCodeUrlTarget { Url = "https://example.com" }
 });
 
-Console.WriteLine($"QR Code Created: {qrCode.QrCodeLandingPageURL}");
-Console.WriteLine($"Short Link: {qrCode.ShorterLink}");
+Console.WriteLine($"Scan this: {qrCode.QrCodeLandingPageURL}");
 ```
 
-## Supported QR Code Types
+---
 
-### 1. Free Text QR Code
+#### CreateFreeTextAsync
 
-Encode any custom text content.
+Create a free text QR code with any custom text content.
+
+**Parameters:**
+
+- `data` (CreateFreeTextQRCodeRequest): QR code data
+  - `Name`, `TemplateId`...
+  - `Text` (string, **required**): Custom text to encode
+
+**Returns:** `Task<QRCodeModel>`
+
+**Example:**
 
 ```csharp
-var qrCode = await qrCodeClient.CreateFreeTextAsync(new CreateFreeTextQRCodeRequest
+var textQR = await qrCodes.CreateFreeTextAsync(new CreateFreeTextQRCodeRequest
 {
-    Name = "Custom Text QR",
-    TemplateId = "template_123",
-    Text = "Any custom text you want to encode"
+    Name = "Product Serial #12345",
+    TemplateId = "template-123",
+    Text = "SN:12345-ABCDE-67890",
+    Tag = "inventory"
 });
 ```
 
-### 2. Email QR Code
+---
 
-Opens the default email client with pre-filled data.
+#### CreateEmailAsync
+
+Create an email QR code that opens the default email client.
+
+**Parameters:**
+
+- `data` (CreateEmailQRCodeRequest): QR code data
+  - `Email` (QRCodeEmailTarget):
+    - `Email` (string): Recipient email
+    - `Subject` (string): Subject line
+    - `Body` (string): Email body
+
+**Returns:** `Task<QRCodeModel>`
+
+**Example:**
 
 ```csharp
-var qrCode = await qrCodeClient.CreateEmailAsync(new CreateEmailQRCodeRequest
+var supportQR = await qrCodes.CreateEmailAsync(new CreateEmailQRCodeRequest
 {
-    Name = "Contact Us",
-    TemplateId = "template_123",
+    Name = "Contact Support",
+    TemplateId = "template-123",
     Email = new QRCodeEmailTarget
     {
-        Email = "contact@example.com",
-        Subject = "Inquiry from QR Code",
-        Body = "Hello, I would like to know more about..."
+        Email = "support@example.com",
+        Subject = "Support Request",
+        Body = "I need help with..."
     }
 });
 ```
 
-### 3. WiFi QR Code
+---
 
-Connect to WiFi networks instantly.
+#### CreateWifiAsync
+
+Create a WiFi QR code for network connection.
+
+**Parameters:**
+
+- `data` (CreateWifiQRCodeRequest): QR code data
+  - `Wifi` (QRCodeWifiTarget):
+    - `Name` (string): SSID
+    - `AuthenticationType` (string): 'WPA', 'WEP', or 'nopass'
+    - `Password` (string): Network password
+
+**Returns:** `Task<QRCodeModel>`
+
+**Example:**
 
 ```csharp
-var qrCode = await qrCodeClient.CreateWifiAsync(new CreateWifiQRCodeRequest
+var wifiQR = await qrCodes.CreateWifiAsync(new CreateWifiQRCodeRequest
 {
     Name = "Office WiFi",
-    TemplateId = "template_123",
+    TemplateId = "template-123",
     Wifi = new QRCodeWifiTarget
     {
-        Name = "OfficeNetwork",
+        Name = "OfficeNetwork-5G",
         AuthenticationType = "WPA",
-        Password = "secret123"
+        Password = "SecurePassword123!"
     }
 });
 ```
 
-### 4. Phone Call QR Code
+---
 
-Initiates a phone call when scanned.
+#### CreateCallAsync
+
+Create a phone call QR code.
+
+**Parameters:**
+
+- `data` (CreateCallQRCodeRequest): QR code data
+  - `Call` (QRCodeCallTarget):
+    - `PhoneNumber` (string): Phone number to call
+
+**Returns:** `Task<QRCodeModel>`
+
+**Example:**
 
 ```csharp
-var qrCode = await qrCodeClient.CreateCallAsync(new CreateCallQRCodeRequest
+var hotlineQR = await qrCodes.CreateCallAsync(new CreateCallQRCodeRequest
 {
-    Name = "Call Support",
-    TemplateId = "template_123",
+    Name = "Customer Service",
+    TemplateId = "template-123",
     Call = new QRCodeCallTarget
     {
-        PhoneNumber = "+1234567890"
+        PhoneNumber = "+1-800-123-4567"
     }
 });
 ```
 
-### 5. SMS QR Code
+---
 
-Opens messaging app with pre-filled text.
+#### CreateSMSAsync
+
+Create an SMS QR code.
+
+**Parameters:**
+
+- `data` (CreateSMSQRCodeRequest): QR code data
+  - `Sms` (QRCodeSmsTarget):
+    - `PhoneNumber` (string): Recipient number
+    - `Message` (string): Message text
+
+**Returns:** `Task<QRCodeModel>`
+
+**Example:**
 
 ```csharp
-var qrCode = await qrCodeClient.CreateSMSAsync(new CreateSMSQRCodeRequest
+var smsQR = await qrCodes.CreateSMSAsync(new CreateSMSQRCodeRequest
 {
-    Name = "Text Us",
-    TemplateId = "template_123",
+    Name = "Join Contest",
+    TemplateId = "template-123",
     Sms = new QRCodeSmsTarget
     {
-        PhoneNumber = "+1234567890",
-        Message = "I scanned your QR code!"
+        PhoneNumber = "+1-555-CONTEST",
+        Message = "ENTER 2026"
     }
 });
 ```
 
-### 6. URL QR Code
+---
 
-Redirects to any website.
+#### CreateGeolocationAsync
 
-```csharp
-var qrCode = await qrCodeClient.CreateURLAsync(new CreateURLQRCodeRequest
-{
-    Name = "Website Link",
-    TemplateId = "template_123",
-    Url = new QRCodeUrlTarget { Url = "https://example.com" },
-    Tag = "marketing",
-    RefId = "CAMPAIGN-001"
-});
-```
+Create a map location QR code.
 
-### 7. Geolocation QR Code
+**Parameters:**
 
-Opens map application with specific coordinates.
+- `data` (CreateGeolocationQRCodeRequest): QR code data
+  - `Geolocation` (QRCodeGeolocationTarget):
+    - `Latitude` (string/double): Latitude
+    - `Longitude` (string/double): Longitude
+
+**Returns:** `Task<QRCodeModel>`
+
+**Example:**
 
 ```csharp
-var qrCode = await qrCodeClient.CreateGeolocationAsync(new CreateGeolocationQRCodeRequest
+var mapQR = await qrCodes.CreateGeolocationAsync(new CreateGeolocationQRCodeRequest
 {
-    Name = "Our Office Location",
-    TemplateId = "template_123",
+    Name = "Office Location",
+    TemplateId = "template-123",
     Geolocation = new QRCodeGeolocationTarget
     {
         Latitude = "40.7128",
@@ -163,200 +331,134 @@ var qrCode = await qrCodeClient.CreateGeolocationAsync(new CreateGeolocationQRCo
 });
 ```
 
-## Update QR Codes
+---
 
-All QR code types can be updated using their respective update methods:
+### Retrieving QR Codes
+
+#### GetAsync
+
+Retrieve complete details of a specific QR code by ID.
+
+**Example:**
 
 ```csharp
-var updatedQrCode = await qrCodeClient.UpdateURLAsync("qr_code_id", new UpdateURLQRCodeRequest
+var qrCode = await qrCodes.GetAsync("qr-code-id-123");
+Console.WriteLine($"Scans: {qrCode.NumberOfVisitors}");
+```
+
+---
+
+#### ListAsync
+
+Search and filter QR codes.
+
+**Parameters:**
+
+- `listParams` (ListQRCodesParams?, optional): Filter criteria
+  - `Name` (string?), `Status` (string?), `Tag` (string?), `RefId` (string?)
+- `pagination` (PaginationParams?, optional)
+
+**Example:**
+
+```csharp
+var marketingQRs = await qrCodes.ListAsync(new ListQRCodesParams
 {
-    Name = "Updated Website Link",
-    TemplateId = "template_123",
-    Url = new QRCodeUrlTarget { Url = "https://newexample.com" }
-});
-```
-
-## Get QR Code Details
-
-```csharp
-var qrCode = await qrCodeClient.GetAsync("qr_code_id");
-Console.WriteLine($"Name: {qrCode.Name}");
-Console.WriteLine($"Visitors: {qrCode.NumberOfVisitors}");
-Console.WriteLine($"Status: {qrCode.Status}");
-```
-
-## List QR Codes
-
-List all QR codes with optional filtering and pagination:
-
-```csharp
-// List all QR codes
-var allQrCodes = await qrCodeClient.ListAsync();
-
-// List with filters
-var filteredQrCodes = await qrCodeClient.ListAsync(
-    new ListQRCodesParams
-    {
-        Status = "approved",
-        Tag = "marketing",
-        IsEnableMonetization = true
-    },
-    new PaginationParams
-    {
-        Page = 1,
-        PageSize = 20
-    }
-);
-
-foreach (var qr in filteredQrCodes.Items)
-{
-    Console.WriteLine($"{qr.Name} - Visitors: {qr.NumberOfVisitors}");
-}
-```
-
-## Delete QR Code
-
-```csharp
-await qrCodeClient.DeleteAsync("qr_code_id");
-```
-
-## Advanced Features
-
-### Custom Landing Pages
-
-```csharp
-var qrCode = await qrCodeClient.CreateURLAsync(new CreateURLQRCodeRequest
-{
-    Name = "Custom Landing Page",
-    TemplateId = "template_123",
-    CustomLandingId = "my-custom-id", // Max 32 characters
-    Url = new QRCodeUrlTarget { Url = "https://example.com" }
-});
-```
-
-### Monetization
-
-Enable monetization to show ads before redirecting:
-
-```csharp
-var qrCode = await qrCodeClient.CreateURLAsync(new CreateURLQRCodeRequest
-{
-    Name = "Monetized Link",
-    TemplateId = "template_123",
-    IsEnableMonetization = true,
-    PageInfo = new QRCodePageInfo
-    {
-        Title = "Please Wait",
-        Description = "You will be redirected shortly..."
-    },
-    Url = new QRCodeUrlTarget { Url = "https://example.com" }
-});
-```
-
-### Reference ID and Tags
-
-Track QR codes with custom identifiers:
-
-```csharp
-var qrCode = await qrCodeClient.CreateURLAsync(new CreateURLQRCodeRequest
-{
-    Name = "Campaign QR Code",
-    TemplateId = "template_123",
-    RefId = "CAMPAIGN-2024-Q1",
     Tag = "marketing",
-    Url = new QRCodeUrlTarget { Url = "https://example.com" }
+    Status = "approved"
 });
 
-// Later, filter by reference ID or tag
-var campaignQrCodes = await qrCodeClient.ListAsync(
-    new ListQRCodesParams { RefId = "CAMPAIGN-2024-Q1" }
-);
+foreach (var qr in marketingQRs.Data)
+{
+    Console.WriteLine($"{qr.Name} - {qr.ShorterLink}");
+}
 ```
 
-## Error Handling
+---
+
+### Updating QR Codes
+
+Each type has a corresponding Update method.
+
+- `UpdateURLAsync(id, request)`
+- `UpdateFreeTextAsync(id, request)`
+- `UpdateEmailAsync(id, request)`
+- `UpdateWifiAsync(id, request)`
+- `UpdateCallAsync(id, request)`
+- `UpdateSMSAsync(id, request)`
+- `UpdateGeolocationAsync(id, request)`
+
+**Example (Update URL):**
+
+```csharp
+await qrCodes.UpdateURLAsync("qr-code-id-123", new UpdateURLQRCodeRequest
+{
+    Name = "Summer Sale - Extended",
+    TemplateId = "template-123",
+    Url = new QRCodeUrlTarget { Url = "https://example.com/extended" },
+    Tag = "summer-sale"
+});
+```
+
+---
+
+### Deleting QR Codes
+
+#### DeleteAsync
+
+**Example:**
+
+```csharp
+await qrCodes.DeleteAsync("qr-code-id-123");
+```
+
+---
+
+## 🔒 Error Handling
+
+Methods throw exceptions from `Posty5.Core.Exceptions`.
 
 ```csharp
 try
 {
-    var qrCode = await qrCodeClient.CreateURLAsync(new CreateURLQRCodeRequest
-    {
-        Name = "My QR Code",
-        TemplateId = "template_123",
-        Url = new QRCodeUrlTarget { Url = "https://example.com" }
-    });
+    await qrCodes.GetAsync("invalid-id");
 }
-catch (InvalidOperationException ex)
+catch (Posty5NotFoundException)
 {
-    Console.WriteLine($"Failed to create QR code: {ex.Message}");
-}
-catch (HttpRequestException ex)
-{
-    Console.WriteLine($"Network error: {ex.Message}");
+    Console.WriteLine("QR Code not found");
 }
 ```
 
-## Cancellation Token Support
+---
 
-All methods support cancellation tokens for better async control:
+## 📖 Resources
 
-```csharp
-using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+- **Official Guides**: [https://guide.posty5.com](https://guide.posty5.com)
+- **API Reference**: [https://docs.posty5.com](https://docs.posty5.com)
+- **Source Code**: [https://github.com/Posty5/dotnet-sdk](https://github.com/Posty5/dotnet-sdk)
 
-try
-{
-    var qrCode = await qrCodeClient.CreateURLAsync(
-        new CreateURLQRCodeRequest
-        {
-            Name = "My QR Code",
-            TemplateId = "template_123",
-            Url = new QRCodeUrlTarget { Url = "https://example.com" }
-        },
-        cts.Token
-    );
-}
-catch (OperationCanceledException)
-{
-    Console.WriteLine("Request was cancelled");
-}
-```
+---
 
-## API Reference
+## 📦 Packages
 
-### QRCodeClient Methods
+This SDK ecosystem contains the following tool packages:
 
-#### Create Methods
-- `CreateFreeTextAsync(CreateFreeTextQRCodeRequest, CancellationToken)` - Create free text QR code
-- `CreateEmailAsync(CreateEmailQRCodeRequest, CancellationToken)` - Create email QR code
-- `CreateWifiAsync(CreateWifiQRCodeRequest, CancellationToken)` - Create WiFi QR code
-- `CreateCallAsync(CreateCallQRCodeRequest, CancellationToken)` - Create phone call QR code
-- `CreateSMSAsync(CreateSMSQRCodeRequest, CancellationToken)` - Create SMS QR code
-- `CreateURLAsync(CreateURLQRCodeRequest, CancellationToken)` - Create URL QR code
-- `CreateGeolocationAsync(CreateGeolocationQRCodeRequest, CancellationToken)` - Create geolocation QR code
+| Package | Description | Version | NuGet |
+| --- | --- | --- | --- |
+| [Posty5.Core](../Posty5.Core) | Core HTTP client and models | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.Core) |
+| [Posty5.ShortLink](../Posty5.ShortLink) | URL shortener client | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.ShortLink) |
+| [Posty5.QRCode](../Posty5.QRCode) | QR code generator client | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.QRCode) |
+| [Posty5.HtmlHosting](../Posty5.HtmlHosting) | HTML hosting client | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHosting) |
+| [Posty5.HtmlHostingVariables](../Posty5.HtmlHostingVariables) | Variable management | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHostingVariables) |
+| [Posty5.HtmlHostingFormSubmission](../Posty5.HtmlHostingFormSubmission) | Form submission management | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHostingFormSubmission) |
+| [Posty5.SocialPublisherWorkspace](../Posty5.SocialPublisherWorkspace) | Social workspace management | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.SocialPublisherWorkspace) |
+| [Posty5.SocialPublisherTask](../Posty5.SocialPublisherTask) | Social publishing task client | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.SocialPublisherTask) |
 
-#### Update Methods
-- `UpdateFreeTextAsync(string, UpdateFreeTextQRCodeRequest, CancellationToken)` - Update free text QR code
-- `UpdateEmailAsync(string, UpdateEmailQRCodeRequest, CancellationToken)` - Update email QR code
-- `UpdateWifiAsync(string, UpdateWifiQRCodeRequest, CancellationToken)` - Update WiFi QR code
-- `UpdateCallAsync(string, UpdateCallQRCodeRequest, CancellationToken)` - Update phone call QR code
-- `UpdateSMSAsync(string, UpdateSMSQRCodeRequest, CancellationToken)` - Update SMS QR code
-- `UpdateURLAsync(string, UpdateURLQRCodeRequest, CancellationToken)` - Update URL QR code
-- `UpdateGeolocationAsync(string, UpdateGeolocationQRCodeRequest, CancellationToken)` - Update geolocation QR code
+---
 
-#### CRUD Methods
-- `GetAsync(string, CancellationToken)` - Get QR code by ID
-- `DeleteAsync(string, CancellationToken)` - Delete QR code
-- `ListAsync(ListQRCodesParams?, PaginationParams?, CancellationToken)` - List QR codes with filters
+## 📄 License
 
-## Dependencies
+MIT License - see [LICENSE](../../LICENSE) file for details.
 
-- **Posty5.Core** - Core HTTP client and models
+---
 
-## License
-
-MIT License
-
-## Support
-
-For issues, questions, or contributions, please visit:
-- Website: https://posty5.com
-- GitHub: https://github.com/posty5/dotnet-sdk
+Made with ❤️ by the Posty5 team

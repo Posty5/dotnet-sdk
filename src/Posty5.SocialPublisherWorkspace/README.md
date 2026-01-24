@@ -1,444 +1,320 @@
 # Posty5.SocialPublisherWorkspace
 
-Social Publisher Workspace management client for Posty5 .NET SDK. This package allows you to create and manage workspaces for social media publishing with multi-platform account integration (YouTube, Facebook, Instagram, TikTok).
+Official Posty5 SDK for managing social media publishing workspaces. Create, manage, and organize workspaces to group your social media accounts and streamline multi-platform content distribution in .NET.
 
-## Features
+---
 
-- 🏢 **Workspace Management**: Create, read, update, and delete workspaces
-- 🖼️ **Image Upload**: Optional workspace logo/image upload to R2 storage
-- 📱 **Multi-Platform**: Integration with YouTube, Facebook, Instagram, and TikTok
-- 🔍 **Advanced Filtering**: Search and filter workspaces by multiple criteria
-- 📊 **Pagination**: Efficient pagination for large workspace lists
-- 🏷️ **Tagging Support**: Organize workspaces with custom tags
+## 🌟 What is Posty5?
 
-## Installation
+**Posty5** is a comprehensive suite of free online tools designed to enhance your digital marketing and social media presence. With over 4+ powerful tools and counting, Posty5 provides everything you need to:
+
+- 🔗 **Shorten URLs** - Create memorable, trackable short links
+- 📱 **Generate QR Codes** - Transform URLs, WiFi credentials, contact cards, and more into scannable codes
+- 🌐 **Host HTML Pages** - Deploy static HTML pages with dynamic variables and form submission handling
+- 📢 **Automate Social Media** - Schedule and manage social media posts across multiple platforms
+- 📊 **Track Performance** - Monitor and analyze your digital marketing efforts
+
+Posty5 empowers businesses, marketers, and developers to streamline their online workflows—all from a unified control panel.
+
+**Learn more:** [https://posty5.com](https://posty5.com)
+
+---
+
+## 📦 About This Package
+
+`Posty5.SocialPublisherWorkspace` is the **workspace management client** for the Posty5 Social Media Publisher. This package enables you to programmatically create and manage workspaces (organizations) that group your social media accounts for streamlined content distribution.
+
+### Key Capabilities
+
+- **Create Workspaces** - Programmatically create new workspaces with custom names, descriptions, and logos
+- **List & Search** - Retrieve all workspaces with pagination, filtering, and search capabilities
+- **Update Workspaces** - Modify workspace details including name, description, and logo image
+- **Delete Workspaces** - Remove workspaces when no longer needed
+- **Tag & Reference System** - Organize workspaces using custom tags and reference IDs
+- **🔐 API Key Filtering** - Scope resources by API key for multi-tenant applications
+- **Account Management** - View connected social media accounts (YouTube, Facebook, Instagram, TikTok)
+- **Logo Upload** - Upload custom workspace logos with automatic image optimization
+
+---
+
+## 📥 Installation
+
+Install via NuGet Package Manager:
 
 ```bash
 dotnet add package Posty5.SocialPublisherWorkspace
 ```
 
-## Quick Start
+Or via Package Manager Console:
 
-```csharp
-using Posty5.Core;
-using Posty5.SocialPublisherWorkspace;
-
-// Initialize the client
-var config = new Posty5Config("your-api-key");
-var httpClient = new Posty5HttpClient(config);
-var client = new SocialPublisherWorkspaceClient(httpClient);
-
-// Create a workspace
-var workspaceId = await client.CreateAsync(new CreateWorkspaceRequest
-{
-    Name = "My Workspace",
-    Description = "Workspace for social media publishing"
-});
+```powershell
+Install-Package Posty5.SocialPublisherWorkspace
 ```
 
-## Usage Examples
+---
 
-### Creating Workspaces
+## 🚀 Quick Start
 
-#### Create Without Image
+Here's a minimal example to get you started:
 
 ```csharp
+using Posty5.Core.Configuration;
+using Posty5.Core.Http;
+using Posty5.SocialPublisherWorkspace;
+using Posty5.SocialPublisherWorkspace.Models;
+
+// Initialize the HTTP client with your API key
+var options = new Posty5Options
+{
+    ApiKey = "your-api-key" // Get from studio.posty5.com/account/settings?tab=APIKeys
+};
+var httpClient = new Posty5HttpClient(options);
+
+// Create workspace client
+var client = new SocialPublisherWorkspaceClient(httpClient);
+
+// Create a new workspace
 var workspaceId = await client.CreateAsync(new CreateWorkspaceRequest
 {
-    Name = "My Workspace",
-    Description = "Central hub for social media publishing",
-    Tag = "production"
+    Name = "My Brand Workspace",
+    Description = "Workspace for managing social media accounts",
+    Tag = "brand-2024",
+    RefId = "WORKSPACE-001"
+});
+
+Console.WriteLine($"Created workspace: {workspaceId}");
+
+// Get workspace details
+var workspace = await client.GetAsync(workspaceId);
+Console.WriteLine($"Workspace: {workspace.Name}");
+
+if (workspace.Account.YouTube != null)
+    Console.WriteLine($"Connected YouTube: {workspace.Account.YouTube.Name}");
+
+// List all workspaces
+var workspaces = await client.ListAsync(
+    null,
+    new PaginationParams { PageNumber = 1, PageSize = 10 }
+);
+
+Console.WriteLine($"Found {workspaces.Pagination.TotalCount} workspaces");
+```
+
+---
+
+## 📚 API Reference & Examples
+
+### CreateAsync
+
+Create a new social media workspace with optional logo image upload.
+
+**Parameters:**
+
+- `data` (CreateWorkspaceRequest): Workspace configuration
+  - `Name` (string): Workspace name
+  - `Description` (string): Workspace description
+  - `Tag` (string?): Custom tag for filtering
+  - `RefId` (string?): Your internal reference ID
+- `logoStream` (Stream?, optional): Logo image stream
+- `contentType` (string, optional): Image content type (default: "image/png")
+
+**Returns:** `Task<string>` - Created workspace ID
+
+**Example:**
+
+```csharp
+// Create workspace without logo
+var workspaceId = await client.CreateAsync(new CreateWorkspaceRequest
+{
+    Name = "Client A - Social Media",
+    Description = "Managing social accounts for Client A",
+    Tag = "client-a"
 });
 
 Console.WriteLine($"Workspace created: {workspaceId}");
-```
 
-#### Create With Image (Logo)
-
-```csharp
-using var logoStream = File.OpenRead("workspace-logo.png");
-
-var workspaceId = await client.CreateAsync(
+// Create workspace with logo upload
+using var logoStream = File.OpenRead("logo.png");
+var workspaceWithLogo = await client.CreateAsync(
     new CreateWorkspaceRequest
     {
-        Name = "Branded Workspace",
-        Description = "Workspace with custom branding",
-        Tag = "production",
-        RefId = "workspace-001"
+        Name = "Brand Workspace",
+        Description = "Workspace with custom branding"
     },
     logoStream,
     "image/png"
 );
-
-Console.WriteLine($"Workspace created with logo: {workspaceId}");
 ```
 
-#### Create With Image from Memory
+---
+
+### GetAsync
+
+Retrieve detailed information about a specific workspace by ID.
+
+**Parameters:**
+
+- `id` (string): Workspace ID
+
+**Returns:** `Task<WorkspaceModel>` - Workspace details including connected accounts
+
+**Example:**
 
 ```csharp
-byte[] imageBytes = await DownloadImageFromUrl("https://example.com/logo.png");
-using var memoryStream = new MemoryStream(imageBytes);
+var workspace = await client.GetAsync("workspace-id-here");
 
-var workspaceId = await client.CreateAsync(
-    new CreateWorkspaceRequest
-    {
-        Name = "Downloaded Logo Workspace",
-        Description = "Using downloaded image"
-    },
-    memoryStream,
-    "image/png"
-);
-```
+Console.WriteLine($"Workspace: {workspace.Name}");
 
-### Retrieving Workspaces
-
-#### Get Single Workspace
-
-```csharp
-var workspace = await client.GetAsync("workspace-id");
-
-Console.WriteLine($"Name: {workspace.Name}");
-Console.WriteLine($"ID: {workspace.Id}");
-
-// Check connected social media accounts
-if (workspace.Account.Youtube != null)
+// Check connected accounts
+if (workspace.Account.YouTube != null)
 {
-    Console.WriteLine($"YouTube: {workspace.Account.Youtube.Name}");
-    Console.WriteLine($"Status: {workspace.Account.Youtube.Status}");
+    Console.WriteLine($"YouTube channel: {workspace.Account.YouTube.Name}");
+    Console.WriteLine($"Status: {workspace.Account.YouTube.Status}");
 }
 
-if (workspace.Account.Facebook != null)
+if (workspace.Account.TikTok != null)
 {
-    Console.WriteLine($"Facebook: {workspace.Account.Facebook.Name}");
-}
-
-if (workspace.Account.Instagram != null)
-{
-    Console.WriteLine($"Instagram: {workspace.Account.Instagram.Name}");
-}
-
-if (workspace.Account.Tiktok != null)
-{
-    Console.WriteLine($"TikTok: {workspace.Account.Tiktok.Name}");
+    Console.WriteLine($"TikTok account: {workspace.Account.TikTok.Name}");
 }
 ```
 
-#### List All Workspaces
+---
+
+### ListAsync
+
+Search and retrieve workspaces with pagination and filtering options.
+
+**Parameters:**
+
+- `listParams` (ListWorkspacesParams?, optional): Search and filter options
+  - `Name` (string?), `Description` (string?), `Tag` (string?), `RefId` (string?)
+- `pagination` (PaginationParams?, optional)
+
+**Returns:** `Task<PaginationResponse<WorkspaceSampleDetails>>`
+
+**Example:**
 
 ```csharp
-var workspaces = await client.ListAsync(
-    pagination: new PaginationParams
-    {
-        Page = 1,
-        PageSize = 20
-    }
+// Get all workspaces
+var allWorkspaces = await client.ListAsync(
+    null,
+    new PaginationParams { PageNumber = 1, PageSize = 20 }
 );
 
-Console.WriteLine($"Total Workspaces: {workspaces.Total}");
-foreach (var workspace in workspaces.Items)
+foreach (var ws in allWorkspaces.Data)
 {
-    Console.WriteLine($"- {workspace.Name}: {workspace.Description}");
-    if (!string.IsNullOrEmpty(workspace.ImageUrl))
-    {
-        Console.WriteLine($"  Logo: {workspace.ImageUrl}");
-    }
+    Console.WriteLine($"- {ws.Name}: {ws.Description}");
 }
-```
 
-### Filtering Workspaces
-
-#### Filter by Name
-
-```csharp
-var workspaces = await client.ListAsync(
-    new ListWorkspacesParams
-    {
-        Name = "Marketing"
-    }
-);
-```
-
-#### Filter by Tag
-
-```csharp
-var productionWorkspaces = await client.ListAsync(
-    new ListWorkspacesParams
-    {
-        Tag = "production"
-    }
-);
-```
-
-#### Multiple Filters
-
-```csharp
-var workspaces = await client.ListAsync(
-    new ListWorkspacesParams
-    {
-        Tag = "client-work",
-        Name = "Agency"
-    },
-    new PaginationParams { Page = 1, PageSize = 10 }
-);
-```
-
-### Updating Workspaces
-
-#### Update Without Changing Image
-
-```csharp
-await client.UpdateAsync("workspace-id", new UpdateWorkspaceRequest
+// Search by name
+var searchResults = await client.ListAsync(new ListWorkspacesParams
 {
-    Name = "Updated Workspace Name",
-    Description = "Updated description",
-    Tag = "updated-tag"
+    Name = "brand"
 });
 ```
 
-#### Update With New Image
+---
+
+### UpdateAsync
+
+Update workspace details including name, description, and optional logo image.
+
+**Parameters:**
+
+- `id` (string): Workspace ID to update
+- `data` (UpdateWorkspaceRequest): Updated workspace data
+  - `Name`, `Description`, `Tag`, `RefId`
+- `logoStream` (Stream?, optional): New logo image stream
+- `contentType` (string, optional)
+
+**Returns:** `Task`
+
+**Example:**
 
 ```csharp
-using var newLogo = File.OpenRead("new-logo.png");
+// Update details
+await client.UpdateAsync("workspace-id", new UpdateWorkspaceRequest
+{
+    Name = "Updated Workspace Name",
+    Description = "New description"
+});
 
+// Update with new logo
+using var newLogoStream = File.OpenRead("new-logo.png");
 await client.UpdateAsync(
     "workspace-id",
-    new UpdateWorkspaceRequest
-    {
-        Name = "Rebranded Workspace",
-        Description = "With new branding"
-    },
-    newLogo,
-    "image/png"
+    new UpdateWorkspaceRequest { Name = "Workspace", Description = "Desc" },
+    newLogoStream
 );
 ```
 
-### Deleting Workspaces
+---
+
+### DeleteAsync
+
+Delete a workspace.
+
+**Parameters:**
+
+- `id` (string): Workspace ID to delete
+
+**Returns:** `Task`
+
+**Example:**
 
 ```csharp
-await client.DeleteAsync("workspace-id");
+await client.DeleteAsync("workspace-id-to-delete");
 Console.WriteLine("Workspace deleted successfully");
 ```
 
-## Common Use Cases
+---
 
-### Agency Management
+## 🔒 Error Handling
 
-Organize client workspaces:
-
-```csharp
-// Create workspace for each client
-var clientWorkspaces = new[]
-{
-    new { Name = "Client A - Social Media", Tag = "client-a" },
-    new { Name = "Client B - Marketing", Tag = "client-b" },
-    new { Name = "Client C - Brand Management", Tag = "client-c" }
-};
-
-foreach (var client in clientWorkspaces)
-{
-    var id = await workspaceClient.CreateAsync(new CreateWorkspaceRequest
-    {
-        Name = client.Name,
-        Description = $"Workspace for {client.Tag}",
-        Tag = client.Tag
-    });
-    
-    Console.WriteLine($"Created workspace for {client.Name}: {id}");
-}
-```
-
-### Multi-Brand Management
-
-Manage multiple brands from one account:
-
-```csharp
-var brands = new[]
-{
-    new { Name = "Brand X", Logo = "brand-x-logo.png", RefId = "brand-x-001" },
-    new { Name = "Brand Y", Logo = "brand-y-logo.png", RefId = "brand-y-001" }
-};
-
-foreach (var brand in brands)
-{
-    using var logoStream = File.OpenRead(brand.Logo);
-    
-    var workspaceId = await client.CreateAsync(
-        new CreateWorkspaceRequest
-        {
-            Name = brand.Name,
-            Description = $"Official {brand.Name} workspace",
-            RefId = brand.RefId
-        },
-        logoStream
-    );
-}
-```
-
-## API Reference
-
-### Methods
-
-| Method | Description | Returns |
-|--------|-------------|---------|
-| `ListAsync()` | List/search workspaces | `PaginationResponse<WorkspaceSampleDetails>` |
-| `GetAsync()` | Get workspace by ID | `WorkspaceModel` |
-| `CreateAsync()` | Create with optional image | `string` (workspace ID) |
-| `UpdateAsync()` | Update with optional image | `Task` |
-| `DeleteAsync()` | Delete workspace | `Task` |
-
-### Models
-
-**`WorkspaceModel`** - Full workspace details
-- `Id` - Workspace ID
-- `Name` - Workspace name
-- `Account` - Social media accounts (YouTube, Facebook, Instagram, TikTok)
-
-**`WorkspaceSampleDetails`** - Simplified for lists
-- `Id`, `Name`, `Description` - Basic info
-- `ImageUrl` - Workspace logo URL
-- `CreatedAt` - Creation timestamp
-
-**`AccountDetails`** - Social platform account
-- `Link`, `Name`, `Thumbnail` - Account info
-- `PlatformAccountId` - Platform-specific ID
-- `Status` - Account status (active, inactive, authenticationExpired)
-
-**`WorkspaceAccount`** - Social media accounts
-- `Youtube`, `Facebook`, `Instagram`, `Tiktok` - Platform accounts
-- `FacebookPlatformPageId`, `InstagramPlatformAccountId` - Platform IDs
-
-**`CreateWorkspaceRequest` / `UpdateWorkspaceRequest`**
-- `Name`, `Description` - Required
-- `Tag`, `RefId` - Optional
-
-## Image Upload
-
-### Supported Image Formats
-
-- PNG (`image/png`) - Default
-- JPEG (`image/jpeg`)
-- WebP (`image/webp`)
-- GIF (`image/gif`)
-
-### Image Upload Examples
-
-```csharp
-// PNG
-using var png = File.OpenRead("logo.png");
-await client.CreateAsync(request, png, "image/png");
-
-// JPEG
-using var jpg = File.OpenRead("logo.jpg");
-await client.CreateAsync(request, jpg, "image/jpeg");
-
-// WebP
-using var webp = File.OpenRead("logo.webp");
-await client.CreateAsync(request, webp, "image/webp");
-```
-
-### Upload Process
-
-1. **Client calls Create/Update** with `hasImage: true`
-2. **API returns** workspace ID + pre-signed R2 upload URL
-3. **Client uploads** image directly to R2 using the pre-signed URL
-4. **API updates** workspace with image URL
-
-## Error Handling
+Methods throw exceptions from `Posty5.Core.Exceptions`.
 
 ```csharp
 try
 {
-    var workspaceId = await client.CreateAsync(request);
+    await client.GetAsync("invalid-id");
 }
-catch (InvalidOperationException ex)
+catch (Posty5NotFoundException)
 {
-    Console.WriteLine($"Operation failed: {ex.Message}");
-}
-catch (HttpRequestException ex)
-{
-    Console.WriteLine($"Network error: {ex.Message}");
+    Console.WriteLine("Workspace not found");
 }
 ```
 
-## Pagination
+---
 
-Handle large workspace lists:
+## 📖 Resources
 
-```csharp
-int currentPage = 1;
-int pageSize = 50;
+- **Official Guides**: [https://guide.posty5.com](https://guide.posty5.com)
+- **API Reference**: [https://docs.posty5.com](https://docs.posty5.com)
+- **Source Code**: [https://github.com/Posty5/dotnet-sdk](https://github.com/Posty5/dotnet-sdk)
 
-while (true)
-{
-    var result = await client.ListAsync(
-        pagination: new PaginationParams
-        {
-            Page = currentPage,
-            PageSize = pageSize
-        }
-    );
+---
 
-    foreach (var workspace in result.Items)
-    {
-        Console.WriteLine($"Processing: {workspace.Name}");
-    }
+## 📦 Packages
 
-    if (result.Items.Count < pageSize || currentPage * pageSize >= result.Total)
-    {
-        break;
-    }
+This SDK ecosystem contains the following tool packages:
 
-    currentPage++;
-}
-```
+| Package | Description | Version | NuGet |
+| --- | --- | --- | --- |
+| [Posty5.Core](../Posty5.Core) | Core HTTP client and models | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.Core) |
+| [Posty5.ShortLink](../Posty5.ShortLink) | URL shortener client | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.ShortLink) |
+| [Posty5.QRCode](../Posty5.QRCode) | QR code generator client | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.QRCode) |
+| [Posty5.HtmlHosting](../Posty5.HtmlHosting) | HTML hosting client | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHosting) |
+| [Posty5.HtmlHostingVariables](../Posty5.HtmlHostingVariables) | Variable management | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHostingVariables) |
+| [Posty5.HtmlHostingFormSubmission](../Posty5.HtmlHostingFormSubmission) | Form submission management | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHostingFormSubmission) |
+| [Posty5.SocialPublisherWorkspace](../Posty5.SocialPublisherWorkspace) | Social workspace management | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.SocialPublisherWorkspace) |
+| [Posty5.SocialPublisherTask](../Posty5.SocialPublisherTask) | Social publishing task client | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.SocialPublisherTask) |
 
-## Best Practices
+---
 
-### 1. Use Descriptive Names
+## 📄 License
 
-```csharp
-// ✅ Good
-Name = "Marketing Team - Q1 2024"
-Name = "Client ABC - Social Media Management"
+MIT License - see [LICENSE](../../LICENSE) file for details.
 
-// ❌ Avoid
-Name = "Workspace 1"
-Name = "Test"
-```
+---
 
-### 2. Organize with Tags
-
-```csharp
-Tag = "client-work"
-Tag = "internal"
-Tag = "production"
-Tag = "staging"
-```
-
-### 3. Link to External Systems
-
-```csharp
-RefId = "crm-account-12345"
-RefId = "project-mgmt-789"
-```
-
-### 4. Optimize Image Sizes
-
-Compress images before uploading to improve load times and reduce storage costs.
-
-## Related Packages
-
-- **Posty5.Core** - Core functionality and HTTP client
-- **Posty5.HtmlHosting** - HTML page hosting
-- **Posty5.ShortLink** - Short link management
-- **Posty5.QRCode** - QR code generation
-
-## Support
-
-- **Documentation**: [https://posty5.com/docs](https://posty5.com/docs)
-- **API Reference**: [https://posty5.com/api](https://posty5.com/api)
-- **GitHub**: [https://github.com/posty5/dotnet-sdk](https://github.com/posty5/dotnet-sdk)
-
-## License
-
-MIT License - see LICENSE file for details
+Made with ❤️ by the Posty5 team
