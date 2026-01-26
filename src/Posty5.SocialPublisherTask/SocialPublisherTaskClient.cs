@@ -390,10 +390,12 @@ public class SocialPublisherTaskClient
                 System.Text.RegularExpressions.RegexOptions.IgnoreCase))
                 return "repost";
 
-            if (System.Text.RegularExpressions.Regex.IsMatch(url,
-                @"^https?://(www\.)?(tiktok\.com|vm\.tiktok\.com)/@?.*/.*",
-                System.Text.RegularExpressions.RegexOptions.IgnoreCase))
-                return "repost";
+       if (System.Text.RegularExpressions.Regex.IsMatch(
+    url,
+    @"^https?:\/\/(www\.)?(tiktok\.com\/@[^\/]+\/video\/\d+|vm\.tiktok\.com\/\w+|vt\.tiktok\.com\/\w+)",
+    System.Text.RegularExpressions.RegexOptions.IgnoreCase
+))
+    return "repost";
 
             if (System.Text.RegularExpressions.Regex.IsMatch(url,
                 @"^https?://(www\.)?(youtube\.com/shorts/|youtu\.be/)[A-Za-z0-9_-]+",
