@@ -17,12 +17,15 @@ public class QRCodePageInfo
     /// </summary>
     public string? Description { get; set; }
     
-    /// <summary>
-    /// Whether description is an HTML file
-    /// </summary>
-    public bool? DescriptionIsHtmlFile { get; set; }
 }
 
+public class QRCodeFreeTextTarget
+{
+       /// <summary>
+    /// Free text content
+    /// </summary>
+    public string? Text { get; set; }
+}
 /// <summary>
 /// Email QR code target configuration
 /// </summary>
@@ -127,8 +130,13 @@ public class QRCodeTarget
     /// <summary>
     /// Target type (email, wifi, call, sms, url, geolocation, freeText)
     /// </summary>
-    public string Type { get; set; } = string.Empty;
-    
+    public QRCodeTargetType  Type { get; set; } = QRCodeTargetType.FreeText;
+
+    /// <summary>
+    /// Free Text configuration (when type is 'freeText')
+    /// </summary>
+    public QRCodeFreeTextTarget? FreeText { get; set; }
+
     /// <summary>
     /// Email configuration (when type is 'email')
     /// </summary>
@@ -217,10 +225,6 @@ public class QRCodeModel
     /// </summary>
     public string? Tag { get; set; }
     
-    /// <summary>
-    /// Custom landing page ID
-    /// </summary>
-    public string? CustomLandingId { get; set; }
     
     /// <summary>
     /// Number of visitors/scans
@@ -245,8 +249,9 @@ public class QRCodeModel
     /// <summary>
     /// QR code landing page URL
     /// </summary>
-    public string? QrCodeLandingPageURL { get; set; }
-    
+    public string? qrCodeLandingPageURL { get; set; }
+    public string? QrCodeDownloadURL { get; set; }
+
     
     /// <summary>
     /// Page information for landing page customization
@@ -272,6 +277,9 @@ public class QRCodeModel
     /// Updated timestamp
     /// </summary>
     public DateTime? UpdatedAt { get; set; }
+
+
+ 
 }
 
 /// <summary>
@@ -548,4 +556,16 @@ public class ListQRCodesParams
     /// Filter by created from source
     /// </summary>
     public string? CreatedFrom { get; set; }
+}
+
+
+public enum QRCodeTargetType
+{
+    FreeText=1,
+    Email,
+    Wifi,
+    Call,
+    Sms,
+    Url,
+    Geolocation
 }

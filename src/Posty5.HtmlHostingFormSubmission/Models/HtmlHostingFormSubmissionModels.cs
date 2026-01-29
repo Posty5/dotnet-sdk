@@ -29,7 +29,7 @@ public class ListFormSubmissionsParams
     /// <summary>
     /// Status filter (optional) - "New", "Viewed", "Approved", "Rejected"
     /// </summary>
-    public string? Status { get; set; }
+    public FormStatus? Status { get; set; }
     
     /// <summary>
     /// Filtered fields for search (optional) - comma-separated field names
@@ -50,7 +50,7 @@ public class StatusHistoryEntry
     /// <summary>
     /// Status value
     /// </summary>
-    public string Status { get; set; } = string.Empty;
+    public FormStatus Status { get; set; } = FormStatus.New;
     
     /// <summary>
     /// Rejection reason (if rejected)
@@ -131,14 +131,9 @@ public class FormSubmissionModel
     public List<string>? Fields { get; set; }
     
     /// <summary>
-    /// Owner user ID
-    /// </summary>
-    public string OwnerUserId { get; set; } = string.Empty;
-    
-    /// <summary>
     /// Current status
     /// </summary>
-    public string Status { get; set; } = string.Empty;
+    public FormStatus Status { get; set; } = FormStatus.New;
     
     /// <summary>
     /// Status history
@@ -159,6 +154,10 @@ public class FormSubmissionModel
     /// Updated timestamp
     /// </summary>
     public DateTime? UpdatedAt { get; set; }
+
+
+
+ 
 }
 
 /// <summary>
@@ -192,4 +191,20 @@ public class NextPreviousSubmissionsResponse
     /// Next submission (if exists)
     /// </summary>
     public NextPreviousSubmission? Next { get; set; }
+}
+
+public enum FormStatus
+{
+   New=1,
+   PendingReview,
+   InProgress             ,
+   OnHold                 ,
+   NeedMoreInfo           ,
+   Approved               ,
+   PartiallyApproved      ,
+   Rejected               ,
+   Completed              ,
+   Archived               ,
+   Cancelled             ,
+
 }

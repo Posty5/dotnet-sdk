@@ -28,12 +28,7 @@ public class HtmlHostingVariableModel
     /// </summary>
     public string Value { get; set; } = string.Empty;
     
-    /// <summary>
-    /// Owner user ID
-    /// </summary>
-    public string UserId { get; set; } = string.Empty;
-    
-    /// <summary>
+       /// <summary>
     /// Custom tag for filtering/categorization
     /// </summary>
     public string? Tag { get; set; }
@@ -52,6 +47,8 @@ public class HtmlHostingVariableModel
     /// Updated timestamp
     /// </summary>
     public DateTime? UpdatedAt { get; set; }
+
+
 }
 
 /// <summary>

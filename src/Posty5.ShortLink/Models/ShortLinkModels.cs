@@ -1,4 +1,6 @@
+using System.Diagnostics;
 using System.Text.Json.Serialization;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Posty5.ShortLink.Models;
 
@@ -17,10 +19,6 @@ public class PageInfo
     /// </summary>
     public string? Description { get; set; }
     
-    /// <summary>
-    /// Whether description is an HTML file
-    /// </summary>
-    public bool? DescriptionIsHtmlFile { get; set; }
 }
 
 public class ShortLinkModel
@@ -35,35 +33,24 @@ public class ShortLinkModel
     
     /// <summary>
     /// Shorter link URL - the actual short URL (primary field from API)
-    /// Corresponds to 'shorterLink' in npm SDK
+    /// 
     /// </summary>
     public string? ShorterLink { get; set; }
     
     /// <summary>
     /// Short link ID - unique short code identifier
-    /// Corresponds to 'shortLinkId' in npm SDK
+    /// 
     /// </summary>
     public string? ShortLinkId { get; set; }
     
     /// <summary>
     /// Base URL - the target URL to redirect to
-    /// Corresponds to 'baseUrl' in npm SDK
+    /// 
     /// </summary>
     public string? BaseUrl { get; set; }
     
     public string? TemplateId { get; set; }
-    
-    /// <summary>
-    /// Custom landing ID for branded short links
-    /// Corresponds to 'customLandingId' in npm SDK
-    /// </summary>
-    public string? CustomLandingId { get; set; }
-    
-    /// <summary>
-    /// Status of the short link (new, pending, approved, rejected)
-    /// </summary>
-    public string? Status { get; set; }
-    
+     
     /// <summary>
     /// External reference ID for filtering/tracking
     /// </summary>
@@ -76,25 +63,25 @@ public class ShortLinkModel
     
     /// <summary>
     /// Number of visitors/clicks
-    /// Corresponds to 'numberOfVisitors' in npm SDK
+    /// 
     /// </summary>
     public int? NumberOfVisitors { get; set; }
     
     /// <summary>
     /// Last visitor date
-    /// Corresponds to 'lastVisitorDate' in npm SDK
+    /// 
     /// </summary>
     public string? LastVisitorDate { get; set; }
     
     /// <summary>
     /// QR code landing page URL
-    /// Corresponds to 'qrCodeLandingPageURL' in npm SDK
+    /// 
     /// </summary>
     public string? QrCodeLandingPageURL { get; set; }
     
     /// <summary>
     /// QR code download URL
-    /// Corresponds to 'qrCodeDownloadURL' in npm SDK
+    /// 
     /// </summary>
     public string? QrCodeDownloadURL { get; set; }
     
@@ -112,12 +99,9 @@ public class ShortLinkModel
     /// Updated timestamp
     /// </summary>
     public DateTime? UpdatedAt { get; set; }
-    
-    /// <summary>
-    /// Click count (deprecated, use NumberOfVisitors)
-    /// </summary>
-    [Obsolete("Use NumberOfVisitors instead")]
-    public int? ClickCount { get; set; }
+
+ 
+ 
 }
 
 /// <summary>

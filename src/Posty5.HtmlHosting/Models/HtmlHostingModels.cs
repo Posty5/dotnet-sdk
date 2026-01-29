@@ -71,118 +71,176 @@ public class HtmlPageModel
     /// </summary>
     [JsonPropertyName("_id")]
     public string? Id { get; set; }
-    
+
     /// <summary>
     /// HTML hosting ID (short code identifier)
     /// </summary>
     public string? HtmlHostingId { get; set; }
-    
+
     /// <summary>
     /// Page name
     /// </summary>
     public string? Name { get; set; }
-    
+
     /// <summary>
     /// SEO-friendly page path
     /// </summary>
     public string? PagePath { get; set; }
-    
+
     /// <summary>
     /// Last visitor date
     /// </summary>
-    public string? LastVisitorDate { get; set; }
-    
+    public DateTime? LastVisitorDate { get; set; }
+
     /// <summary>
     /// Number of visitors/views
     /// </summary>
-    public int NumberOfVisitors { get; set; }
-    
+    public int? NumberOfVisitors { get; set; }
+
     /// <summary>
-    /// Created timestamp
+    /// Number of reports
     /// </summary>
-    public DateTime CreatedAt { get; set; }
-    
-    /// <summary>
-    /// Updated timestamp
-    /// </summary>
-    public DateTime? UpdatedAt { get; set; }
-    
+    public int? NumberOfReports { get; set; }
+
     /// <summary>
     /// Owner user ID
     /// </summary>
-    public string User { get; set; } = string.Empty;
-    
+    public string? UserId { get; set; }
+
+    /// <summary>
+    /// API key ID
+    /// </summary>
+    public string? ApiKeyId { get; set; }
+
     /// <summary>
     /// Enable monetization flag
     /// </summary>
     public bool? IsEnableMonetization { get; set; }
-    
+
     /// <summary>
     /// Auto-save form submissions in Google Sheet
     /// </summary>
     public bool? AutoSaveInGoogleSheet { get; set; }
-    
+
     /// <summary>
     /// Is temporary page
     /// </summary>
-    public bool IsTemp { get; set; }
-    
-    /// <summary>
-    /// Page status (approved, pending, rejected, etc.)
-    /// </summary>
-    public string? Status { get; set; }
-    
-    /// <summary>
-    /// Preview/moderation reasons
-    /// </summary>
-    public List<PreviewReason>? PreviewReasons { get; set; }
-    
-    /// <summary>
-    /// Is cached in local storage
-    /// </summary>
-    public bool IsCachedInLocalStorage { get; set; }
-    
-    /// <summary>
-    /// Source type: "file" or "github"
-    /// </summary>
-    public string? SourceType { get; set; }
-    
-    /// <summary>
-    /// Form submission data
-    /// </summary>
-    public FormSubmissionData? FormSubmission { get; set; }
-    
-    /// <summary>
-    /// Shorter link URL
-    /// </summary>
-    public string? ShorterLink { get; set; }
-    
-    /// <summary>
-    /// File URL (R2 storage)
-    /// </summary>
-    public string? FileUrl { get; set; }
-    
-    /// <summary>
-    /// GitHub information (when sourceType is "github")
-    /// </summary>
-    public GithubInfo? GithubInfo { get; set; }
-    
-    /// <summary>
-    /// File name (when sourceType is "file")
-    /// </summary>
-    public string? FileName { get; set; }
-    
+    public bool? IsTemp { get; set; }
+
     /// <summary>
     /// External reference ID for filtering/tracking
     /// </summary>
     public string? RefId { get; set; }
-    
+
     /// <summary>
     /// Custom tag for filtering/categorization
     /// </summary>
     public string? Tag { get; set; }
+
+    /// <summary>
+    /// Template ID (QR or page template)
+    /// </summary>
+    public string? TemplateId { get; set; }
+
+    /// <summary>
+    /// Page sub category
+    /// </summary>
+    public int? SubCategory { get; set; }
+
+    /// <summary>
+    /// Page category
+    /// </summary>
+    public int? Category { get; set; }
+
+    /// <summary>
+    /// Created from (dashboard, api, etc)
+    /// </summary>
+    public string? CreatedFrom { get; set; }
+
+    /// <summary>
+    /// GitHub information (when sourceType is "github")
+    /// </summary>
+    public GithubInfoModel? GithubInfo { get; set; }
+
+    /// <summary>
+    /// Form submission data
+    /// </summary>
+    public FormSubmissionModel? FormSubmission { get; set; }
+
+    /// <summary>
+    /// Is cached in local storage
+    /// </summary>
+    public bool? IsCachedInLocalStorage { get; set; }
+
+    /// <summary>
+    /// Shorter link URL
+    /// </summary>
+    public string? ShorterLink { get; set; }
+
+    /// <summary>
+    /// File URL (R2 storage)
+    /// </summary>
+    public string? FileUrl { get; set; }
+
+    /// <summary>
+    /// Source type: "file" or "github"
+    /// </summary>
+    public string? SourceType { get; set; }
+
+    /// <summary>
+    /// File name (when sourceType is "file")
+    /// </summary>
+    public string? FileName { get; set; }
 }
 
+public class GithubInfoModel
+{
+    /// <summary>
+    /// GitHub file public URL
+    /// </summary>
+    public string? FileURL { get; set; }
+}
+
+public class FormSubmissionModel
+{
+    /// <summary>
+    /// Number of form submissions
+    /// </summary>
+    public int? NumberOfFormSubmission { get; set; }
+
+    /// <summary>
+    /// Last form submission time
+    /// </summary>
+    public DateTime? LasFormSubmissionAt { get; set; }
+
+    /// <summary>
+    /// Last export time
+    /// </summary>
+    public DateTime? LasExportTime { get; set; }
+
+    /// <summary>
+    /// Forms configuration
+    /// </summary>
+    public List<FormInfoModel>? Forms { get; set; }
+}
+
+public class FormInfoModel
+{
+    /// <summary>
+    /// Form identifier
+    /// </summary>
+    public string? FormId { get; set; }
+
+    /// <summary>
+    /// Form fields names
+    /// </summary>
+    public List<string>? FormFields { get; set; }
+
+    /// <summary>
+    /// Google spreadsheet ID
+    /// </summary>
+    public string? SpreadsheetId { get; set; }
+}
 /// <summary>
 /// Base request for HTML page creation/update
 /// </summary>

@@ -76,8 +76,8 @@ public class HtmlHostingFormSubmissionClient
             queryParams["formId"] = listParams.FormId;
         if (!string.IsNullOrEmpty(listParams.Numbering))
             queryParams["numbering"] = listParams.Numbering;
-        if (!string.IsNullOrEmpty(listParams.Status))
-            queryParams["status"] = listParams.Status;
+        if (!string.IsNullOrEmpty(listParams.Status?.ToString()))
+            queryParams["status"] = listParams.Status.ToString();
         if (!string.IsNullOrEmpty(listParams.FilteredFields))
             queryParams["filteredFields"] = listParams.FilteredFields;
 

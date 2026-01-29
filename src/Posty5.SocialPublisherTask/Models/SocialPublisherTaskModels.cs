@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Posty5.SocialPublisherTask.Models;
 
@@ -457,47 +458,7 @@ public class TaskModel
     /// Current task status
     /// </summary>
     public string CurrentStatus { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// YouTube publishing enabled
-    /// </summary>
-    public bool IsAllowYoutube { get; set; }
-    
-    /// <summary>
-    /// Facebook publishing enabled
-    /// </summary>
-    public bool IsAllowFacebookPage { get; set; }
-    
-    /// <summary>
-    /// Instagram publishing enabled
-    /// </summary>
-    public bool IsAllowInstagram { get; set; }
-    
-    /// <summary>
-    /// TikTok publishing enabled
-    /// </summary>
-    public bool IsAllowTiktok { get; set; }
-    
-    /// <summary>
-    /// Workspace name
-    /// </summary>
-    public string WorkspaceName { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// Schedule type (now or schedule)
-    /// </summary>
-    public string ScheduleType { get; set; } = "now";
-    
-    /// <summary>
-    /// Scheduled date/time
-    /// </summary>
-    public DateTime? ScheduleScheduledAt { get; set; }
-    
-    /// <summary>
-    /// Schedule execution date/time
-    /// </summary>
-    public DateTime? ScheduleExecutedAt { get; set; }
-    
+     
     /// <summary>
     /// External reference ID
     /// </summary>
@@ -507,12 +468,26 @@ public class TaskModel
     /// Custom tag
     /// </summary>
     public string? Tag { get; set; }
-    
-    /// <summary>
-    /// API key name
-    /// </summary>
-    public string? ApiKeyName { get; set; }
+    public TaskModelIsAllowAccount IisAllow { get; set; }
+    public TaskModeWorkspace Workspace { get; set; }
+    public ScheduleConfig Schedule { get; set; }
 }
+
+public class TaskModelIsAllowAccount
+{
+    public bool Youtube { get; set; }
+    public bool Facebook { get; set; }
+    public bool Instagram { get; set; }
+    public bool Tiktok { get; set; }
+}
+
+public class TaskModeWorkspace
+{
+    [JsonPropertyName("workspace._id")]
+    public string Id { get; set; }
+    public string Name { get; set; }
+}
+
 
 /// <summary>
 /// Task status response with full details
