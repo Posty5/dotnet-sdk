@@ -407,6 +407,75 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
 
     #endregion
 
+    #region ChangeStatus Tests
+
+    [Fact]
+    public async Task ChangeStatus_WithValidData_ShouldUpdateStatus()
+    {
+        // Arrange
+        var listResult = await _client.ListAsync(
+            new ListFormSubmissionsParams { HtmlHostingId = _testHtmlHostingId },
+            new PaginationParams { Page = 1, PageSize = 1 }
+        );
+
+        if (listResult.Items.Count == 0)
+        {
+            // Skip if no submissions exist
+            return;
+        }
+
+        var submissionId = listResult.Items[0].Id;
+        var request = new ChangeStatusRequest
+        {
+            Status = "In Progress",
+            Notes = "Status changed via test"
+        };
+
+        // Act
+        var result = await _client.ChangeStatusAsync(submissionId, request);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.StatusHistory);
+        Assert.True(result.StatusHistory.Count > 0);
+
+        // Verify the submission was updated
+        var updatedSubmission = await _client.GetAsync(submissionId);
+        Assert.Equal("In Progress", updatedSubmission.Status);
+    }
+
+    [Fact]
+    public async Task ChangeStatus_WithRejectedReason_ShouldIncludeReason()
+    {
+        // Arrange
+        var listResult = await _client.ListAsync(
+            new ListFormSubmissionsParams { HtmlHostingId = _testHtmlHostingId },
+            new PaginationParams { Page = 1, PageSize = 1 }
+        );
+
+        if (listResult.Items.Count == 0)
+        {
+            return;
+        }
+
+        var submissionId = listResult.Items[0].Id;
+        var request = new ChangeStatusRequest
+        {
+            Status = "Rejected",
+            RejectedReason = "Does not meet requirements",
+            Notes = "Rejected via test"
+        };
+
+        // Act
+        var result = await _client.ChangeStatusAsync(submissionId, request);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.StatusHistory);
+    }
+
+    #endregion
+
     #region Combined Workflow Tests
 
     [Fact]

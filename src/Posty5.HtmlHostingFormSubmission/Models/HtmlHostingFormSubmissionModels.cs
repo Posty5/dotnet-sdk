@@ -38,6 +38,30 @@ public class ListFormSubmissionsParams
     public string? FilteredFields { get; set; }
 }
 
+/// <summary>
+/// Request to change form submission status
+/// </summary>
+public class ChangeStatusRequest
+{
+    /// <summary>
+    /// New status value for the submission
+    /// </summary>
+    [JsonPropertyName("status")]
+    public string Status { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Rejection reason (optional, typically used when status is 'Rejected')
+    /// </summary>
+    [JsonPropertyName("rejectedReason")]
+    public string? RejectedReason { get; set; }
+
+    /// <summary>
+    /// Additional notes about the status change
+    /// </summary>
+    [JsonPropertyName("notes")]
+    public string? Notes { get; set; }
+}
+
 // ============================================================================
 // RESPONSE MODELS
 // ============================================================================
@@ -191,6 +215,24 @@ public class NextPreviousSubmissionsResponse
     /// Next submission (if exists)
     /// </summary>
     public NextPreviousSubmission? Next { get; set; }
+}
+
+/// <summary>
+/// Response from changing form submission status
+/// </summary>
+public class ChangeStatusResponse
+{
+    /// <summary>
+    /// Success message
+    /// </summary>
+    [JsonPropertyName("message")]
+    public string? Message { get; set; }
+
+    /// <summary>
+    /// Updated status history (grouped by status)
+    /// </summary>
+    [JsonPropertyName("statusHistory")]
+    public List<object>? StatusHistory { get; set; }
 }
 
 public enum FormStatus

@@ -96,6 +96,33 @@ public class HtmlHostingFormSubmissionClient
     }
 
     /// <summary>
+    /// Change the status of a form submission
+    /// </summary>
+    /// <param name="id">Submission ID</param>
+    /// <param name="request">Status change request containing new status, rejection reason, and notes</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Response with updated status history</returns>
+    /// <exception cref="ArgumentNullException">Thrown when id or request is null</exception>
+    /// <exception cref="InvalidOperationException">Thrown when submission not found or user doesn't have permission</exception>
+    public async Task<ChangeStatusResponse> ChangeStatusAsync(
+        string id,
+        ChangeStatusRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrEmpty(id))
+            throw new ArgumentNullException(nameof(id));
+        if (request == null)
+            throw new ArgumentNullException(nameof(request));
+
+        var response = await _http.PutAsync<ChangeStatusResponse>(
+            $"{BasePath}/{id}/status",
+            request,
+            cancellationToken: cancellationToken);
+
+        return response.Result ?? throw new InvalidOperationException("Failed to change status");
+    }
+
+    /// <summary>
     /// Delete a form submission
     /// </summary>
     /// <param name="id">Submission ID to delete</param>
