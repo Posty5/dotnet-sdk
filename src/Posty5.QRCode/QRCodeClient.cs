@@ -65,7 +65,7 @@ public class QRCodeClient
     {
         var qrCodeTarget = new
         {
-            text = data.Text,
+            freeText = new { text = data.Text },
             type = "freeText"
         };
 
@@ -84,7 +84,7 @@ public class QRCodeClient
             data.PageInfo,
             options = new
             {
-                text = qrCodeTarget.text
+                text = qrCodeTarget.freeText.text
             },
             templateType = "user",
             createdFrom = "dotnetPackage"
@@ -451,7 +451,7 @@ public class QRCodeClient
     {
         var qrCodeTarget = new
         {
-            text = data.Text,
+            freeText = new { text = data.Text },
             type = "freeText"
         };
 
@@ -470,7 +470,7 @@ public class QRCodeClient
             data.PageInfo,
             options = new
             {
-                text = qrCodeTarget.text
+                text = qrCodeTarget.freeText.text
             },
             templateType = "user",
             createdFrom = "dotnetPackage"
