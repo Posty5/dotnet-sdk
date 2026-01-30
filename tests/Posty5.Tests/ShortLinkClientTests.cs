@@ -21,7 +21,7 @@ public class ShortLinkClientTests : IDisposable
     public async Task CreateShortLink_ShouldReturnValidShortLink()
     {
         // Arrange
-        var request = new CreateShortLinkRequest
+        var request = new ShortLinkCreateRequestModel
         {
             Name = $"Test Short Link - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
             BaseUrl = "https://posty5.com",
@@ -46,7 +46,7 @@ public class ShortLinkClientTests : IDisposable
     {
         // Arrange
         var customSlug = $"test-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
-        var request = new CreateShortLinkRequest
+        var request = new ShortLinkCreateRequestModel
         {
             Name = "Custom Slug Link",
             BaseUrl = "https://example.com",
@@ -69,7 +69,7 @@ public class ShortLinkClientTests : IDisposable
     public async Task GetShortLinkById_WithValidId_ShouldReturnShortLink()
     {
         // Arrange - Create a short link first
-        var createRequest = new CreateShortLinkRequest
+        var createRequest = new ShortLinkCreateRequestModel
         {
             Name = "Test Link for Get",
             BaseUrl = "https://posty5.com",
@@ -108,7 +108,7 @@ public class ShortLinkClientTests : IDisposable
     public async Task ListShortLinks_WithSearch_ShouldFilterResults()
     {
         // Arrange
-        var searchParams = new ListShortLinksParams
+        var searchParams = new ShortLinkListParamsModel
         {
             Search = "test"
         };
@@ -128,7 +128,7 @@ public class ShortLinkClientTests : IDisposable
     public async Task UpdateShortLink_ShouldUpdateSuccessfully()
     {
         // Arrange - Create a short link first
-        var createRequest = new CreateShortLinkRequest
+        var createRequest = new ShortLinkCreateRequestModel
         {
             Name = "Original Name",
             BaseUrl = "https://posty5.com",
@@ -139,7 +139,7 @@ public class ShortLinkClientTests : IDisposable
 
         // Act
         var newName = $"Updated Short Link - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
-        var updateRequest = new UpdateShortLinkRequest
+        var updateRequest = new ShortLinkUpdateRequestModel
         {
             Name = newName,
             BaseUrl = "https://guide.posty5.com",
@@ -156,7 +156,7 @@ public class ShortLinkClientTests : IDisposable
     public async Task UpdateShortLink_BaseUrl_ShouldUpdateSuccessfully()
     {
         // Arrange - Create a short link first
-        var createRequest = new CreateShortLinkRequest
+        var createRequest = new ShortLinkCreateRequestModel
         {
             Name = "Link to Update URL",
             BaseUrl = "https://posty5.com",
@@ -166,7 +166,7 @@ public class ShortLinkClientTests : IDisposable
         TestConfig.CreatedResources.ShortLinks.Add(created.Id!);
 
         // Act
-        var updateRequest = new UpdateShortLinkRequest
+        var updateRequest = new ShortLinkUpdateRequestModel
         {
             BaseUrl = "https://updated.posty5.com",
             TemplateId = TestConfig.TemplateId
@@ -182,7 +182,7 @@ public class ShortLinkClientTests : IDisposable
     public async Task DeleteShortLink_ShouldDeleteSuccessfully()
     {
         // Arrange - Create a short link first
-        var createRequest = new CreateShortLinkRequest
+        var createRequest = new ShortLinkCreateRequestModel
         {
             Name = "Link to Delete",
             BaseUrl = "https://posty5.com",

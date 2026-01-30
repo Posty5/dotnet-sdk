@@ -320,7 +320,7 @@ public class SocialPublisherTaskClientTests : IDisposable
         // Arrange
         var filterParams = new ListTasksParams
         {
-            CurrentStatus = "pending"
+            CurrentStatus = SocialPublisherTaskStatusType.Pending
         };
 
         // Act

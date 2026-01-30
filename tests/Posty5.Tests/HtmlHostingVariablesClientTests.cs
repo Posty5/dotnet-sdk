@@ -22,7 +22,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
     public async Task Create_WithValidKey_ShouldSucceed()
     {
         // Arrange
-        var request = new CreateHtmlHostingVariableRequest
+        var request = new HtmlHostingVariablesCreateRequestModel
         {
             Name = $"API Key - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
             Key = $"pst5_test_key_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
@@ -38,7 +38,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
     public async Task Create_WithInvalidKey_ShouldThrowArgumentException()
     {
         // Arrange
-        var request = new CreateHtmlHostingVariableRequest
+        var request = new HtmlHostingVariablesCreateRequestModel
         {
             Name = "Invalid Key Variable",
             Key = "invalid_key", // Missing pst5_ prefix
@@ -58,7 +58,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
     public async Task Create_WithTagAndRefId_ShouldSucceed()
     {
         // Arrange
-        var request = new CreateHtmlHostingVariableRequest
+        var request = new HtmlHostingVariablesCreateRequestModel
         {
             Name = "Variable with Metadata",
             Key = $"pst5_metadata_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
@@ -75,7 +75,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
     public async Task Create_EmptyKey_ShouldThrowArgumentException()
     {
         // Arrange
-        var request = new CreateHtmlHostingVariableRequest
+        var request = new HtmlHostingVariablesCreateRequestModel
         {
             Name = "Empty Key",
             Key = "",
@@ -94,7 +94,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
     public async Task Create_KeyStartingWithPst5_ShouldSucceed()
     {
         // Arrange
-        var request = new CreateHtmlHostingVariableRequest
+        var request = new HtmlHostingVariablesCreateRequestModel
         {
             Name = "Correct Prefix",
             Key = $"pst5_correct_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
@@ -113,7 +113,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
     public async Task Get_WithValidId_ShouldReturnVariable()
     {
         // Arrange - Create a variable first
-        var createRequest = new CreateHtmlHostingVariableRequest
+        var createRequest = new HtmlHostingVariablesCreateRequestModel
         {
             Name = "Variable for Get Test",
             Key = $"pst5_get_test_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
@@ -125,7 +125,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
 
         // Get the variable by listing and finding it
         var list = await _client.ListAsync(
-            new ListHtmlHostingVariablesParams { Tag = "get-test" }
+            new HtmlHostingVariablesListParamsModel { Tag = "get-test" }
         );
 
         Assert.NotEmpty(list.Items);
@@ -153,7 +153,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
     public async Task Update_WithValidKey_ShouldSucceed()
     {
         // Arrange - Create a variable first
-        var createRequest = new CreateHtmlHostingVariableRequest
+        var createRequest = new HtmlHostingVariablesCreateRequestModel
         {
             Name = "Original Variable",
             Key = $"pst5_update_test_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
@@ -163,7 +163,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
         await _client.CreateAsync(createRequest);
 
         var list = await _client.ListAsync(
-            new ListHtmlHostingVariablesParams 
+            new HtmlHostingVariablesListParamsModel 
             { 
                 Key = createRequest.Key 
             }
@@ -173,7 +173,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
         var variableId = list.Items[0].Id;
 
         // Act
-        var updateRequest = new CreateHtmlHostingVariableRequest
+        var updateRequest = new HtmlHostingVariablesCreateRequestModel
         {
             Name = "Updated Variable",
             Key = createRequest.Key,
@@ -194,7 +194,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
     public async Task Update_WithInvalidKey_ShouldThrowArgumentException()
     {
         // Arrange - Create a variable first
-        var createRequest = new CreateHtmlHostingVariableRequest
+        var createRequest = new HtmlHostingVariablesCreateRequestModel
         {
             Name = "Variable to Update",
             Key = $"pst5_before_update_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
@@ -204,14 +204,14 @@ public class HtmlHostingVariablesClientTests : IDisposable
         await _client.CreateAsync(createRequest);
 
         var list = await _client.ListAsync(
-            new ListHtmlHostingVariablesParams { Key = createRequest.Key }
+            new HtmlHostingVariablesListParamsModel { Key = createRequest.Key }
         );
 
         Assert.NotEmpty(list.Items);
         var variableId = list.Items[0].Id;
 
         // Act & Assert
-        var updateRequest = new CreateHtmlHostingVariableRequest
+        var updateRequest = new HtmlHostingVariablesCreateRequestModel
         {
             Name = "Updated",
             Key = "invalid_key", // Missing pst5_ prefix
@@ -231,7 +231,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
     public async Task Update_ChangeTagAndRefId_ShouldSucceed()
     {
         // Arrange - Create a variable
-        var createRequest = new CreateHtmlHostingVariableRequest
+        var createRequest = new HtmlHostingVariablesCreateRequestModel
         {
             Name = "Metadata Update Test",
             Key = $"pst5_metadata_update_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
@@ -243,14 +243,14 @@ public class HtmlHostingVariablesClientTests : IDisposable
         await _client.CreateAsync(createRequest);
 
         var list = await _client.ListAsync(
-            new ListHtmlHostingVariablesParams { Tag = "old-tag" }
+            new HtmlHostingVariablesListParamsModel { Tag = "old-tag" }
         );
 
         Assert.NotEmpty(list.Items);
         var variableId = list.Items[0].Id;
 
         // Act
-        var updateRequest = new CreateHtmlHostingVariableRequest
+        var updateRequest = new HtmlHostingVariablesCreateRequestModel
         {
             Name = createRequest.Name,
             Key = createRequest.Key,
@@ -277,7 +277,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
     public async Task Delete_WithValidId_ShouldSucceed()
     {
         // Arrange - Create a variable
-        var createRequest = new CreateHtmlHostingVariableRequest
+        var createRequest = new HtmlHostingVariablesCreateRequestModel
         {
             Name = "Variable to Delete",
             Key = $"pst5_delete_test_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
@@ -287,7 +287,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
         await _client.CreateAsync(createRequest);
 
         var list = await _client.ListAsync(
-            new ListHtmlHostingVariablesParams { Key = createRequest.Key }
+            new HtmlHostingVariablesListParamsModel { Key = createRequest.Key }
         );
 
         Assert.NotEmpty(list.Items);
@@ -323,7 +323,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
         // Arrange
         var uniqueTag = $"tag_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
         
-        await _client.CreateAsync(new CreateHtmlHostingVariableRequest
+        await _client.CreateAsync(new HtmlHostingVariablesCreateRequestModel
         {
             Name = "Tagged Variable 1",
             Key = $"pst5_tagged1_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
@@ -331,7 +331,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
             Tag = uniqueTag
         });
 
-        await _client.CreateAsync(new CreateHtmlHostingVariableRequest
+        await _client.CreateAsync(new HtmlHostingVariablesCreateRequestModel
         {
             Name = "Tagged Variable 2",
             Key = $"pst5_tagged2_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
@@ -341,7 +341,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
 
         // Act
         var result = await _client.ListAsync(
-            new ListHtmlHostingVariablesParams { Tag = uniqueTag }
+            new HtmlHostingVariablesListParamsModel { Tag = uniqueTag }
         );
 
         // Assert
@@ -356,7 +356,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
         // Arrange
         var keyPrefix = $"pst5_key_filter_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
         
-        await _client.CreateAsync(new CreateHtmlHostingVariableRequest
+        await _client.CreateAsync(new HtmlHostingVariablesCreateRequestModel
         {
             Name = "Key Filter Test",
             Key = $"{keyPrefix}_001",
@@ -365,7 +365,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
 
         // Act
         var result = await _client.ListAsync(
-            new ListHtmlHostingVariablesParams { Key = keyPrefix }
+            new HtmlHostingVariablesListParamsModel { Key = keyPrefix }
         );
 
         // Assert
@@ -380,7 +380,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
         // Arrange
         var uniqueName = $"NameFilter_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
         
-        await _client.CreateAsync(new CreateHtmlHostingVariableRequest
+        await _client.CreateAsync(new HtmlHostingVariablesCreateRequestModel
         {
             Name = uniqueName,
             Key = $"pst5_name_filter_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
@@ -389,7 +389,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
 
         // Act
         var result = await _client.ListAsync(
-            new ListHtmlHostingVariablesParams { Name = uniqueName }
+            new HtmlHostingVariablesListParamsModel { Name = uniqueName }
         );
 
         // Assert
@@ -403,7 +403,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
         // Arrange
         var uniqueRef = $"ref_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
         
-        await _client.CreateAsync(new CreateHtmlHostingVariableRequest
+        await _client.CreateAsync(new HtmlHostingVariablesCreateRequestModel
         {
             Name = "RefId Test",
             Key = $"pst5_refid_test_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
@@ -413,7 +413,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
 
         // Act
         var result = await _client.ListAsync(
-            new ListHtmlHostingVariablesParams { RefId = uniqueRef }
+            new HtmlHostingVariablesListParamsModel { RefId = uniqueRef }
         );
 
         // Assert
@@ -429,7 +429,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
         var tag = $"multi_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
         var keyPrefix = $"pst5_multi_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
 
-        await _client.CreateAsync(new CreateHtmlHostingVariableRequest
+        await _client.CreateAsync(new HtmlHostingVariablesCreateRequestModel
         {
             Name = "Multi Filter Test",
             Key = $"{keyPrefix}_001",
@@ -439,7 +439,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
 
         // Act
         var result = await _client.ListAsync(
-            new ListHtmlHostingVariablesParams
+            new HtmlHostingVariablesListParamsModel
             {
                 Tag = tag,
                 Key = keyPrefix
@@ -477,7 +477,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
     public async Task CompleteWorkflow_CreateGetUpdateDelete_ShouldSucceed()
     {
         // Create
-        var createRequest = new CreateHtmlHostingVariableRequest
+        var createRequest = new HtmlHostingVariablesCreateRequestModel
         {
             Name = "Workflow Test",
             Key = $"pst5_workflow_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
@@ -489,7 +489,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
 
         // Get by listing
         var list = await _client.ListAsync(
-            new ListHtmlHostingVariablesParams { Tag = "workflow-test" }
+            new HtmlHostingVariablesListParamsModel { Tag = "workflow-test" }
         );
 
         Assert.NotEmpty(list.Items);
@@ -501,7 +501,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
         Assert.Equal("original_value", retrieved.Value);
 
         // Update
-        var updateRequest = new CreateHtmlHostingVariableRequest
+        var updateRequest = new HtmlHostingVariablesCreateRequestModel
         {
             Name = "Workflow Test Updated",
             Key = createRequest.Key,
@@ -528,7 +528,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
     public async Task Create_WithSpecialCharactersInValue_ShouldSucceed()
     {
         // Arrange
-        var request = new CreateHtmlHostingVariableRequest
+        var request = new HtmlHostingVariablesCreateRequestModel
         {
             Name = "Special Characters",
             Key = $"pst5_special_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
@@ -544,7 +544,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
     {
         // Arrange
         var longValue = new string('x', 1000);
-        var request = new CreateHtmlHostingVariableRequest
+        var request = new HtmlHostingVariablesCreateRequestModel
         {
             Name = "Long Value",
             Key = $"pst5_long_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",

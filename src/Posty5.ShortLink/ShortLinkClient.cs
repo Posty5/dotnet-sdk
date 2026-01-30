@@ -29,7 +29,7 @@ public class ShortLinkClient
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Paginated list of short links</returns>
     public async Task<PaginationResponse<ShortLinkModel>> ListAsync(
-        ListShortLinksParams? listParams = null,
+        ShortLinkListParamsModel? listParams = null,
         PaginationParams? pagination = null,
         CancellationToken cancellationToken = default)
     {
@@ -53,8 +53,8 @@ public class ShortLinkClient
                 queryParams["tag"] = listParams.Tag;
             if (!string.IsNullOrEmpty(listParams.TemplateId))
                 queryParams["templateId"] = listParams.TemplateId;
-            if (!string.IsNullOrEmpty(listParams.Status))
-                queryParams["status"] = listParams.Status;
+            if (listParams.Status.HasValue)
+                queryParams["status"] = listParams.Status.Value.ToString();
             if (listParams.IsForDeepLink.HasValue)
                 queryParams["isForDeepLink"] = listParams.IsForDeepLink.Value;
             if (listParams.IsEnableMonetization.HasValue)
@@ -100,7 +100,7 @@ public class ShortLinkClient
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Created short link details</returns>
     public async Task<ShortLinkModel> CreateAsync(
-        CreateShortLinkRequest request,
+        ShortLinkCreateRequestModel request,
         CancellationToken cancellationToken = default)
     {
         var data = new
@@ -126,7 +126,7 @@ public class ShortLinkClient
     /// <returns>Updated short link details</returns>
     public async Task<ShortLinkModel> UpdateAsync(
         string id,
-        UpdateShortLinkRequest request,
+        ShortLinkUpdateRequestModel request,
         CancellationToken cancellationToken = default)
     {
         var response = await _http.PutAsync<ShortLinkModel>($"{BasePath}/{id}", request, cancellationToken);

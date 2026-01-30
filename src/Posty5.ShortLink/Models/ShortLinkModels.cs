@@ -7,7 +7,7 @@ namespace Posty5.ShortLink.Models;
 /// <summary>
 /// Page information for landing page customization
 /// </summary>
-public class PageInfo
+public class ShortLinkPageInfoModel
 {
     /// <summary>
     /// Landing page title
@@ -88,7 +88,7 @@ public class ShortLinkModel
     /// <summary>
     /// Landing page information
     /// </summary>
-    public PageInfo? PageInfo { get; set; }
+    public ShortLinkPageInfoModel? PageInfo { get; set; }
     
     /// <summary>
     /// Created timestamp
@@ -100,14 +100,14 @@ public class ShortLinkModel
     /// </summary>
     public DateTime? UpdatedAt { get; set; }
 
- 
- 
+    public ShortLinkStatusType? Status { get; set; }
+
 }
 
 /// <summary>
 /// Create short link request
 /// </summary>
-public class CreateShortLinkRequest
+public class ShortLinkCreateRequestModel
 {
     public string Name { get; set; } = string.Empty;
     /// <summary>
@@ -139,13 +139,13 @@ public class CreateShortLinkRequest
     /// <summary>
     /// Landing page information
     /// </summary>
-    public PageInfo? PageInfo { get; set; }
+    public ShortLinkPageInfoModel? PageInfo { get; set; }
 }
 
 /// <summary>
 /// Update short link request
 /// </summary>
-public class UpdateShortLinkRequest
+public class ShortLinkUpdateRequestModel
 {
     public string? Name { get; set; }
     /// <summary>
@@ -177,13 +177,13 @@ public class UpdateShortLinkRequest
     /// <summary>
     /// Landing page information
     /// </summary>
-    public PageInfo? PageInfo { get; set; }
+    public ShortLinkPageInfoModel? PageInfo { get; set; }
 }
 
 /// <summary>
 /// List parameters for short links
 /// </summary>
-public class ListShortLinksParams
+public class ShortLinkListParamsModel
 {
     /// <summary>
     /// Search by full or partial target URL
@@ -228,7 +228,7 @@ public class ListShortLinksParams
     /// <summary>
     /// Filter by status (new, pending, approved, rejected)
     /// </summary>
-    public string? Status { get; set; }
+    public ShortLinkStatusType? Status { get; set; }
     
     /// <summary>
     /// Filter by deep link flag
@@ -254,4 +254,14 @@ public class ListShortLinksParams
     /// Filter to date
     /// </summary>
     public DateTime? ToDate { get; set; }
+}
+
+public readonly record struct ShortLinkStatusType (string Value)
+{
+    public static readonly ShortLinkStatusType New = new("new");
+    public static readonly ShortLinkStatusType Pending = new("pending");
+    public static readonly ShortLinkStatusType Rejected = new("rejected");
+    public static readonly ShortLinkStatusType Approved = new("approved");
+
+    public override string ToString ( ) => Value;
 }

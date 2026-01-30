@@ -5,7 +5,7 @@ namespace Posty5.QRCode.Models;
 /// <summary>
 /// QR Code page information for landing page customization
 /// </summary>
-public class QRCodePageInfo
+public class QRCodePageInfoModel
 {
     /// <summary>
     /// Page title
@@ -19,7 +19,7 @@ public class QRCodePageInfo
     
 }
 
-public class QRCodeFreeTextTarget
+public class QRCodeFreeTextTargetModel
 {
        /// <summary>
     /// Free text content
@@ -29,7 +29,7 @@ public class QRCodeFreeTextTarget
 /// <summary>
 /// Email QR code target configuration
 /// </summary>
-public class QRCodeEmailTarget
+public class QRCodeEmailTargetModel
 {
     /// <summary>
     /// Email address
@@ -50,7 +50,7 @@ public class QRCodeEmailTarget
 /// <summary>
 /// WiFi QR code target configuration
 /// </summary>
-public class QRCodeWifiTarget
+public class QRCodeWifiTargetModel
 {
     /// <summary>
     /// WiFi network name (SSID)
@@ -71,7 +71,7 @@ public class QRCodeWifiTarget
 /// <summary>
 /// Phone call QR code target configuration
 /// </summary>
-public class QRCodeCallTarget
+public class QRCodeCallTargetModel
 {
     /// <summary>
     /// Phone number
@@ -82,7 +82,7 @@ public class QRCodeCallTarget
 /// <summary>
 /// SMS QR code target configuration
 /// </summary>
-public class QRCodeSmsTarget
+public class QRCodeSmsTargetModel
 {
     /// <summary>
     /// Phone number
@@ -98,7 +98,7 @@ public class QRCodeSmsTarget
 /// <summary>
 /// URL QR code target configuration
 /// </summary>
-public class QRCodeUrlTarget
+public class QRCodeUrlTargetModel
 {
     /// <summary>
     /// Target URL
@@ -109,7 +109,7 @@ public class QRCodeUrlTarget
 /// <summary>
 /// Geolocation QR code target configuration
 /// </summary>
-public class QRCodeGeolocationTarget
+public class QRCodeGeolocationTargetModel
 {
     /// <summary>
     /// Latitude coordinate
@@ -125,7 +125,7 @@ public class QRCodeGeolocationTarget
 /// <summary>
 /// QR Code target configuration
 /// </summary>
-public class QRCodeTarget
+public class QRCodeTargetModel
 {
     /// <summary>
     /// Target type (email, wifi, call, sms, url, geolocation, freeText)
@@ -135,37 +135,37 @@ public class QRCodeTarget
     /// <summary>
     /// Free Text configuration (when type is 'freeText')
     /// </summary>
-    public QRCodeFreeTextTarget? FreeText { get; set; }
+    public QRCodeFreeTextTargetModel? FreeText { get; set; }
 
     /// <summary>
     /// Email configuration (when type is 'email')
     /// </summary>
-    public QRCodeEmailTarget? Email { get; set; }
+    public QRCodeEmailTargetModel? Email { get; set; }
     
     /// <summary>
     /// WiFi configuration (when type is 'wifi')
     /// </summary>
-    public QRCodeWifiTarget? Wifi { get; set; }
+    public QRCodeWifiTargetModel? Wifi { get; set; }
     
     /// <summary>
     /// Call configuration (when type is 'call')
     /// </summary>
-    public QRCodeCallTarget? Call { get; set; }
+    public QRCodeCallTargetModel? Call { get; set; }
     
     /// <summary>
     /// SMS configuration (when type is 'sms')
     /// </summary>
-    public QRCodeSmsTarget? Sms { get; set; }
+    public QRCodeSmsTargetModel? Sms { get; set; }
     
     /// <summary>
     /// URL configuration (when type is 'url')
     /// </summary>
-    public QRCodeUrlTarget? Url { get; set; }
+    public QRCodeUrlTargetModel? Url { get; set; }
     
     /// <summary>
     /// Geolocation configuration (when type is 'geolocation')
     /// </summary>
-    public QRCodeGeolocationTarget? Geolocation { get; set; }
+    public QRCodeGeolocationTargetModel? Geolocation { get; set; }
     
     /// <summary>
     /// Free text content (when type is 'freeText')
@@ -176,7 +176,7 @@ public class QRCodeTarget
 /// <summary>
 /// Preview reason (moderation score)
 /// </summary>
-public class PreviewReason
+public class QRCodePreviewReasonModel
 {
     /// <summary>
     /// Category name
@@ -244,29 +244,29 @@ public class QRCodeModel
     /// <summary>
     /// QR code status (new, pending, approved, rejected)
     /// </summary>
-    public string? Status { get; set; }
+    public QRCodeStatusType Status { get; set; }
     
     /// <summary>
     /// QR code landing page URL
     /// </summary>
-    public string? qrCodeLandingPageURL { get; set; }
+    public string? QrCodeLandingPageURL { get; set; }
     public string? QrCodeDownloadURL { get; set; }
 
     
     /// <summary>
     /// Page information for landing page customization
     /// </summary>
-    public QRCodePageInfo? PageInfo { get; set; }
+    public QRCodePageInfoModel? PageInfo { get; set; }
     
     /// <summary>
     /// QR code target configuration
     /// </summary>
-    public QRCodeTarget? QrCodeTarget { get; set; }
+    public QRCodeTargetModel? QrCodeTarget { get; set; }
     
     /// <summary>
     /// Preview reasons (moderation scores)
     /// </summary>
-    public List<PreviewReason>? PreviewReasons { get; set; }
+    public List<QRCodePreviewReasonModel>? PreviewReasons { get; set; }
     
     /// <summary>
     /// Created timestamp
@@ -285,7 +285,7 @@ public class QRCodeModel
 /// <summary>
 /// Base request for QR code operations
 /// </summary>
-public class QRCodeRequestBase
+public class QRCodeRequestBaseModel
 {
     /// <summary>
     /// QR code name (optional)
@@ -320,13 +320,13 @@ public class QRCodeRequestBase
     /// <summary>
     /// Page information (required when monetization is enabled)
     /// </summary>
-    public QRCodePageInfo? PageInfo { get; set; }
+    public QRCodePageInfoModel? PageInfo { get; set; }
 }
 
 /// <summary>
 /// Create free text QR code request
 /// </summary>
-public class CreateFreeTextQRCodeRequest : QRCodeRequestBase
+public class QRCodeCreateFreeTextRequestModel : QRCodeRequestBaseModel
 {
     /// <summary>
     /// Free text content
@@ -337,73 +337,73 @@ public class CreateFreeTextQRCodeRequest : QRCodeRequestBase
 /// <summary>
 /// Create email QR code request
 /// </summary>
-public class CreateEmailQRCodeRequest : QRCodeRequestBase
+public class QRCodeCreateEmailRequestModel : QRCodeRequestBaseModel
 {
     /// <summary>
     /// Email configuration
     /// </summary>
-    public QRCodeEmailTarget Email { get; set; } = new();
+    public QRCodeEmailTargetModel Email { get; set; } = new();
 }
 
 /// <summary>
 /// Create WiFi QR code request
 /// </summary>
-public class CreateWifiQRCodeRequest : QRCodeRequestBase
+public class QRCodeCreateWifiRequestModel : QRCodeRequestBaseModel
 {
     /// <summary>
     /// WiFi configuration
     /// </summary>
-    public QRCodeWifiTarget Wifi { get; set; } = new();
+    public QRCodeWifiTargetModel Wifi { get; set; } = new();
 }
 
 /// <summary>
 /// Create phone call QR code request
 /// </summary>
-public class CreateCallQRCodeRequest : QRCodeRequestBase
+public class QRCodeCreateCallRequestModel : QRCodeRequestBaseModel
 {
     /// <summary>
     /// Call configuration
     /// </summary>
-    public QRCodeCallTarget Call { get; set; } = new();
+    public QRCodeCallTargetModel Call { get; set; } = new();
 }
 
 /// <summary>
 /// Create SMS QR code request
 /// </summary>
-public class CreateSMSQRCodeRequest : QRCodeRequestBase
+public class QRCodeCreateSMSRequestModel : QRCodeRequestBaseModel
 {
     /// <summary>
     /// SMS configuration
     /// </summary>
-    public QRCodeSmsTarget Sms { get; set; } = new();
+    public QRCodeSmsTargetModel Sms { get; set; } = new();
 }
 
 /// <summary>
 /// Create URL QR code request
 /// </summary>
-public class CreateURLQRCodeRequest : QRCodeRequestBase
+public class QRCodeCreateURLRequestModel : QRCodeRequestBaseModel
 {
     /// <summary>
     /// URL configuration
     /// </summary>
-    public QRCodeUrlTarget Url { get; set; } = new();
+    public QRCodeUrlTargetModel Url { get; set; } = new();
 }
 
 /// <summary>
 /// Create geolocation QR code request
 /// </summary>
-public class CreateGeolocationQRCodeRequest : QRCodeRequestBase
+public class QRCodeCreateGeolocationRequestModel : QRCodeRequestBaseModel
 {
     /// <summary>
     /// Geolocation configuration
     /// </summary>
-    public QRCodeGeolocationTarget Geolocation { get; set; } = new();
+    public QRCodeGeolocationTargetModel Geolocation { get; set; } = new();
 }
 
 /// <summary>
 /// Update free text QR code request
 /// </summary>
-public class UpdateFreeTextQRCodeRequest : QRCodeRequestBase
+public class QRCodeUpdateFreeTextRequestModel : QRCodeRequestBaseModel
 {
     /// <summary>
     /// QR code name (required for updates)
@@ -419,7 +419,7 @@ public class UpdateFreeTextQRCodeRequest : QRCodeRequestBase
 /// <summary>
 /// Update email QR code request
 /// </summary>
-public class UpdateEmailQRCodeRequest : QRCodeRequestBase
+public class QRCodeUpdateEmailRequestModel : QRCodeRequestBaseModel
 {
     /// <summary>
     /// QR code name (required for updates)
@@ -429,13 +429,13 @@ public class UpdateEmailQRCodeRequest : QRCodeRequestBase
     /// <summary>
     /// Email configuration
     /// </summary>
-    public QRCodeEmailTarget Email { get; set; } = new();
+    public QRCodeEmailTargetModel Email { get; set; } = new();
 }
 
 /// <summary>
 /// Update WiFi QR code request
 /// </summary>
-public class UpdateWifiQRCodeRequest : QRCodeRequestBase
+public class QRCodeUpdateWifiRequestModel : QRCodeRequestBaseModel
 {
     /// <summary>
     /// QR code name (required for updates)
@@ -445,13 +445,13 @@ public class UpdateWifiQRCodeRequest : QRCodeRequestBase
     /// <summary>
     /// WiFi configuration
     /// </summary>
-    public QRCodeWifiTarget Wifi { get; set; } = new();
+    public QRCodeWifiTargetModel Wifi { get; set; } = new();
 }
 
 /// <summary>
 /// Update phone call QR code request
 /// </summary>
-public class UpdateCallQRCodeRequest : QRCodeRequestBase
+public class QRCodeUpdateCallRequestModel : QRCodeRequestBaseModel
 {
     /// <summary>
     /// QR code name (required for updates)
@@ -461,13 +461,13 @@ public class UpdateCallQRCodeRequest : QRCodeRequestBase
     /// <summary>
     /// Call configuration
     /// </summary>
-    public QRCodeCallTarget Call { get; set; } = new();
+    public QRCodeCallTargetModel Call { get; set; } = new();
 }
 
 /// <summary>
 /// Update SMS QR code request
 /// </summary>
-public class UpdateSMSQRCodeRequest : QRCodeRequestBase
+public class QRCodeUpdateSMSRequestModel : QRCodeRequestBaseModel
 {
     /// <summary>
     /// QR code name (required for updates)
@@ -477,13 +477,13 @@ public class UpdateSMSQRCodeRequest : QRCodeRequestBase
     /// <summary>
     /// SMS configuration
     /// </summary>
-    public QRCodeSmsTarget Sms { get; set; } = new();
+    public QRCodeSmsTargetModel Sms { get; set; } = new();
 }
 
 /// <summary>
 /// Update URL QR code request
 /// </summary>
-public class UpdateURLQRCodeRequest : QRCodeRequestBase
+public class QRCodeUpdateURLRequestModel : QRCodeRequestBaseModel
 {
     /// <summary>
     /// QR code name (required for updates)
@@ -493,13 +493,13 @@ public class UpdateURLQRCodeRequest : QRCodeRequestBase
     /// <summary>
     /// URL configuration
     /// </summary>
-    public QRCodeUrlTarget Url { get; set; } = new();
+    public QRCodeUrlTargetModel Url { get; set; } = new();
 }
 
 /// <summary>
 /// Update geolocation QR code request
 /// </summary>
-public class UpdateGeolocationQRCodeRequest : QRCodeRequestBase
+public class QRCodeUpdateGeolocationRequestModel : QRCodeRequestBaseModel
 {
     /// <summary>
     /// QR code name (required for updates)
@@ -509,13 +509,13 @@ public class UpdateGeolocationQRCodeRequest : QRCodeRequestBase
     /// <summary>
     /// Geolocation configuration
     /// </summary>
-    public QRCodeGeolocationTarget Geolocation { get; set; } = new();
+    public QRCodeGeolocationTargetModel Geolocation { get; set; } = new();
 }
 
 /// <summary>
 /// List parameters for searching QR codes
 /// </summary>
-public class ListQRCodesParams
+public class QRCodeListParamsModel
 {
     /// <summary>
     /// Filter by QR code name
@@ -550,7 +550,7 @@ public class ListQRCodesParams
     /// <summary>
     /// Filter by status (new, pending, approved, rejected)
     /// </summary>
-    public string? Status { get; set; }
+    public QRCodeStatusType? Status { get; set; }
     
     /// <summary>
     /// Filter by created from source
@@ -568,4 +568,16 @@ public enum QRCodeTargetType
     Sms,
     Url,
     Geolocation
+}
+
+
+
+public readonly record struct QRCodeStatusType (string Value)
+{
+    public static readonly QRCodeStatusType New = new("new");
+    public static readonly QRCodeStatusType Pending = new("pending");
+    public static readonly QRCodeStatusType Rejected = new("rejected");
+    public static readonly QRCodeStatusType Approved = new("approved");
+
+    public override string ToString ( ) => Value;
 }

@@ -27,11 +27,11 @@ public class HtmlHostingFormSubmissionClient
     /// <param name="id">Submission ID</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Form submission details with form data</returns>
-    public async Task<FormSubmissionModel> GetAsync(
+    public async Task<HtmlHostingFormSubmissionModel> GetAsync(
         string id,
         CancellationToken cancellationToken = default)
     {
-        var response = await _http.GetAsync<FormSubmissionModel>(
+        var response = await _http.GetAsync<HtmlHostingFormSubmissionModel>(
             $"{BasePath}/{id}",
             cancellationToken: cancellationToken);
 
@@ -44,15 +44,15 @@ public class HtmlHostingFormSubmissionClient
     /// <param name="id">Current submission ID</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Next and previous submission references (if they exist)</returns>
-    public async Task<NextPreviousSubmissionsResponse> GetNextPreviousAsync(
+    public async Task<HtmlHostingFormSubmissionNextPreviousResponseModel> GetNextPreviousAsync(
         string id,
         CancellationToken cancellationToken = default)
     {
-        var response = await _http.GetAsync<NextPreviousSubmissionsResponse>(
+        var response = await _http.GetAsync<HtmlHostingFormSubmissionNextPreviousResponseModel>(
             $"{BasePath}/{id}/next-previous",
             cancellationToken: cancellationToken);
 
-        return response.Result ?? new NextPreviousSubmissionsResponse();
+        return response.Result ?? new HtmlHostingFormSubmissionNextPreviousResponseModel();
     }
 
     /// <summary>
@@ -62,8 +62,8 @@ public class HtmlHostingFormSubmissionClient
     /// <param name="pagination">Pagination parameters</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Paginated list of form submissions</returns>
-    public async Task<PaginationResponse<FormSubmissionModel>> ListAsync(
-        ListFormSubmissionsParams listParams,
+    public async Task<PaginationResponse<HtmlHostingFormSubmissionModel>> ListAsync(
+        HtmlHostingFormSubmissionListParamsModel listParams,
         PaginationParams? pagination = null,
         CancellationToken cancellationToken = default)
     {
@@ -87,12 +87,12 @@ public class HtmlHostingFormSubmissionClient
             queryParams["pageSize"] = pagination.PageSize;
         }
 
-        var response = await _http.GetAsync<PaginationResponse<FormSubmissionModel>>(
+        var response = await _http.GetAsync<PaginationResponse<HtmlHostingFormSubmissionModel>>(
             BasePath,
             queryParams,
             cancellationToken);
 
-        return response.Result ?? new PaginationResponse<FormSubmissionModel>();
+        return response.Result ?? new PaginationResponse<HtmlHostingFormSubmissionModel>();
     }
 
     /// <summary>
@@ -104,9 +104,9 @@ public class HtmlHostingFormSubmissionClient
     /// <returns>Response with updated status history</returns>
     /// <exception cref="ArgumentNullException">Thrown when id or request is null</exception>
     /// <exception cref="InvalidOperationException">Thrown when submission not found or user doesn't have permission</exception>
-    public async Task<ChangeStatusResponse> ChangeStatusAsync(
+    public async Task<HtmlHostingFormSubmissionChangeStatusResponseModel> ChangeStatusAsync(
         string id,
-        ChangeStatusRequest request,
+        HtmlHostingFormSubmissionChangeStatusRequestModel request,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(id))
@@ -114,7 +114,7 @@ public class HtmlHostingFormSubmissionClient
         if (request == null)
             throw new ArgumentNullException(nameof(request));
 
-        var response = await _http.PutAsync<ChangeStatusResponse>(
+        var response = await _http.PutAsync<HtmlHostingFormSubmissionChangeStatusResponseModel>(
             $"{BasePath}/{id}/status",
             request,
             cancellationToken: cancellationToken);

@@ -26,7 +26,7 @@ public class HtmlHostingClientTests : IDisposable
     {
         // Arrange
         var fileName = $"test-page-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}.html";
-        var request = new CreateHtmlPageFileRequest
+        var request = new HtmlHostingCreatePageFileRequestModel
         {
             Name = $"Test HTML Page - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
             FileName = fileName,
@@ -64,7 +64,7 @@ public class HtmlHostingClientTests : IDisposable
 </body>
 </html>";
 
-        var request = new CreateHtmlPageFileRequest
+        var request = new HtmlHostingCreatePageFileRequestModel
         {
             Name = $"Memory Stream Page - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
             FileName = "memory-test.html",
@@ -89,10 +89,10 @@ public class HtmlHostingClientTests : IDisposable
     public async Task CreateWithGithubFile_ShouldReturnValidResponse()
     {
         // Arrange
-        var request = new CreateHtmlPageGithubRequest
+        var request = new HtmlHostingCreatePageGithubRequestModel
         {
             Name = $"GitHub Page - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
-            GithubInfo = new GithubInfo
+            GithubInfo = new HtmlHostingGithubInfoModel
             {
                 FileURL = "https://raw.githubusercontent.com/posty5/examples/main/index.html"
             },
@@ -117,7 +117,7 @@ public class HtmlHostingClientTests : IDisposable
     {
         // Arrange
         var customSlug = $"html-test-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
-        var request = new CreateHtmlPageFileRequest
+        var request = new HtmlHostingCreatePageFileRequestModel
         {
             Name = "Custom Slug HTML Page",
             FileName = "custom-slug.html",
@@ -142,7 +142,7 @@ public class HtmlHostingClientTests : IDisposable
     public async Task CreateWithFile_WithAutoSaveGoogleSheet_ShouldSucceed()
     {
         // Arrange
-        var request = new CreateHtmlPageFileRequest
+        var request = new HtmlHostingCreatePageFileRequestModel
         {
             Name = $"Form Page - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
             FileName = "contact_form.html",
@@ -170,7 +170,7 @@ public class HtmlHostingClientTests : IDisposable
     public async Task Get_WithValidId_ShouldReturnPage()
     {
         // Arrange - Create a page first
-        var createRequest = new CreateHtmlPageFileRequest
+        var createRequest = new HtmlHostingCreatePageFileRequestModel
         {
             Name = "Page for Get Test",
             FileName = "get-test.html"
@@ -211,7 +211,7 @@ public class HtmlHostingClientTests : IDisposable
     public async Task List_WithFilters_ShouldFilterResults()
     {
         // Arrange
-        var filterParams = new ListHtmlPagesParams
+        var filterParams = new HtmlHostingListPagesParamsModel
         {
             SourceType = "file",
             Tag = "test"
@@ -241,7 +241,7 @@ public class HtmlHostingClientTests : IDisposable
     public async Task List_WithNameSearch_ShouldFilterByName()
     {
         // Arrange
-        var searchParams = new ListHtmlPagesParams
+        var searchParams = new HtmlHostingListPagesParamsModel
         {
             Name = "Test"
         };
@@ -262,7 +262,7 @@ public class HtmlHostingClientTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.IsType<List<HtmlPageLookupItem>>(result);
+        Assert.IsType<List<HtmlHostingPageLookupItemModel>>(result);
         
         // Verify structure if items exist
         if (result.Count > 0)
@@ -277,7 +277,7 @@ public class HtmlHostingClientTests : IDisposable
     public async Task LookupForms_WithValidPageId_ShouldReturnForms()
     {
         // Arrange - Create a page with a form first
-        var createRequest = new CreateHtmlPageFileRequest
+        var createRequest = new HtmlHostingCreatePageFileRequestModel
         {
             Name = "Form Lookup Test",
             FileName = "contact_form.html"
@@ -295,7 +295,7 @@ public class HtmlHostingClientTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.IsType<List<FormLookupItem>>(result);
+        Assert.IsType<List<HtmlHostingFormLookupItemModel>>(result);
     }
 
     #endregion
@@ -306,7 +306,7 @@ public class HtmlHostingClientTests : IDisposable
     public async Task UpdateWithFile_ShouldUpdateSuccessfully()
     {
         // Arrange - Create a page first
-        var createRequest = new CreateHtmlPageFileRequest
+        var createRequest = new HtmlHostingCreatePageFileRequestModel
         {
             Name = "Original Page",
             FileName = "original.html"
@@ -318,7 +318,7 @@ public class HtmlHostingClientTests : IDisposable
         TestConfig.CreatedResources.HtmlHostings.Add(created.Id!);
 
         // Act
-        var updateRequest = new UpdateHtmlPageFileRequest
+        var updateRequest = new HtmlHostingUpdatePageFileRequestModel
         {
             Name = "Updated Page",
             FileName = "updated.html"
@@ -339,10 +339,10 @@ public class HtmlHostingClientTests : IDisposable
     public async Task UpdateWithGithubFile_ShouldUpdateSuccessfully()
     {
         // Arrange - Create a GitHub page first
-        var createRequest = new CreateHtmlPageGithubRequest
+        var createRequest = new HtmlHostingCreatePageGithubRequestModel
         {
             Name = "GitHub Page to Update",
-            GithubInfo = new GithubInfo
+            GithubInfo = new HtmlHostingGithubInfoModel
             {
                 FileURL = "https://raw.githubusercontent.com/posty5/examples/main/index.html"
             }
@@ -352,10 +352,10 @@ public class HtmlHostingClientTests : IDisposable
         TestConfig.CreatedResources.HtmlHostings.Add(created.Id!);
 
         // Act
-        var updateRequest = new UpdateHtmlPageGithubRequest
+        var updateRequest = new HtmlHostingUpdatePageGithubRequestModel
         {
             Name = "Updated GitHub Page",
-            GithubInfo = new GithubInfo
+            GithubInfo = new HtmlHostingGithubInfoModel
             {
                 FileURL = "https://raw.githubusercontent.com/posty5/examples/main/about.html"
             }
@@ -377,7 +377,7 @@ public class HtmlHostingClientTests : IDisposable
     public async Task Delete_ShouldDeleteSuccessfully()
     {
         // Arrange - Create a page first
-        var createRequest = new CreateHtmlPageFileRequest
+        var createRequest = new HtmlHostingCreatePageFileRequestModel
         {
             Name = "Page to Delete",
             FileName = "delete-test.html"
@@ -398,7 +398,7 @@ public class HtmlHostingClientTests : IDisposable
     public async Task CleanCache_WithValidId_ShouldSucceed()
     {
         // Arrange - Create a page first
-        var createRequest = new CreateHtmlPageFileRequest
+        var createRequest = new HtmlHostingCreatePageFileRequestModel
         {
             Name = "Page for Cache Test",
             FileName = "cache-test.html"
@@ -424,7 +424,7 @@ public class HtmlHostingClientTests : IDisposable
     public async Task CreateWithFile_WithAllParameters_ShouldSucceed()
     {
         // Arrange - Test all optional parameters
-        var request = new CreateHtmlPageFileRequest
+        var request = new HtmlHostingCreatePageFileRequestModel
         {
             Name = "Full Parameters Test",
             FileName = "full-params.html",
@@ -453,7 +453,7 @@ public class HtmlHostingClientTests : IDisposable
     public async Task List_WithMultipleFilters_ShouldCombineFilters()
     {
         // Arrange
-        var filterParams = new ListHtmlPagesParams
+        var filterParams = new HtmlHostingListPagesParamsModel
         {
             SourceType = "file",
             IsEnableMonetization = true,
@@ -477,7 +477,7 @@ public class HtmlHostingClientTests : IDisposable
     {
         // Arrange
         var testTag = $"workflow-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
-        var createRequest = new CreateHtmlPageFileRequest
+        var createRequest = new HtmlHostingCreatePageFileRequestModel
         {
             Name = "Workflow Test Page",
             FileName = "workflow.html",

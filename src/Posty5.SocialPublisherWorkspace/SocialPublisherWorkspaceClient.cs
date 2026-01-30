@@ -29,8 +29,8 @@ public class SocialPublisherWorkspaceClient
     /// <param name="pagination">Pagination parameters</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Paginated list of workspaces</returns>
-    public async Task<PaginationResponse<WorkspaceSampleDetails>> ListAsync(
-        ListWorkspacesParams? listParams = null,
+    public async Task<PaginationResponse<SocialPublisherWorkspaceSampleDetailsModel>> ListAsync(
+        SocialPublisherWorkspaceListParamsModel? listParams = null,
         PaginationParams? pagination = null,
         CancellationToken cancellationToken = default)
     {
@@ -54,12 +54,12 @@ public class SocialPublisherWorkspaceClient
             queryParams["pageSize"] = pagination.PageSize;
         }
 
-        var response = await _http.GetAsync<PaginationResponse<WorkspaceSampleDetails>>(
+        var response = await _http.GetAsync<PaginationResponse<SocialPublisherWorkspaceSampleDetailsModel>>(
             BasePath,
             queryParams,
             cancellationToken);
 
-        return response.Result ?? new PaginationResponse<WorkspaceSampleDetails>();
+        return response.Result ?? new PaginationResponse<SocialPublisherWorkspaceSampleDetailsModel>();
     }
 
     /// <summary>
@@ -68,16 +68,53 @@ public class SocialPublisherWorkspaceClient
     /// <param name="id">Workspace ID</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Workspace details with account information</returns>
-    public async Task<WorkspaceModel> GetAsync(
+    public async Task<SocialPublisherWorkspaceModel> GetAsync(
         string id,
         CancellationToken cancellationToken = default)
     {
-        var response = await _http.GetAsync<WorkspaceModel>(
+        var response = await _http.GetAsync<SocialPublisherWorkspaceModel>(
             $"{BasePath}/{id}",
             cancellationToken: cancellationToken);
 
         return response.Result ?? throw new InvalidOperationException("Workspace not found");
     }
+
+    /// <summary>
+    /// Get workspace details for creating new task
+    /// </summary>
+    /// <param name="id">Workspace ID</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Workspace details with populated account information</returns>
+    /// <example>
+    /// <code>
+    /// // Get workspace details for task creation
+    /// var workspace = await client.GetForNewTaskAsync("workspace-id");
+    /// 
+    /// // Access account details
+    /// if (workspace.Account.Youtube != null)
+    /// {
+    ///     Console.WriteLine($"YouTube: {workspace.Account.Youtube.Name}");
+    ///     Console.WriteLine($"Status: {workspace.Account.Youtube.Status}");
+    /// }
+    /// 
+    /// if (workspace.Account.Facebook != null)
+    /// {
+    ///     Console.WriteLine($"Facebook Page: {workspace.Account.Facebook.Name}");
+    ///     Console.WriteLine($"Page ID: {workspace.Account.FacebookPlatformPageId}");
+    /// }
+    /// </code>
+    /// </example>
+    public async Task<SocialPublisherWorkspaceForNewTaskModel> GetForNewTaskAsync(
+        string id,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await _http.GetAsync<SocialPublisherWorkspaceForNewTaskModel>(
+            $"{BasePath}/{id}/for-new-task",
+            cancellationToken: cancellationToken);
+
+        return response.Result ?? throw new InvalidOperationException("Workspace not found");
+    }
+
 
     /// <summary>
     /// Create a new workspace with optional image upload
@@ -106,7 +143,7 @@ public class SocialPublisherWorkspaceClient
     /// </code>
     /// </example>
     public async Task<string> CreateAsync(
-        CreateWorkspaceRequest data,
+        SocialPublisherWorkspaceCreateRequestModel data,
         Stream? logoStream = null,
         string contentType = "image/png",
         CancellationToken cancellationToken = default)
@@ -122,7 +159,7 @@ public class SocialPublisherWorkspaceClient
             createdFrom = "dotnetPackage"
         };
 
-        var response = await _http.PostAsync<CreateWorkspaceResponse>(BasePath, payload, cancellationToken);
+        var response = await _http.PostAsync<SocialPublisherWorkspaceCreateResponseModel>(BasePath, payload, cancellationToken);
         var result = response.Result ?? throw new InvalidOperationException("Failed to create workspace");
 
         // Step 2: Upload image if provided
@@ -158,7 +195,7 @@ public class SocialPublisherWorkspaceClient
     /// </example>
     public async Task UpdateAsync(
         string id,
-        UpdateWorkspaceRequest data,
+        SocialPublisherWorkspaceUpdateRequestModel data,
         Stream? logoStream = null,
         string contentType = "image/png",
         CancellationToken cancellationToken = default)
@@ -173,7 +210,7 @@ public class SocialPublisherWorkspaceClient
             hasImage = logoStream != null
         };
 
-        var response = await _http.PutAsync<CreateWorkspaceResponse>($"{BasePath}/{id}", payload, cancellationToken);
+        var response = await _http.PutAsync<SocialPublisherWorkspaceCreateResponseModel>($"{BasePath}/{id}", payload, cancellationToken);
         var result = response.Result;
 
         // Step 2: Upload image if provided

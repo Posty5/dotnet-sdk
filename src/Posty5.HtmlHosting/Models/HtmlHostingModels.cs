@@ -2,26 +2,12 @@ using System.Text.Json.Serialization;
 
 namespace Posty5.HtmlHosting.Models;
 
-/// <summary>
-/// GitHub repository information for HTML hosting
-/// </summary>
-public class GithubInfo
-{
-    /// <summary>
-    /// GitHub file URL (supports multiple formats)
-    /// </summary>
-    public string FileURL { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// Final computed raw file URL
-    /// </summary>
-    public string? FinalFileRawURL { get; set; }
-}
+ 
 
 /// <summary>
 /// Form submission statistics
 /// </summary>
-public class FormSubmissionData
+public class HtmlHostingFormSubmissionDataModel
 {
     /// <summary>
     /// Last form submission date
@@ -37,7 +23,7 @@ public class FormSubmissionData
 /// <summary>
 /// Preview/moderation reason with score
 /// </summary>
-public class PreviewReason
+public class HtmlHostingPreviewReasonModel
 {
     /// <summary>
     /// Reason key/category
@@ -53,7 +39,7 @@ public class PreviewReason
 /// <summary>
 /// Upload configuration for R2 storage
 /// </summary>
-public class UploadFileConfig
+public class HtmlHostingUploadFileConfigModel
 {
     /// <summary>
     /// Pre-signed URL for direct upload to R2
@@ -64,7 +50,7 @@ public class UploadFileConfig
 /// <summary>
 /// HTML page model with full details
 /// </summary>
-public class HtmlPageModel
+public class HtmlHostingPageModel
 {
     /// <summary>
     /// MongoDB document ID
@@ -160,12 +146,12 @@ public class HtmlPageModel
     /// <summary>
     /// GitHub information (when sourceType is "github")
     /// </summary>
-    public GithubInfoModel? GithubInfo { get; set; }
+    public HtmlHostingGithubInfoModel? GithubInfo { get; set; }
 
     /// <summary>
     /// Form submission data
     /// </summary>
-    public FormSubmissionModel? FormSubmission { get; set; }
+    public HtmlHostingFormSubmissionModel? FormSubmission { get; set; }
 
     /// <summary>
     /// Is cached in local storage
@@ -193,7 +179,7 @@ public class HtmlPageModel
     public string? FileName { get; set; }
 }
 
-public class GithubInfoModel
+public class HtmlHostingGithubInfoModel
 {
     /// <summary>
     /// GitHub file public URL
@@ -201,7 +187,7 @@ public class GithubInfoModel
     public string? FileURL { get; set; }
 }
 
-public class FormSubmissionModel
+public class HtmlHostingFormSubmissionModel
 {
     /// <summary>
     /// Number of form submissions
@@ -221,10 +207,10 @@ public class FormSubmissionModel
     /// <summary>
     /// Forms configuration
     /// </summary>
-    public List<FormInfoModel>? Forms { get; set; }
+    public List<HtmlHostingFormInfoModel>? Forms { get; set; }
 }
 
-public class FormInfoModel
+public class HtmlHostingFormInfoModel
 {
     /// <summary>
     /// Form identifier
@@ -244,7 +230,7 @@ public class FormInfoModel
 /// <summary>
 /// Base request for HTML page creation/update
 /// </summary>
-public class HtmlPageRequestBase
+public class HtmlHostingPageRequestBaseModel
 {
     /// <summary>
     /// Page name
@@ -280,7 +266,7 @@ public class HtmlPageRequestBase
 /// <summary>
 /// Create HTML page with file upload
 /// </summary>
-public class CreateHtmlPageFileRequest : HtmlPageRequestBase
+public class HtmlHostingCreatePageFileRequestModel : HtmlHostingPageRequestBaseModel
 {
     /// <summary>
     /// File name for the HTML file
@@ -291,18 +277,18 @@ public class CreateHtmlPageFileRequest : HtmlPageRequestBase
 /// <summary>
 /// Create HTML page from GitHub repository
 /// </summary>
-public class CreateHtmlPageGithubRequest : HtmlPageRequestBase
+public class HtmlHostingCreatePageGithubRequestModel : HtmlHostingPageRequestBaseModel
 {
     /// <summary>
     /// GitHub repository file information
     /// </summary>
-    public GithubInfo GithubInfo { get; set; } = new();
+    public HtmlHostingGithubInfoModel GithubInfo { get; set; } = new();
 }
 
 /// <summary>
 /// Update HTML page with new file
 /// </summary>
-public class UpdateHtmlPageFileRequest : HtmlPageRequestBase
+public class HtmlHostingUpdatePageFileRequestModel : HtmlHostingPageRequestBaseModel
 {
     /// <summary>
     /// File name for the HTML file
@@ -313,37 +299,37 @@ public class UpdateHtmlPageFileRequest : HtmlPageRequestBase
 /// <summary>
 /// Update HTML page from GitHub repository
 /// </summary>
-public class UpdateHtmlPageGithubRequest : HtmlPageRequestBase
+public class HtmlHostingUpdatePageGithubRequestModel : HtmlHostingPageRequestBaseModel
 {
     /// <summary>
     /// GitHub repository file information
     /// </summary>
-    public GithubInfo GithubInfo { get; set; } = new();
+    public HtmlHostingGithubInfoModel GithubInfo { get; set; } = new();
 }
 
 /// <summary>
 /// Response from create/update operations with upload config
 /// Note: API has typo "uplaodFileConfig" instead of "uploadFileConfig"
 /// </summary>
-public class CreateHtmlPageResponse
+public class HtmlHostingCreatePageResponseModel
 {
     /// <summary>
     /// Upload configuration for R2 storage
     /// Note: Property name has intentional typo to match API
     /// </summary>
     [JsonPropertyName("uplaodFileConfig")]
-    public UploadFileConfig? UploadFileConfig { get; set; }
+    public HtmlHostingUploadFileConfigModel? UploadFileConfig { get; set; }
     
     /// <summary>
     /// HTML page details
     /// </summary>
-    public HtmlPageModel? Details { get; set; }
+    public HtmlHostingPageModel? Details { get; set; }
 }
 
 /// <summary>
 /// Simplified response for file-based operations
 /// </summary>
-public class HtmlPageFileResponse
+public class HtmlHostingPageFileResponseModel
 {
     /// <summary>
     /// Page ID
@@ -364,7 +350,7 @@ public class HtmlPageFileResponse
 /// <summary>
 /// Simplified response for GitHub-based operations
 /// </summary>
-public class HtmlPageGithubResponse
+public class HtmlHostingPageGithubResponseModel
 {
     /// <summary>
     /// Page ID
@@ -379,13 +365,13 @@ public class HtmlPageGithubResponse
     /// <summary>
     /// GitHub repository information
     /// </summary>
-    public GithubInfo? GithubInfo { get; set; }
+    public HtmlHostingGithubInfoModel? GithubInfo { get; set; }
 }
 
 /// <summary>
 /// Simplified HTML page for lookup/dropdown lists
 /// </summary>
-public class HtmlPageLookupItem
+public class HtmlHostingPageLookupItemModel
 {
     /// <summary>
     /// Page ID
@@ -407,7 +393,7 @@ public class HtmlPageLookupItem
 /// <summary>
 /// Form lookup item
 /// </summary>
-public class FormLookupItem
+public class HtmlHostingFormLookupItemModel
 {
     /// <summary>
     /// Form internal ID
@@ -429,7 +415,7 @@ public class FormLookupItem
 /// <summary>
 /// Parameters for listing/filtering HTML pages
 /// </summary>
-public class ListHtmlPagesParams
+public class HtmlHostingListPagesParamsModel
 {
     /// <summary>
     /// Search by name
@@ -454,7 +440,7 @@ public class ListHtmlPagesParams
     /// <summary>
     /// Filter by status
     /// </summary>
-    public string? Status { get; set; }
+    public HtmlHostingStatusType? Status { get; set; }
     
     /// <summary>
     /// Filter by source type ("file" or "github")
@@ -480,4 +466,16 @@ public class ListHtmlPagesParams
     /// Filter by cached in local storage flag
     /// </summary>
     public bool? IsCachedInLocalStorage { get; set; }
+}
+
+
+public readonly record struct HtmlHostingStatusType (string Value)
+{
+    public static readonly HtmlHostingStatusType New = new("new");
+    public static readonly HtmlHostingStatusType Pending = new("pending");
+    public static readonly HtmlHostingStatusType Rejected = new("rejected");
+    public static readonly HtmlHostingStatusType Approved = new("approved");
+    public static readonly HtmlHostingStatusType FileIsNotFound = new("fileIsNotFound");
+
+    public override string ToString ( ) => Value;
 }

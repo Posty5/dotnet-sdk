@@ -38,7 +38,7 @@ public class HtmlHostingVariablesClient
     /// </code>
     /// </example>
     public async Task CreateAsync(
-        CreateHtmlHostingVariableRequest data,
+        HtmlHostingVariablesCreateRequestModel data,
         CancellationToken cancellationToken = default)
     {
         // Validate key prefix
@@ -74,11 +74,11 @@ public class HtmlHostingVariablesClient
     /// Console.WriteLine($"{variable.Key}: {variable.Value}");
     /// </code>
     /// </example>
-    public async Task<HtmlHostingVariableModel> GetAsync(
+    public async Task<HtmlHostingVariablesVariableModel> GetAsync(
         string id,
         CancellationToken cancellationToken = default)
     {
-        var response = await _http.GetAsync<HtmlHostingVariableModel>(
+        var response = await _http.GetAsync<HtmlHostingVariablesVariableModel>(
             $"{BasePath}/{id}",
             cancellationToken: cancellationToken);
         
@@ -104,7 +104,7 @@ public class HtmlHostingVariablesClient
     /// </example>
     public async Task UpdateAsync(
         string id,
-        CreateHtmlHostingVariableRequest data,
+        HtmlHostingVariablesCreateRequestModel data,
         CancellationToken cancellationToken = default)
     {
         // Validate key prefix
@@ -155,8 +155,8 @@ public class HtmlHostingVariablesClient
     /// }
     /// </code>
     /// </example>
-    public async Task<PaginationResponse<HtmlHostingVariableModel>> ListAsync(
-        ListHtmlHostingVariablesParams? listParams = null,
+    public async Task<PaginationResponse<HtmlHostingVariablesVariableModel>> ListAsync(
+        HtmlHostingVariablesListParamsModel? listParams = null,
         PaginationParams? pagination = null,
         CancellationToken cancellationToken = default)
     {
@@ -182,11 +182,11 @@ public class HtmlHostingVariablesClient
             queryParams["pageSize"] = pagination.PageSize;
         }
 
-        var response = await _http.GetAsync<PaginationResponse<HtmlHostingVariableModel>>(
+        var response = await _http.GetAsync<PaginationResponse<HtmlHostingVariablesVariableModel>>(
             BasePath,
             queryParams,
             cancellationToken);
 
-        return response.Result ?? new PaginationResponse<HtmlHostingVariableModel>();
+        return response.Result ?? new PaginationResponse<HtmlHostingVariablesVariableModel>();
     }
 }

@@ -5,7 +5,7 @@ namespace Posty5.HtmlHostingVariables.Models;
 /// <summary>
 /// HTML hosting variable model
 /// </summary>
-public class HtmlHostingVariableModel
+public class HtmlHostingVariablesVariableModel
 {
     /// <summary>
     /// MongoDB document ID
@@ -54,7 +54,7 @@ public class HtmlHostingVariableModel
 /// <summary>
 /// Create/Update HTML hosting variable request
 /// </summary>
-public class CreateHtmlHostingVariableRequest
+public class HtmlHostingVariablesCreateRequestModel
 {
     /// <summary>
     /// Variable name (human-readable, required)
@@ -85,7 +85,7 @@ public class CreateHtmlHostingVariableRequest
 /// <summary>
 /// Parameters for listing/filtering HTML hosting variables
 /// </summary>
-public class ListHtmlHostingVariablesParams
+public class HtmlHostingVariablesListParamsModel
 {
     /// <summary>
     /// Filter by variable name

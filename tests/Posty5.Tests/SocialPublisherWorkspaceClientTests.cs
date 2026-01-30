@@ -25,7 +25,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
     public async Task Create_WithoutImage_ShouldReturnWorkspaceId()
     {
         // Arrange
-        var request = new CreateWorkspaceRequest
+        var request = new SocialPublisherWorkspaceCreateRequestModel
         {
             Name = $"Test Workspace - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
             Description = "Test workspace without image",
@@ -46,7 +46,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
     public async Task Create_WithImage_ShouldUploadAndReturnWorkspaceId()
     {
         // Arrange
-        var request = new CreateWorkspaceRequest
+        var request = new SocialPublisherWorkspaceCreateRequestModel
         {
             Name = $"Workspace with Image - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
             Description = "Test workspace with logo",
@@ -69,7 +69,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
     public async Task Create_WithMemoryStreamImage_ShouldSucceed()
     {
         // Arrange
-        var request = new CreateWorkspaceRequest
+        var request = new SocialPublisherWorkspaceCreateRequestModel
         {
             Name = "Memory Stream Workspace"+ new Random().Next(),
             Description = "Using memory stream for image"
@@ -92,7 +92,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
     public async Task Create_WithTagAndRefId_ShouldSucceed()
     {
         // Arrange
-        var request = new CreateWorkspaceRequest
+        var request = new SocialPublisherWorkspaceCreateRequestModel
         {
             Name = "Tagged Workspace"+new Random().Next(),
             Description = "Workspace with metadata",
@@ -117,7 +117,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
     public async Task Get_WithValidId_ShouldReturnWorkspace()
     {
         // Arrange - Create a workspace first
-        var createRequest = new CreateWorkspaceRequest
+        var createRequest = new SocialPublisherWorkspaceCreateRequestModel
         {
             Name = "Workspace for Get Test"+ new Random().Next(),
             Description = "Testing get operation",
@@ -137,6 +137,98 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
         Assert.NotNull(result);
         Assert.Equal(workspaceId, result.Id);
         Assert.NotNull(result.Account);
+    }
+
+    #endregion
+
+    #region GetForNewTask Tests
+
+    [Fact]
+    public async Task GetForNewTask_WithValidId_ShouldReturnWorkspaceWithAccounts()
+    {
+        // Arrange - Create a workspace first
+        var createRequest = new SocialPublisherWorkspaceCreateRequestModel
+        {
+            Name = "Workspace for GetForNewTask Test" + new Random().Next(),
+            Description = "Testing getForNewTask operation",
+            Tag = "new-task-test"
+        };
+
+        var workspaceId = await _client.CreateAsync(createRequest);
+        TestConfig.CreatedResources.Workspaces.Add(workspaceId);
+
+        // Wait a moment for the workspace to be fully created
+        await Task.Delay(1000);
+
+        // Act
+        var result = await _client.GetForNewTaskAsync(workspaceId);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(workspaceId, result.Id);
+        Assert.NotNull(result.Name);
+        Assert.NotNull(result.Description);
+        Assert.NotNull(result.Account);
+    }
+
+    [Fact]
+    public async Task GetForNewTask_ShouldReturnPopulatedAccountDetails()
+    {
+        // Arrange - Create a workspace
+        var createRequest = new SocialPublisherWorkspaceCreateRequestModel
+        {
+            Name = "Account Details Test" + new Random().Next(),
+            Description = "Testing account population"
+        };
+
+        var workspaceId = await _client.CreateAsync(createRequest);
+        TestConfig.CreatedResources.Workspaces.Add(workspaceId);
+
+        await Task.Delay(1000);
+
+        // Act
+        var result = await _client.GetForNewTaskAsync(workspaceId);
+
+        // Assert
+        Assert.NotNull(result.Account);
+        // Account object should have properties (even if null for individual platforms)
+        // The Account object itself should not be null
+        Assert.NotNull(result.Account);
+    }
+
+    [Fact]
+    public async Task GetForNewTask_WithInvalidId_ShouldThrowException()
+    {
+        // Act & Assert
+        await Assert.ThrowsAsync<Exception>(async () =>
+        {
+            await _client.GetForNewTaskAsync("invalid-workspace-id-12345");
+        });
+    }
+
+    [Fact]
+    public async Task GetForNewTask_ShouldIncludeImageUrl()
+    {
+        // Arrange - Create workspace with image
+        var createRequest = new SocialPublisherWorkspaceCreateRequestModel
+        {
+            Name = "Image URL Test" + new Random().Next(),
+            Description = "Testing imageUrl in response"
+        };
+
+        using var imageStream = File.OpenRead(_testImagePath);
+        var workspaceId = await _client.CreateAsync(createRequest, imageStream, "image/png");
+        TestConfig.CreatedResources.Workspaces.Add(workspaceId);
+
+        await Task.Delay(1000);
+
+        // Act
+        var result = await _client.GetForNewTaskAsync(workspaceId);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.ImageUrl);
+        Assert.NotEmpty(result.ImageUrl);
     }
 
     #endregion
@@ -164,14 +256,14 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
         var uniqueTag = $"tag_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
 
         // Create workspaces with the same tag
-        var workspace1Id = await _client.CreateAsync(new CreateWorkspaceRequest
+        var workspace1Id = await _client.CreateAsync(new SocialPublisherWorkspaceCreateRequestModel
         {
             Name = "Tagged Workspace 1"+new Random().Next(),
             Description = "First workspace",
             Tag = uniqueTag
         });
 
-        var workspace2Id = await _client.CreateAsync(new CreateWorkspaceRequest
+        var workspace2Id = await _client.CreateAsync(new SocialPublisherWorkspaceCreateRequestModel
         {
             Name = "Tagged Workspace 2"+new Random().Next(),
             Description = "Second workspace",
@@ -183,7 +275,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
 
         // Act
         var result = await _client.ListAsync(
-            new ListWorkspacesParams { Tag = uniqueTag }
+            new SocialPublisherWorkspaceListParamsModel { Tag = uniqueTag }
         );
 
         // Assert
@@ -201,7 +293,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
         // Arrange
         var uniqueName = $"NameFilter_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
 
-        var workspaceId = await _client.CreateAsync(new CreateWorkspaceRequest
+        var workspaceId = await _client.CreateAsync(new SocialPublisherWorkspaceCreateRequestModel
         {
             Name = uniqueName,
             Description = "Name filter test"
@@ -211,7 +303,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
 
         // Act
         var result = await _client.ListAsync(
-            new ListWorkspacesParams { Name = uniqueName }
+            new SocialPublisherWorkspaceListParamsModel { Name = uniqueName }
         );
 
         // Assert
@@ -240,7 +332,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
     public async Task Update_WithoutImage_ShouldUpdateWorkspace()
     {
         // Arrange - Create a workspace
-        var workspaceId = await _client.CreateAsync(new CreateWorkspaceRequest
+        var workspaceId = await _client.CreateAsync(new SocialPublisherWorkspaceCreateRequestModel
         {
             Name = "Original Name"+ new Random().Next(),
             Description = "Original description"
@@ -249,7 +341,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
         TestConfig.CreatedResources.Workspaces.Add(workspaceId);
 
         // Act
-        await _client.UpdateAsync(workspaceId, new UpdateWorkspaceRequest
+        await _client.UpdateAsync(workspaceId, new SocialPublisherWorkspaceUpdateRequestModel
         {
             Name = "Updated Name"+ new Random().Next(),
             Description = "Updated description"
@@ -263,7 +355,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
     public async Task Update_WithNewImage_ShouldUploadImage()
     {
         // Arrange - Create a workspace
-        var workspaceId = await _client.CreateAsync(new CreateWorkspaceRequest
+        var workspaceId = await _client.CreateAsync(new SocialPublisherWorkspaceCreateRequestModel
         {
             Name = "Workspace to Update"+ new Random().Next(),
             Description = "Will add image"
@@ -275,7 +367,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
         using var imageStream = File.OpenRead(_testImagePath);
         await _client.UpdateAsync(
             workspaceId,
-            new UpdateWorkspaceRequest
+            new SocialPublisherWorkspaceUpdateRequestModel
             {
                 Name = "Updated with Image"+ new Random().Next(),
                 Description = "Now has an image"
@@ -292,7 +384,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
     public async Task Update_ChangeTagAndRefId_ShouldSucceed()
     {
         // Arrange
-        var workspaceId = await _client.CreateAsync(new CreateWorkspaceRequest
+        var workspaceId = await _client.CreateAsync(new SocialPublisherWorkspaceCreateRequestModel
         {
             Name = "Metadata Update Test"+ new Random().Next(),
             Description = "Testing metadata updates",
@@ -303,7 +395,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
         TestConfig.CreatedResources.Workspaces.Add(workspaceId);
 
         // Act
-        await _client.UpdateAsync(workspaceId, new UpdateWorkspaceRequest
+        await _client.UpdateAsync(workspaceId, new SocialPublisherWorkspaceUpdateRequestModel
         {
             Name = "Metadata Update Test"+ new Random().Next(),
             Description = "Testing metadata updates",
@@ -323,7 +415,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
     public async Task Delete_WithValidId_ShouldDeleteWorkspace()
     {
         // Arrange
-        var workspaceId = await _client.CreateAsync(new CreateWorkspaceRequest
+        var workspaceId = await _client.CreateAsync(new SocialPublisherWorkspaceCreateRequestModel
         {
             Name = "Workspace to Delete",
             Description = "This will be deleted"
@@ -344,7 +436,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
     public async Task CompleteWorkflow_CreateGetUpdateDelete_ShouldSucceed()
     {
         // Create
-        var workspaceId = await _client.CreateAsync(new CreateWorkspaceRequest
+        var workspaceId = await _client.CreateAsync(new SocialPublisherWorkspaceCreateRequestModel
         {
             Name = "Workflow Test Workspace",
             Description = "Full CRUD workflow",
@@ -358,7 +450,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
         Assert.Equal("Workflow Test Workspace", workspace.Name);
 
         // Update
-        await _client.UpdateAsync(workspaceId, new UpdateWorkspaceRequest
+        await _client.UpdateAsync(workspaceId, new SocialPublisherWorkspaceUpdateRequestModel
         {
             Name = "Updated Workflow Workspace",
             Description = "Updated in workflow",
@@ -380,7 +472,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
         using (var createStream = File.OpenRead(_testImagePath))
         {
             var workspaceId = await _client.CreateAsync(
-                new CreateWorkspaceRequest
+                new SocialPublisherWorkspaceCreateRequestModel
                 {
                     Name = "Image Workflow Test",
                     Description = "Testing with images"
@@ -394,7 +486,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
             {
                 await _client.UpdateAsync(
                     workspaceId,
-                    new UpdateWorkspaceRequest
+                    new SocialPublisherWorkspaceUpdateRequestModel
                     {
                         Name = "Updated Image Workspace",
                         Description = "With new image"
@@ -418,7 +510,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
     {
         // Arrange
         var longDescription = new string('x', 500);
-        var request = new CreateWorkspaceRequest
+        var request = new SocialPublisherWorkspaceCreateRequestModel
         {
             Name = "Long Description Workspace" + new Random().Next(),
             Description = longDescription
@@ -439,7 +531,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
         // Arrange
         var uniqueRef = $"ref_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
 
-        var workspaceId = await _client.CreateAsync(new CreateWorkspaceRequest
+        var workspaceId = await _client.CreateAsync(new SocialPublisherWorkspaceCreateRequestModel
         {
             Name = "RefId Test"+ new Random().Next(),
             Description = "Testing refId filter",
@@ -450,7 +542,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
 
         // Act
         var result = await _client.ListAsync(
-            new ListWorkspacesParams { RefId = uniqueRef }
+            new SocialPublisherWorkspaceListParamsModel { RefId = uniqueRef }
         );
 
         // Assert

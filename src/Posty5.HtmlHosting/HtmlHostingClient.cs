@@ -31,8 +31,8 @@ public class HtmlHostingClient
     /// <param name="contentType">Content type of the file (default: text/html)</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Created page with ID, shorter link, and file URL</returns>
-    public async Task<HtmlPageFileResponse> CreateWithFileAsync(
-        CreateHtmlPageFileRequest data,
+    public async Task<HtmlHostingPageFileResponseModel> CreateWithFileAsync(
+        HtmlHostingCreatePageFileRequestModel data,
         Stream fileStream,
         string contentType = "text/html",
         CancellationToken cancellationToken = default)
@@ -51,7 +51,7 @@ public class HtmlHostingClient
             createdFrom = "dotnetPackage"
         };
 
-        var response = await _http.PostAsync<CreateHtmlPageResponse>(BasePath, payload, cancellationToken);
+        var response = await _http.PostAsync<HtmlHostingCreatePageResponseModel>(BasePath, payload, cancellationToken);
         var result = response.Result?.Details ?? throw new InvalidOperationException("Failed to create HTML page");
         var uploadConfig = response.Result?.UploadFileConfig ?? throw new InvalidOperationException("Upload configuration not provided");
 
@@ -61,7 +61,7 @@ public class HtmlHostingClient
         // Step 3: Publish the HTML page
         await PublishAsync(result.Id!, cancellationToken);
 
-        return new HtmlPageFileResponse
+        return new HtmlHostingPageFileResponseModel
         {
             Id = result.Id,
             ShorterLink = result.ShorterLink,
@@ -76,8 +76,8 @@ public class HtmlHostingClient
     /// <param name="data">Create request data with GitHub file URL</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Created page with ID, shorter link, and GitHub info</returns>
-    public async Task<HtmlPageGithubResponse> CreateWithGithubFileAsync(
-        CreateHtmlPageGithubRequest data,
+    public async Task<HtmlHostingPageGithubResponseModel> CreateWithGithubFileAsync(
+        HtmlHostingCreatePageGithubRequestModel data,
         CancellationToken cancellationToken = default)
     {
         var payload = new
@@ -93,10 +93,10 @@ public class HtmlHostingClient
             createdFrom = "dotnetPackage"
         };
 
-        var response = await _http.PostAsync<CreateHtmlPageResponse>(BasePath, payload, cancellationToken);
+        var response = await _http.PostAsync<HtmlHostingCreatePageResponseModel>(BasePath, payload, cancellationToken);
         var result = response.Result?.Details ?? throw new InvalidOperationException("Failed to create HTML page");
 
-        return new HtmlPageGithubResponse
+        return new HtmlHostingPageGithubResponseModel
         {
             Id = result.Id,
             ShorterLink = result.ShorterLink,
@@ -110,9 +110,9 @@ public class HtmlHostingClient
     /// <param name="id">HTML page ID</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>HTML page full details</returns>
-    public async Task<HtmlPageModel> GetAsync(string id, CancellationToken cancellationToken = default)
+    public async Task<HtmlHostingPageModel> GetAsync(string id, CancellationToken cancellationToken = default)
     {
-        var response = await _http.GetAsync<HtmlPageModel>($"{BasePath}/{id}", cancellationToken: cancellationToken);
+        var response = await _http.GetAsync<HtmlHostingPageModel>($"{BasePath}/{id}", cancellationToken: cancellationToken);
         return response.Result ?? throw new InvalidOperationException("HTML page not found");
     }
 
@@ -123,8 +123,8 @@ public class HtmlHostingClient
     /// <param name="pagination">Pagination parameters</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Paginated list of HTML pages</returns>
-    public async Task<PaginationResponse<HtmlPageModel>> ListAsync(
-        ListHtmlPagesParams? listParams = null,
+    public async Task<PaginationResponse<HtmlHostingPageModel>> ListAsync(
+        HtmlHostingListPagesParamsModel? listParams = null,
         PaginationParams? pagination = null,
         CancellationToken cancellationToken = default)
     {
@@ -140,8 +140,8 @@ public class HtmlHostingClient
                 queryParams["tag"] = listParams.Tag;
             if (!string.IsNullOrEmpty(listParams.RefId))
                 queryParams["refId"] = listParams.RefId;
-            if (!string.IsNullOrEmpty(listParams.Status))
-                queryParams["status"] = listParams.Status;
+            if (listParams.Status.HasValue)
+                queryParams["status"] = listParams.Status.Value.ToString();
             if (!string.IsNullOrEmpty(listParams.SourceType))
                 queryParams["sourceType"] = listParams.SourceType;
             if (listParams.IsEnableMonetization.HasValue)
@@ -160,12 +160,12 @@ public class HtmlHostingClient
             queryParams["pageSize"] = pagination.PageSize;
         }
 
-        var response = await _http.GetAsync<PaginationResponse<HtmlPageModel>>(
+        var response = await _http.GetAsync<PaginationResponse<HtmlHostingPageModel>>(
             BasePath,
             queryParams,
             cancellationToken);
 
-        return response.Result ?? new PaginationResponse<HtmlPageModel>();
+        return response.Result ?? new PaginationResponse<HtmlHostingPageModel>();
     }
 
     /// <summary>
@@ -174,12 +174,12 @@ public class HtmlHostingClient
     /// </summary>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>List of HTML page lookup items</returns>
-    public async Task<List<HtmlPageLookupItem>> LookupAsync(CancellationToken cancellationToken = default)
+    public async Task<List<HtmlHostingPageLookupItemModel>> LookupAsync(CancellationToken cancellationToken = default)
     {
-        var response = await _http.GetAsync<List<HtmlPageLookupItem>>(
+        var response = await _http.GetAsync<List<HtmlHostingPageLookupItemModel>>(
             $"{BasePath}/lookup",
             cancellationToken: cancellationToken);
-        return response.Result ?? new List<HtmlPageLookupItem>();
+        return response.Result ?? new List<HtmlHostingPageLookupItemModel>();
     }
 
     /// <summary>
@@ -188,12 +188,12 @@ public class HtmlHostingClient
     /// <param name="id">HTML page ID</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>List of form lookup items</returns>
-    public async Task<List<FormLookupItem>> LookupFormsAsync(string id, CancellationToken cancellationToken = default)
+    public async Task<List<HtmlHostingFormLookupItemModel>> LookupFormsAsync(string id, CancellationToken cancellationToken = default)
     {
-        var response = await _http.GetAsync<List<FormLookupItem>>(
+        var response = await _http.GetAsync<List<HtmlHostingFormLookupItemModel>>(
             $"{BasePath}/lookup-froms/{id}",
             cancellationToken: cancellationToken);
-        return response.Result ?? new List<FormLookupItem>();
+        return response.Result ?? new List<HtmlHostingFormLookupItemModel>();
     }
 
     /// <summary>
@@ -206,9 +206,9 @@ public class HtmlHostingClient
     /// <param name="contentType">Content type of the file (default: text/html)</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Updated page with ID, shorter link, and file URL</returns>
-    public async Task<HtmlPageFileResponse> UpdateWithFileAsync(
+    public async Task<HtmlHostingPageFileResponseModel> UpdateWithFileAsync(
         string id,
-        UpdateHtmlPageFileRequest data,
+        HtmlHostingUpdatePageFileRequestModel data,
         Stream fileStream,
         string contentType = "text/html",
         CancellationToken cancellationToken = default)
@@ -225,7 +225,7 @@ public class HtmlHostingClient
             isNewFile = true
         };
 
-        var response = await _http.PutAsync<CreateHtmlPageResponse>($"{BasePath}/{id}", payload, cancellationToken);
+        var response = await _http.PutAsync<HtmlHostingCreatePageResponseModel>($"{BasePath}/{id}", payload, cancellationToken);
         var result = response.Result?.Details ?? throw new InvalidOperationException("Failed to update HTML page");
         var uploadConfig = response.Result?.UploadFileConfig;
 
@@ -238,7 +238,7 @@ public class HtmlHostingClient
         // Step 3: Publish the HTML page
         await PublishAsync(result.Id!, cancellationToken);
 
-        return new HtmlPageFileResponse
+        return new HtmlHostingPageFileResponseModel
         {
             Id = result.Id,
             ShorterLink = result.ShorterLink,
@@ -254,9 +254,9 @@ public class HtmlHostingClient
     /// <param name="data">Update request data with GitHub file URL</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Updated page with ID, shorter link, and GitHub info</returns>
-    public async Task<HtmlPageGithubResponse> UpdateWithGithubFileAsync(
+    public async Task<HtmlHostingPageGithubResponseModel> UpdateWithGithubFileAsync(
         string id,
-        UpdateHtmlPageGithubRequest data,
+        HtmlHostingUpdatePageGithubRequestModel data,
         CancellationToken cancellationToken = default)
     {
         var payload = new
@@ -269,14 +269,14 @@ public class HtmlHostingClient
             sourceType = "github"
         };
 
-        var response = await _http.PutAsync<CreateHtmlPageResponse>($"{BasePath}/{id}", payload, cancellationToken);
+        var response = await _http.PutAsync<HtmlHostingCreatePageResponseModel>($"{BasePath}/{id}", payload, cancellationToken);
         var result = response.Result?.Details ?? throw new InvalidOperationException("Failed to update HTML page");
 
-        return new HtmlPageGithubResponse
+        return new HtmlHostingPageGithubResponseModel
         {
             Id = result.Id,
             ShorterLink = result.ShorterLink,
-            GithubInfo = result.GithubInfo!
+            GithubInfo = result.GithubInfo
         };
     }
 

@@ -18,7 +18,7 @@ namespace Posty5.QRCode;
 /// var qrCodeClient = new QRCodeClient(httpClient);
 /// 
 /// // Create a URL QR code
-/// var qrCode = await qrCodeClient.CreateURLAsync(new CreateURLQRCodeRequest
+/// var qrCode = await qrCodeClient.CreateURLAsync(new QRCodeCreateURLRequestModel
 /// {
 ///     Name = "My Website",
 ///     TemplateId = "template_123",
@@ -50,7 +50,7 @@ public class QRCodeClient
     /// <returns>Created QR code with ID and landing page URL</returns>
     /// <example>
     /// <code>
-    /// var qrCode = await qrCodeClient.CreateFreeTextAsync(new CreateFreeTextQRCodeRequest
+    /// var qrCode = await qrCodeClient.CreateFreeTextAsync(new QRCodeCreateFreeTextRequestModel
     /// {
     ///     Name = "Custom Text QR",
     ///     TemplateId = "template_123",
@@ -60,7 +60,7 @@ public class QRCodeClient
     /// </code>
     /// </example>
     public async Task<QRCodeModel> CreateFreeTextAsync(
-        CreateFreeTextQRCodeRequest data,
+        QRCodeCreateFreeTextRequestModel data,
         CancellationToken cancellationToken = default)
     {
         var qrCodeTarget = new
@@ -102,7 +102,7 @@ public class QRCodeClient
     /// <returns>Created QR code with ID and landing page URL</returns>
     /// <example>
     /// <code>
-    /// var qrCode = await qrCodeClient.CreateEmailAsync(new CreateEmailQRCodeRequest
+    /// var qrCode = await qrCodeClient.CreateEmailAsync(new QRCodeCreateEmailRequestModel
     /// {
     ///     Name = "Contact Us",
     ///     TemplateId = "template_123",
@@ -116,7 +116,7 @@ public class QRCodeClient
     /// </code>
     /// </example>
     public async Task<QRCodeModel> CreateEmailAsync(
-        CreateEmailQRCodeRequest data,
+        QRCodeCreateEmailRequestModel data,
         CancellationToken cancellationToken = default)
     {
         var qrCodeTarget = new
@@ -158,7 +158,7 @@ public class QRCodeClient
     /// <returns>Created QR code with ID and landing page URL</returns>
     /// <example>
     /// <code>
-    /// var qrCode = await qrCodeClient.CreateWifiAsync(new CreateWifiQRCodeRequest
+    /// var qrCode = await qrCodeClient.CreateWifiAsync(new QRCodeCreateWifiRequestModel
     /// {
     ///     Name = "Office WiFi",
     ///     TemplateId = "template_123",
@@ -172,7 +172,7 @@ public class QRCodeClient
     /// </code>
     /// </example>
     public async Task<QRCodeModel> CreateWifiAsync(
-        CreateWifiQRCodeRequest data,
+        QRCodeCreateWifiRequestModel data,
         CancellationToken cancellationToken = default)
     {
         var qrCodeTarget = new
@@ -214,7 +214,7 @@ public class QRCodeClient
     /// <returns>Created QR code with ID and landing page URL</returns>
     /// <example>
     /// <code>
-    /// var qrCode = await qrCodeClient.CreateCallAsync(new CreateCallQRCodeRequest
+    /// var qrCode = await qrCodeClient.CreateCallAsync(new QRCodeCreateCallRequestModel
     /// {
     ///     Name = "Call Support",
     ///     TemplateId = "template_123",
@@ -226,7 +226,7 @@ public class QRCodeClient
     /// </code>
     /// </example>
     public async Task<QRCodeModel> CreateCallAsync(
-        CreateCallQRCodeRequest data,
+        QRCodeCreateCallRequestModel data,
         CancellationToken cancellationToken = default)
     {
         var qrCodeTarget = new
@@ -268,7 +268,7 @@ public class QRCodeClient
     /// <returns>Created QR code with ID and landing page URL</returns>
     /// <example>
     /// <code>
-    /// var qrCode = await qrCodeClient.CreateSMSAsync(new CreateSMSQRCodeRequest
+    /// var qrCode = await qrCodeClient.CreateSMSAsync(new QRCodeCreateSMSRequestModel
     /// {
     ///     Name = "Text Us",
     ///     TemplateId = "template_123",
@@ -281,7 +281,7 @@ public class QRCodeClient
     /// </code>
     /// </example>
     public async Task<QRCodeModel> CreateSMSAsync(
-        CreateSMSQRCodeRequest data,
+        QRCodeCreateSMSRequestModel data,
         CancellationToken cancellationToken = default)
     {
         var qrCodeTarget = new
@@ -323,7 +323,7 @@ public class QRCodeClient
     /// <returns>Created QR code with ID and landing page URL</returns>
     /// <example>
     /// <code>
-    /// var qrCode = await qrCodeClient.CreateURLAsync(new CreateURLQRCodeRequest
+    /// var qrCode = await qrCodeClient.CreateURLAsync(new QRCodeCreateURLRequestModel
     /// {
     ///     Name = "Website Link",
     ///     TemplateId = "template_123",
@@ -334,7 +334,7 @@ public class QRCodeClient
     /// </code>
     /// </example>
     public async Task<QRCodeModel> CreateURLAsync(
-        CreateURLQRCodeRequest data,
+        QRCodeCreateURLRequestModel data,
         CancellationToken cancellationToken = default)
     {
         var qrCodeTarget = new
@@ -376,7 +376,7 @@ public class QRCodeClient
     /// <returns>Created QR code with ID and landing page URL</returns>
     /// <example>
     /// <code>
-    /// var qrCode = await qrCodeClient.CreateGeolocationAsync(new CreateGeolocationQRCodeRequest
+    /// var qrCode = await qrCodeClient.CreateGeolocationAsync(new QRCodeCreateGeolocationRequestModel
     /// {
     ///     Name = "Our Office Location",
     ///     TemplateId = "template_123",
@@ -389,7 +389,7 @@ public class QRCodeClient
     /// </code>
     /// </example>
     public async Task<QRCodeModel> CreateGeolocationAsync(
-        CreateGeolocationQRCodeRequest data,
+        QRCodeCreateGeolocationRequestModel data,
         CancellationToken cancellationToken = default)
     {
         var qrCodeTarget = new
@@ -436,7 +436,7 @@ public class QRCodeClient
     /// <returns>Updated QR code with ID and landing page URL</returns>
     /// <example>
     /// <code>
-    /// var qrCode = await qrCodeClient.UpdateFreeTextAsync("qr_code_id", new UpdateFreeTextQRCodeRequest
+    /// var qrCode = await qrCodeClient.UpdateFreeTextAsync("qr_code_id", new QRCodeUpdateFreeTextRequestModel
     /// {
     ///     Name = "Updated Text QR",
     ///     TemplateId = "template_123",
@@ -446,7 +446,7 @@ public class QRCodeClient
     /// </example>
     public async Task<QRCodeModel> UpdateFreeTextAsync(
         string id,
-        UpdateFreeTextQRCodeRequest data,
+        QRCodeUpdateFreeTextRequestModel data,
         CancellationToken cancellationToken = default)
     {
         var qrCodeTarget = new
@@ -489,7 +489,7 @@ public class QRCodeClient
     /// <returns>Updated QR code with ID and landing page URL</returns>
     /// <example>
     /// <code>
-    /// var qrCode = await qrCodeClient.UpdateEmailAsync("qr_code_id", new UpdateEmailQRCodeRequest
+    /// var qrCode = await qrCodeClient.UpdateEmailAsync("qr_code_id", new QRCodeUpdateEmailRequestModel
     /// {
     ///     Name = "Contact Us",
     ///     TemplateId = "template_123",
@@ -504,7 +504,7 @@ public class QRCodeClient
     /// </example>
     public async Task<QRCodeModel> UpdateEmailAsync(
         string id,
-        UpdateEmailQRCodeRequest data,
+        QRCodeUpdateEmailRequestModel data,
         CancellationToken cancellationToken = default)
     {
         var qrCodeTarget = new
@@ -547,7 +547,7 @@ public class QRCodeClient
     /// <returns>Updated QR code with ID and landing page URL</returns>
     /// <example>
     /// <code>
-    /// var qrCode = await qrCodeClient.UpdateWifiAsync("qr_code_id", new UpdateWifiQRCodeRequest
+    /// var qrCode = await qrCodeClient.UpdateWifiAsync("qr_code_id", new QRCodeUpdateWifiRequestModel
     /// {
     ///     Name = "Office WiFi",
     ///     TemplateId = "template_123",
@@ -562,7 +562,7 @@ public class QRCodeClient
     /// </example>
     public async Task<QRCodeModel> UpdateWifiAsync(
         string id,
-        UpdateWifiQRCodeRequest data,
+        QRCodeUpdateWifiRequestModel data,
         CancellationToken cancellationToken = default)
     {
         var qrCodeTarget = new
@@ -605,7 +605,7 @@ public class QRCodeClient
     /// <returns>Updated QR code with ID and landing page URL</returns>
     /// <example>
     /// <code>
-    /// var qrCode = await qrCodeClient.UpdateCallAsync("qr_code_id", new UpdateCallQRCodeRequest
+    /// var qrCode = await qrCodeClient.UpdateCallAsync("qr_code_id", new QRCodeUpdateCallRequestModel
     /// {
     ///     Name = "Call Support",
     ///     TemplateId = "template_123",
@@ -618,7 +618,7 @@ public class QRCodeClient
     /// </example>
     public async Task<QRCodeModel> UpdateCallAsync(
         string id,
-        UpdateCallQRCodeRequest data,
+        QRCodeUpdateCallRequestModel data,
         CancellationToken cancellationToken = default)
     {
         var qrCodeTarget = new
@@ -661,7 +661,7 @@ public class QRCodeClient
     /// <returns>Updated QR code with ID and landing page URL</returns>
     /// <example>
     /// <code>
-    /// var qrCode = await qrCodeClient.UpdateSMSAsync("qr_code_id", new UpdateSMSQRCodeRequest
+    /// var qrCode = await qrCodeClient.UpdateSMSAsync("qr_code_id", new QRCodeUpdateSMSRequestModel
     /// {
     ///     Name = "Text Us",
     ///     TemplateId = "template_123",
@@ -675,7 +675,7 @@ public class QRCodeClient
     /// </example>
     public async Task<QRCodeModel> UpdateSMSAsync(
         string id,
-        UpdateSMSQRCodeRequest data,
+        QRCodeUpdateSMSRequestModel data,
         CancellationToken cancellationToken = default)
     {
         var qrCodeTarget = new
@@ -718,7 +718,7 @@ public class QRCodeClient
     /// <returns>Updated QR code with ID and landing page URL</returns>
     /// <example>
     /// <code>
-    /// var qrCode = await qrCodeClient.UpdateURLAsync("qr_code_id", new UpdateURLQRCodeRequest
+    /// var qrCode = await qrCodeClient.UpdateURLAsync("qr_code_id", new QRCodeUpdateURLRequestModel
     /// {
     ///     Name = "Website Link",
     ///     TemplateId = "template_123",
@@ -730,7 +730,7 @@ public class QRCodeClient
     /// </example>
     public async Task<QRCodeModel> UpdateURLAsync(
         string id,
-        UpdateURLQRCodeRequest data,
+        QRCodeUpdateURLRequestModel data,
         CancellationToken cancellationToken = default)
     {
         var qrCodeTarget = new
@@ -773,7 +773,7 @@ public class QRCodeClient
     /// <returns>Updated QR code with ID and landing page URL</returns>
     /// <example>
     /// <code>
-    /// var qrCode = await qrCodeClient.UpdateGeolocationAsync("qr_code_id", new UpdateGeolocationQRCodeRequest
+    /// var qrCode = await qrCodeClient.UpdateGeolocationAsync("qr_code_id", new QRCodeUpdateGeolocationRequestModel
     /// {
     ///     Name = "Our Office Location",
     ///     TemplateId = "template_123",
@@ -787,7 +787,7 @@ public class QRCodeClient
     /// </example>
     public async Task<QRCodeModel> UpdateGeolocationAsync(
         string id,
-        UpdateGeolocationQRCodeRequest data,
+        QRCodeUpdateGeolocationRequestModel data,
         CancellationToken cancellationToken = default)
     {
         var qrCodeTarget = new
@@ -874,13 +874,13 @@ public class QRCodeClient
     /// 
     /// // List with filters
     /// var filtered = await qrCodeClient.ListAsync(
-    ///     new ListQRCodesParams { Status = "approved", Tag = "marketing" },
+    ///     new QRCodeListParamsModel { Status = "approved", Tag = "marketing" },
     ///     new PaginationParams { Page = 1, PageSize = 20 }
     /// );
     /// </code>
     /// </example>
     public async Task<PaginationResponse<QRCodeModel>> ListAsync(
-        ListQRCodesParams? listParams = null,
+        QRCodeListParamsModel? listParams = null,
         PaginationParams? pagination = null,
         CancellationToken cancellationToken = default)
     {
@@ -900,8 +900,8 @@ public class QRCodeClient
                 queryParams["refId"] = listParams.RefId;
             if (listParams.IsEnableMonetization.HasValue)
                 queryParams["isEnableMonetization"] = listParams.IsEnableMonetization.Value;
-            if (!string.IsNullOrEmpty(listParams.Status))
-                queryParams["status"] = listParams.Status;
+            if (listParams.Status.HasValue)
+                queryParams["status"] = listParams.Status.Value.ToString();
             if (!string.IsNullOrEmpty(listParams.CreatedFrom))
                 queryParams["createdFrom"] = listParams.CreatedFrom;
         }

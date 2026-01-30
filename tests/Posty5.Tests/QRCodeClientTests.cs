@@ -23,7 +23,7 @@ public class QRCodeClientTests : IDisposable
     public async Task CreateFreeText_ShouldReturnValidQRCode()
     {
         // Arrange
-        var request = new CreateFreeTextQRCodeRequest
+        var request = new QRCodeCreateFreeTextRequestModel
         {
             Name = $"Test Free Text QR - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
             TemplateId = TestConfig.TemplateId,
@@ -48,7 +48,7 @@ public class QRCodeClientTests : IDisposable
     public async Task UpdateFreeText_ShouldUpdateSuccessfully()
     {
         // Arrange - Create first
-        var createRequest = new CreateFreeTextQRCodeRequest
+        var createRequest = new QRCodeCreateFreeTextRequestModel
         {
             Name = "Original Free Text",
             TemplateId = TestConfig.TemplateId,
@@ -58,7 +58,7 @@ public class QRCodeClientTests : IDisposable
         TestConfig.CreatedResources.QRCodes.Add(created.Id!);
 
         // Act
-        var updateRequest = new UpdateFreeTextQRCodeRequest
+        var updateRequest = new QRCodeUpdateFreeTextRequestModel
         {
             Name = $"Updated Free Text - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
             TemplateId = TestConfig.TemplateId,
@@ -80,11 +80,11 @@ public class QRCodeClientTests : IDisposable
     public async Task CreateEmail_ShouldReturnValidQRCode()
     {
         // Arrange
-        var request = new CreateEmailQRCodeRequest
+        var request = new QRCodeCreateEmailRequestModel
         {
             Name = $"Test Email QR - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
             TemplateId = TestConfig.TemplateId,
-            Email = new QRCodeEmailTarget
+            Email = new QRCodeEmailTargetModel
             {
                 Email = "test@example.com",
                 Subject = "Test Subject",
@@ -108,11 +108,11 @@ public class QRCodeClientTests : IDisposable
     public async Task UpdateEmail_ShouldUpdateSuccessfully()
     {
         // Arrange - Create first
-        var createRequest = new CreateEmailQRCodeRequest
+        var createRequest = new QRCodeCreateEmailRequestModel
         {
             Name = "Original Email QR",
             TemplateId = TestConfig.TemplateId,
-            Email = new QRCodeEmailTarget
+            Email = new QRCodeEmailTargetModel
             {
                 Email = "original@example.com",
                 Subject = "Original Subject",
@@ -123,11 +123,11 @@ public class QRCodeClientTests : IDisposable
         TestConfig.CreatedResources.QRCodes.Add(created.Id!);
 
         // Act
-        var updateRequest = new UpdateEmailQRCodeRequest
+        var updateRequest = new QRCodeUpdateEmailRequestModel
         {
             Name = $"Updated Email QR - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
             TemplateId = TestConfig.TemplateId,
-            Email = new QRCodeEmailTarget
+            Email = new QRCodeEmailTargetModel
             {
                 Email = "updated@example.com",
                 Subject = "Updated Subject",
@@ -149,11 +149,11 @@ public class QRCodeClientTests : IDisposable
     public async Task CreateWifi_ShouldReturnValidQRCode()
     {
         // Arrange
-        var request = new CreateWifiQRCodeRequest
+        var request = new QRCodeCreateWifiRequestModel
         {
             Name = $"Test WiFi QR - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
             TemplateId = TestConfig.TemplateId,
-            Wifi = new QRCodeWifiTarget
+            Wifi = new QRCodeWifiTargetModel
             {
                 Name = "TestNetwork",
                 AuthenticationType = "WPA",
@@ -177,11 +177,11 @@ public class QRCodeClientTests : IDisposable
     public async Task UpdateWifi_ShouldUpdateSuccessfully()
     {
         // Arrange - Create first
-        var createRequest = new CreateWifiQRCodeRequest
+        var createRequest = new QRCodeCreateWifiRequestModel
         {
             Name = "Original WiFi QR",
             TemplateId = TestConfig.TemplateId,
-            Wifi = new QRCodeWifiTarget
+            Wifi = new QRCodeWifiTargetModel
             {
                 Name = "OriginalNetwork",
                 AuthenticationType = "WPA",
@@ -192,11 +192,11 @@ public class QRCodeClientTests : IDisposable
         TestConfig.CreatedResources.QRCodes.Add(created.Id!);
 
         // Act
-        var updateRequest = new UpdateWifiQRCodeRequest
+        var updateRequest = new QRCodeUpdateWifiRequestModel
         {
             Name = $"Updated WiFi QR - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
             TemplateId = TestConfig.TemplateId,
-            Wifi = new QRCodeWifiTarget
+            Wifi = new QRCodeWifiTargetModel
             {
                 Name = "UpdatedNetwork",
                 AuthenticationType = "WPA2",
@@ -218,11 +218,11 @@ public class QRCodeClientTests : IDisposable
     public async Task CreateCall_ShouldReturnValidQRCode()
     {
         // Arrange
-        var request = new CreateCallQRCodeRequest
+        var request = new QRCodeCreateCallRequestModel
         {
             Name = $"Test Call QR - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
             TemplateId = TestConfig.TemplateId,
-            Call = new QRCodeCallTarget
+            Call = new QRCodeCallTargetModel
             {
                 PhoneNumber = "+1234567890"
             }
@@ -244,11 +244,11 @@ public class QRCodeClientTests : IDisposable
     public async Task UpdateCall_ShouldUpdateSuccessfully()
     {
         // Arrange - Create first
-        var createRequest = new CreateCallQRCodeRequest
+        var createRequest = new QRCodeCreateCallRequestModel
         {
             Name = "Original Call QR",
             TemplateId = TestConfig.TemplateId,
-            Call = new QRCodeCallTarget
+            Call = new QRCodeCallTargetModel
             {
                 PhoneNumber = "+1111111111"
             }
@@ -257,11 +257,11 @@ public class QRCodeClientTests : IDisposable
         TestConfig.CreatedResources.QRCodes.Add(created.Id!);
 
         // Act
-        var updateRequest = new UpdateCallQRCodeRequest
+        var updateRequest = new QRCodeUpdateCallRequestModel
         {
             Name = $"Updated Call QR - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
             TemplateId = TestConfig.TemplateId,
-            Call = new QRCodeCallTarget
+            Call = new QRCodeCallTargetModel
             {
                 PhoneNumber = "+9999999999"
             }
@@ -281,11 +281,11 @@ public class QRCodeClientTests : IDisposable
     public async Task CreateSMS_ShouldReturnValidQRCode()
     {
         // Arrange
-        var request = new CreateSMSQRCodeRequest
+        var request = new QRCodeCreateSMSRequestModel
         {
             Name = $"Test SMS QR - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
             TemplateId = TestConfig.TemplateId,
-            Sms = new QRCodeSmsTarget
+            Sms = new QRCodeSmsTargetModel
             {
                 PhoneNumber = "+1234567890",
                 Message = "Hello from QR code test!"
@@ -308,11 +308,11 @@ public class QRCodeClientTests : IDisposable
     public async Task UpdateSMS_ShouldUpdateSuccessfully()
     {
         // Arrange - Create first
-        var createRequest = new CreateSMSQRCodeRequest
+        var createRequest = new QRCodeCreateSMSRequestModel
         {
             Name = "Original SMS QR",
             TemplateId = TestConfig.TemplateId,
-            Sms = new QRCodeSmsTarget
+            Sms = new QRCodeSmsTargetModel
             {
                 PhoneNumber = "+1111111111",
                 Message = "Original message"
@@ -322,11 +322,11 @@ public class QRCodeClientTests : IDisposable
         TestConfig.CreatedResources.QRCodes.Add(created.Id!);
 
         // Act
-        var updateRequest = new UpdateSMSQRCodeRequest
+        var updateRequest = new QRCodeUpdateSMSRequestModel
         {
             Name = $"Updated SMS QR - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
             TemplateId = TestConfig.TemplateId,
-            Sms = new QRCodeSmsTarget
+            Sms = new QRCodeSmsTargetModel
             {
                 PhoneNumber = "+9999999999",
                 Message = "Updated message"
@@ -347,11 +347,11 @@ public class QRCodeClientTests : IDisposable
     public async Task CreateURL_ShouldReturnValidQRCode()
     {
         // Arrange
-        var request = new CreateURLQRCodeRequest
+        var request = new QRCodeCreateURLRequestModel
         {
             Name = $"Test URL QR - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
             TemplateId = TestConfig.TemplateId,
-            Url = new QRCodeUrlTarget
+            Url = new QRCodeUrlTargetModel
             {
                 Url = "https://posty5.com"
             },
@@ -378,12 +378,12 @@ public class QRCodeClientTests : IDisposable
     {
         // Arrange
         var customSlug = $"test-qr-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
-        var request = new CreateURLQRCodeRequest
+        var request = new QRCodeCreateURLRequestModel
         {
             Name = "Custom Slug QR",
             TemplateId = TestConfig.TemplateId,
             CustomLandingId = customSlug,
-            Url = new QRCodeUrlTarget
+            Url = new QRCodeUrlTargetModel
             {
                 Url = "https://example.com"
             }
@@ -404,11 +404,11 @@ public class QRCodeClientTests : IDisposable
     public async Task UpdateURL_ShouldUpdateSuccessfully()
     {
         // Arrange - Create first
-        var createRequest = new CreateURLQRCodeRequest
+        var createRequest = new QRCodeCreateURLRequestModel
         {
             Name = "Original URL QR",
             TemplateId = TestConfig.TemplateId,
-            Url = new QRCodeUrlTarget
+            Url = new QRCodeUrlTargetModel
             {
                 Url = "https://posty5.com"
             }
@@ -417,11 +417,11 @@ public class QRCodeClientTests : IDisposable
         TestConfig.CreatedResources.QRCodes.Add(created.Id!);
 
         // Act
-        var updateRequest = new UpdateURLQRCodeRequest
+        var updateRequest = new QRCodeUpdateURLRequestModel
         {
             Name = $"Updated URL QR - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
             TemplateId = TestConfig.TemplateId,
-            Url = new QRCodeUrlTarget
+            Url = new QRCodeUrlTargetModel
             {
                 Url = "https://guide.posty5.com"
             }
@@ -441,11 +441,11 @@ public class QRCodeClientTests : IDisposable
     public async Task CreateGeolocation_ShouldReturnValidQRCode()
     {
         // Arrange
-        var request = new CreateGeolocationQRCodeRequest
+        var request = new QRCodeCreateGeolocationRequestModel
         {
             Name = $"Test Geolocation QR - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
             TemplateId = TestConfig.TemplateId,
-            Geolocation = new QRCodeGeolocationTarget
+            Geolocation = new QRCodeGeolocationTargetModel
             {
                 Latitude = "40.7128",
                 Longitude = "-74.0060"
@@ -468,11 +468,11 @@ public class QRCodeClientTests : IDisposable
     public async Task UpdateGeolocation_ShouldUpdateSuccessfully()
     {
         // Arrange - Create first
-        var createRequest = new CreateGeolocationQRCodeRequest
+        var createRequest = new QRCodeCreateGeolocationRequestModel
         {
             Name = "Original Geolocation QR",
             TemplateId = TestConfig.TemplateId,
-            Geolocation = new QRCodeGeolocationTarget
+            Geolocation = new QRCodeGeolocationTargetModel
             {
                 Latitude = "40.7128",
                 Longitude = "-74.0060"
@@ -482,11 +482,11 @@ public class QRCodeClientTests : IDisposable
         TestConfig.CreatedResources.QRCodes.Add(created.Id!);
 
         // Act
-        var updateRequest = new UpdateGeolocationQRCodeRequest
+        var updateRequest = new QRCodeUpdateGeolocationRequestModel
         {
             Name = $"Updated Geolocation QR - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
             TemplateId = TestConfig.TemplateId,
-            Geolocation = new QRCodeGeolocationTarget
+            Geolocation = new QRCodeGeolocationTargetModel
             {
                 Latitude = "34.0522",
                 Longitude = "-118.2437"
@@ -507,11 +507,11 @@ public class QRCodeClientTests : IDisposable
     public async Task GetQRCodeById_WithValidId_ShouldReturnQRCode()
     {
         // Arrange - Create a QR code first
-        var createRequest = new CreateURLQRCodeRequest
+        var createRequest = new QRCodeCreateURLRequestModel
         {
             Name = "QR for Get Test",
             TemplateId = TestConfig.TemplateId,
-            Url = new QRCodeUrlTarget { Url = "https://posty5.com" }
+            Url = new QRCodeUrlTargetModel { Url = "https://posty5.com" }
         };
         var created = await _client.CreateURLAsync(createRequest);
         TestConfig.CreatedResources.QRCodes.Add(created.Id!);
@@ -546,18 +546,18 @@ public class QRCodeClientTests : IDisposable
         var tag = $"test-tag-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
         
         // Create a QR code with specific tag
-        var createRequest = new CreateURLQRCodeRequest
+        var createRequest = new QRCodeCreateURLRequestModel
         {
             Name = "Filterable QR",
             TemplateId = TestConfig.TemplateId,
             Tag = tag,
-            Url = new QRCodeUrlTarget { Url = "https://posty5.com" }
+            Url = new QRCodeUrlTargetModel { Url = "https://posty5.com" }
         };
         var created = await _client.CreateURLAsync(createRequest);
         TestConfig.CreatedResources.QRCodes.Add(created.Id!);
 
         // Act
-        var filterParams = new ListQRCodesParams
+        var filterParams = new QRCodeListParamsModel
         {
             Tag = tag
         };
@@ -579,18 +579,18 @@ public class QRCodeClientTests : IDisposable
         var refId = $"REF-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
         
         // Create a QR code with specific refId
-        var createRequest = new CreateURLQRCodeRequest
+        var createRequest = new QRCodeCreateURLRequestModel
         {
             Name = "RefId Filterable QR",
             TemplateId = TestConfig.TemplateId,
             RefId = refId,
-            Url = new QRCodeUrlTarget { Url = "https://posty5.com" }
+            Url = new QRCodeUrlTargetModel { Url = "https://posty5.com" }
         };
         var created = await _client.CreateURLAsync(createRequest);
         TestConfig.CreatedResources.QRCodes.Add(created.Id!);
 
         // Act
-        var filterParams = new ListQRCodesParams
+        var filterParams = new QRCodeListParamsModel
         {
             RefId = refId
         };
@@ -609,11 +609,11 @@ public class QRCodeClientTests : IDisposable
     public async Task DeleteQRCode_ShouldDeleteSuccessfully()
     {
         // Arrange - Create a QR code first
-        var createRequest = new CreateURLQRCodeRequest
+        var createRequest = new QRCodeCreateURLRequestModel
         {
             Name = "QR to Delete",
             TemplateId = TestConfig.TemplateId,
-            Url = new QRCodeUrlTarget { Url = "https://posty5.com" }
+            Url = new QRCodeUrlTargetModel { Url = "https://posty5.com" }
         };
         var created = await _client.CreateURLAsync(createRequest);
         TestConfig.CreatedResources.QRCodes.Add(created.Id!);
@@ -633,17 +633,17 @@ public class QRCodeClientTests : IDisposable
     public async Task CreateQRCode_WithMonetization_ShouldIncludePageInfo()
     {
         // Arrange
-        var request = new CreateURLQRCodeRequest
+        var request = new QRCodeCreateURLRequestModel
         {
             Name = $"Monetized QR - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
             TemplateId = TestConfig.TemplateId,
             IsEnableMonetization = true,
-            PageInfo = new QRCodePageInfo
+            PageInfo = new QRCodePageInfoModel
             {
                 Title = "Please Wait",
                 Description = "You will be redirected shortly..."
             },
-            Url = new QRCodeUrlTarget { Url = "https://posty5.com" }
+            Url = new QRCodeUrlTargetModel { Url = "https://posty5.com" }
         };
 
         // Act

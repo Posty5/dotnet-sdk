@@ -5,7 +5,7 @@ namespace Posty5.SocialPublisherWorkspace.Models;
 /// <summary>
 /// Account details for a social media platform
 /// </summary>
-public class AccountDetails
+public class SocialPublisherWorkspaceAccountDetailsModel
 {
     /// <summary>
     /// Link to the social media account
@@ -36,27 +36,27 @@ public class AccountDetails
 /// <summary>
 /// Social media accounts associated with a workspace
 /// </summary>
-public class WorkspaceAccount
+public class SocialPublisherWorkspaceAccountModel
 {
     /// <summary>
     /// YouTube account details
     /// </summary>
-    public AccountDetails? Youtube { get; set; }
+    public SocialPublisherWorkspaceAccountDetailsModel? Youtube { get; set; }
     
     /// <summary>
     /// Facebook account details
     /// </summary>
-    public AccountDetails? Facebook { get; set; }
+    public SocialPublisherWorkspaceAccountDetailsModel? Facebook { get; set; }
     
     /// <summary>
     /// Instagram account details
     /// </summary>
-    public AccountDetails? Instagram { get; set; }
+    public SocialPublisherWorkspaceAccountDetailsModel? Instagram { get; set; }
     
     /// <summary>
     /// TikTok account details
     /// </summary>
-    public AccountDetails? Tiktok { get; set; }
+    public SocialPublisherWorkspaceAccountDetailsModel? Tiktok { get; set; }
     
     /// <summary>
     /// Facebook platform page ID
@@ -72,7 +72,7 @@ public class WorkspaceAccount
 /// <summary>
 /// Full workspace model with account details
 /// </summary>
-public class WorkspaceModel
+public class SocialPublisherWorkspaceModel
 {
     /// <summary>
     /// MongoDB document ID
@@ -88,13 +88,13 @@ public class WorkspaceModel
     /// <summary>
     /// Social media accounts associated with this workspace
     /// </summary>
-    public WorkspaceAccount Account { get; set; } = new();
+    public SocialPublisherWorkspaceAccountModel Account { get; set; } = new();
 }
 
 /// <summary>
 /// Simplified workspace details for list operations
 /// </summary>
-public class WorkspaceSampleDetails
+public class SocialPublisherWorkspaceSampleDetailsModel
 {
     /// <summary>
     /// MongoDB document ID
@@ -130,7 +130,7 @@ public class WorkspaceSampleDetails
 /// <summary>
 /// Upload image configuration for R2 storage
 /// </summary>
-public class UploadImageConfig
+public class SocialPublisherWorkspaceUploadImageConfigModel
 {
     /// <summary>
     /// Pre-signed URL for uploading image to R2
@@ -146,7 +146,7 @@ public class UploadImageConfig
 /// <summary>
 /// Response from create/update operations with workspace ID and upload config
 /// </summary>
-public class CreateWorkspaceResponse
+public class SocialPublisherWorkspaceCreateResponseModel
 {
     /// <summary>
     /// Created/updated workspace ID
@@ -156,13 +156,13 @@ public class CreateWorkspaceResponse
     /// <summary>
     /// Upload configuration for workspace image (null if no image)
     /// </summary>
-    public UploadImageConfig? UploadImageConfig { get; set; }
+    public SocialPublisherWorkspaceUploadImageConfigModel? UploadImageConfig { get; set; }
 }
 
 /// <summary>
 /// Base workspace request
 /// </summary>
-public class WorkspaceRequest
+public class SocialPublisherWorkspaceRequestModel
 {
     /// <summary>
     /// Workspace name (required)
@@ -188,21 +188,21 @@ public class WorkspaceRequest
 /// <summary>
 /// Create workspace request
 /// </summary>
-public class CreateWorkspaceRequest : WorkspaceRequest
+public class SocialPublisherWorkspaceCreateRequestModel : SocialPublisherWorkspaceRequestModel
 {
 }
 
 /// <summary>
 /// Update workspace request
 /// </summary>
-public class UpdateWorkspaceRequest : WorkspaceRequest
+public class SocialPublisherWorkspaceUpdateRequestModel : SocialPublisherWorkspaceRequestModel
 {
 }
 
 /// <summary>
 /// Parameters for listing/filtering workspaces
 /// </summary>
-public class ListWorkspacesParams
+public class SocialPublisherWorkspaceListParamsModel
 {
     /// <summary>
     /// Filter by workspace name
@@ -224,3 +224,36 @@ public class ListWorkspacesParams
     /// </summary>
     public string? RefId { get; set; }
 }
+
+/// <summary>
+/// Workspace details formatted for new task creation with populated account information
+/// </summary>
+public class SocialPublisherWorkspaceForNewTaskModel
+{
+    /// <summary>
+    /// MongoDB document ID
+    /// </summary>
+    [JsonPropertyName("_id")]
+    public string Id { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Workspace name
+    /// </summary>
+    public string Name { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Workspace description
+    /// </summary>
+    public string Description { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Workspace logo/image URL
+    /// </summary>
+    public string? ImageUrl { get; set; }
+    
+    /// <summary>
+    /// Social media accounts with full details including status and platform IDs
+    /// </summary>
+    public SocialPublisherWorkspaceAccountModel Account { get; set; } = new();
+}
+

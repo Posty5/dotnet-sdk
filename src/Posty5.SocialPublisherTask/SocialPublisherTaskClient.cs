@@ -48,8 +48,8 @@ public class SocialPublisherTaskClient
                 queryParams["caption"] = listParams.Caption;
             if (!string.IsNullOrEmpty(listParams.Numbering))
                 queryParams["numbering"] = listParams.Numbering;
-            if (!string.IsNullOrEmpty(listParams.CurrentStatus))
-                queryParams["currentStatus"] = listParams.CurrentStatus;
+            if (listParams.CurrentStatus.HasValue)
+                queryParams["currentStatus"] = listParams.CurrentStatus.ToString();
             if (!string.IsNullOrEmpty(listParams.WorkspaceId))
                 queryParams["workspaceId"] = listParams.WorkspaceId;
             if (!string.IsNullOrEmpty(listParams.RefId))

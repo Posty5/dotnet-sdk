@@ -9,7 +9,7 @@ namespace Posty5.HtmlHostingFormSubmission.Models;
 /// <summary>
 /// Parameters for listing/filtering form submissions
 /// </summary>
-public class ListFormSubmissionsParams
+public class HtmlHostingFormSubmissionListParamsModel
 {
     /// <summary>
     /// HTML hosting ID (required) - the target page landing ID
@@ -29,7 +29,7 @@ public class ListFormSubmissionsParams
     /// <summary>
     /// Status filter (optional) - "New", "Viewed", "Approved", "Rejected"
     /// </summary>
-    public FormStatus? Status { get; set; }
+    public HtmlHostingFormSubmissionFormStatusType? Status { get; set; }
     
     /// <summary>
     /// Filtered fields for search (optional) - comma-separated field names
@@ -41,7 +41,7 @@ public class ListFormSubmissionsParams
 /// <summary>
 /// Request to change form submission status
 /// </summary>
-public class ChangeStatusRequest
+public class HtmlHostingFormSubmissionChangeStatusRequestModel
 {
     /// <summary>
     /// New status value for the submission
@@ -69,12 +69,12 @@ public class ChangeStatusRequest
 /// <summary>
 /// Status history entry for a form submission
 /// </summary>
-public class StatusHistoryEntry
+public class HtmlHostingFormSubmissionStatusHistoryEntryModel
 {
     /// <summary>
     /// Status value
     /// </summary>
-    public FormStatus Status { get; set; } = FormStatus.New;
+    public HtmlHostingFormSubmissionFormStatusType Status { get; set; } = HtmlHostingFormSubmissionFormStatusType.New;
     
     /// <summary>
     /// Rejection reason (if rejected)
@@ -95,7 +95,7 @@ public class StatusHistoryEntry
 /// <summary>
 /// Syncing status for form submission
 /// </summary>
-public class SyncingStatus
+public class HtmlHostingFormSubmissionSyncingStatusModel
 {
     /// <summary>
     /// Whether syncing is complete
@@ -116,7 +116,7 @@ public class SyncingStatus
 /// <summary>
 /// HTML hosting form submission model
 /// </summary>
-public class FormSubmissionModel
+public class HtmlHostingFormSubmissionModel
 {
     /// <summary>
     /// Submission ID
@@ -157,17 +157,17 @@ public class FormSubmissionModel
     /// <summary>
     /// Current status
     /// </summary>
-    public FormStatus Status { get; set; } = FormStatus.New;
+    public HtmlHostingFormSubmissionFormStatusType Status { get; set; } = HtmlHostingFormSubmissionFormStatusType.New;
     
     /// <summary>
     /// Status history
     /// </summary>
-    public List<StatusHistoryEntry> StatusHistory { get; set; } = new();
+    public List<HtmlHostingFormSubmissionStatusHistoryEntryModel> StatusHistory { get; set; } = new();
     
     /// <summary>
     /// Syncing status
     /// </summary>
-    public SyncingStatus Syncing { get; set; } = new();
+    public HtmlHostingFormSubmissionSyncingStatusModel Syncing { get; set; } = new();
     
     /// <summary>
     /// Created timestamp
@@ -187,7 +187,7 @@ public class FormSubmissionModel
 /// <summary>
 /// Next or previous submission reference for navigation
 /// </summary>
-public class NextPreviousSubmission
+public class HtmlHostingFormSubmissionNextPreviousSubmissionModel
 {
     /// <summary>
     /// Submission ID
@@ -204,23 +204,23 @@ public class NextPreviousSubmission
 /// <summary>
 /// Next and previous submissions for navigation
 /// </summary>
-public class NextPreviousSubmissionsResponse
+public class HtmlHostingFormSubmissionNextPreviousResponseModel
 {
     /// <summary>
     /// Previous submission (if exists)
     /// </summary>
-    public NextPreviousSubmission? Previous { get; set; }
+    public HtmlHostingFormSubmissionNextPreviousSubmissionModel? Previous { get; set; }
     
     /// <summary>
     /// Next submission (if exists)
     /// </summary>
-    public NextPreviousSubmission? Next { get; set; }
+    public HtmlHostingFormSubmissionNextPreviousSubmissionModel? Next { get; set; }
 }
 
 /// <summary>
 /// Response from changing form submission status
 /// </summary>
-public class ChangeStatusResponse
+public class HtmlHostingFormSubmissionChangeStatusResponseModel
 {
     /// <summary>
     /// Success message
@@ -235,18 +235,44 @@ public class ChangeStatusResponse
     public List<object>? StatusHistory { get; set; }
 }
 
-public enum FormStatus
-{
-   New=1,
-   PendingReview,
-   InProgress             ,
-   OnHold                 ,
-   NeedMoreInfo           ,
-   Approved               ,
-   PartiallyApproved      ,
-   Rejected               ,
-   Completed              ,
-   Archived               ,
-   Cancelled             ,
 
+ 
+public readonly record struct HtmlHostingFormSubmissionFormStatusType (string Value)
+{
+    public static readonly HtmlHostingFormSubmissionFormStatusType New = new("new");
+    public static readonly HtmlHostingFormSubmissionFormStatusType PendingReview = new("pendingReview");
+    public static readonly HtmlHostingFormSubmissionFormStatusType InProgress = new("inProgress");
+    public static readonly HtmlHostingFormSubmissionFormStatusType OnHold = new("onHold");
+    public static readonly HtmlHostingFormSubmissionFormStatusType NeedMoreInfo = new("needMoreInfo");
+    public static readonly HtmlHostingFormSubmissionFormStatusType Approved = new("approved");
+    public static readonly HtmlHostingFormSubmissionFormStatusType PartiallyApproved = new("partiallyApproved");
+    public static readonly HtmlHostingFormSubmissionFormStatusType Rejected = new("rejected");
+    public static readonly HtmlHostingFormSubmissionFormStatusType Completed = new("completed");
+    public static readonly HtmlHostingFormSubmissionFormStatusType Archived = new("archived");
+    public static readonly HtmlHostingFormSubmissionFormStatusType Cancelled = new("cancelled");
+
+    //private static readonly HashSet<string> Allowed = new()
+    //{
+    //    "new",
+    //    "pendingReview",
+    //    "inProgress",
+    //    "onHold",
+    //    "needMoreInfo",
+    //    "approved",
+    //    "partiallyApproved",
+    //    "rejected",
+    //    "completed",
+    //    "archived",
+    //    "cancelled"
+    //};
+
+    //public static FormStatusType From (string value)
+    //{
+    //    if (!Allowed.Contains(value))
+    //        throw new ArgumentException($"Invalid FormStatusType: {value}");
+
+    //    return new FormStatusType(value);
+    //}
+
+    public override string ToString ( ) => Value;
 }

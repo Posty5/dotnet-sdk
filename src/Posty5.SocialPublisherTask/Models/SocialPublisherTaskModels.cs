@@ -336,7 +336,7 @@ public class ListTasksParams
     /// <summary>
     /// Filter by status (pending, processing, published, failed)
     /// </summary>
-    public string? CurrentStatus { get; set; }
+    public SocialPublisherTaskStatusType? CurrentStatus { get; set; }
     
     /// <summary>
     /// Filter by workspace ID
@@ -457,7 +457,7 @@ public class TaskModel
     /// <summary>
     /// Current task status
     /// </summary>
-    public string CurrentStatus { get; set; } = string.Empty;
+    public SocialPublisherTaskStatusType CurrentStatus { get; set; } 
      
     /// <summary>
     /// External reference ID
@@ -518,7 +518,7 @@ public class TaskStatusResponse
     /// <summary>
     /// Current task status
     /// </summary>
-    public string CurrentStatus { get; set; } = string.Empty;
+    public SocialPublisherTaskStatusType CurrentStatus { get; set; }
     
     /// <summary>
     /// Current error message
@@ -565,4 +565,87 @@ public class DefaultSettingsResponse
     // Generic dictionary for system defaults
     [JsonExtensionData]
     public Dictionary<string, object>? ExtensionData { get; set; }
+}
+
+public readonly record struct SocialPublisherTaskStatusType (string Value)
+{
+    /// <summary>
+    /// The video is waiting in the queue and hasn't been processed yet.
+    /// </summary>
+    public static readonly SocialPublisherTaskStatusType Pending = new("pending");
+
+    /// <summary>
+    /// The video is currently being uploaded by the job system.
+    /// </summary>
+    public static readonly SocialPublisherTaskStatusType Processing = new("processing");
+
+    /// <summary>
+    /// In Instagram and TikTok, the file is sent in one step and published in another step.
+    /// </summary>
+    public static readonly SocialPublisherTaskStatusType ProcessingInPlatform = new("processingInPlatform");
+
+    /// <summary>
+    /// The video was sent to the platform but an error occurred during platform processing.
+    /// </summary>
+    public static readonly SocialPublisherTaskStatusType FailedByPlatform = new("failedByPlatform");
+
+    /// <summary>
+    /// The video was successfully uploaded.
+    /// </summary>
+    public static readonly SocialPublisherTaskStatusType Done = new("done");
+
+    /// <summary>
+    /// The upload failed due to an error (network, API failure, etc.).
+    /// </summary>
+    public static readonly SocialPublisherTaskStatusType Error = new("error");
+
+    /// <summary>
+    /// The user or system canceled the upload before it started.
+    /// </summary>
+    public static readonly SocialPublisherTaskStatusType Canceled = new("canceled");
+
+    /// <summary>
+    /// The task requires maintenance because some platform has issues.
+    /// </summary>
+    public static readonly SocialPublisherTaskStatusType NeedsMaintenance = new("needsMaintenance");
+
+    /// <summary>
+    /// The provided video URL is invalid or inaccessible.
+    /// </summary>
+    public static readonly SocialPublisherTaskStatusType InvalidVideoURL = new("invalidVideoURL");
+
+    /// <summary>
+    /// The platform video URL (Facebook, TikTok, YouTube) is invalid or inaccessible.
+    /// </summary>
+    public static readonly SocialPublisherTaskStatusType InvalidPostVideoURL = new("invalidPostVideoURL");
+
+    /// <summary>
+    /// The task is being retried after an error.
+    /// </summary>
+    public static readonly SocialPublisherTaskStatusType Retrying = new("retrying");
+
+    //private static readonly HashSet<string> Allowed = new()
+    //{
+    //    "pending",
+    //    "processing",
+    //    "processingInPlatform",
+    //    "failedByPlatform",
+    //    "done",
+    //    "error",
+    //    "canceled",
+    //    "needsMaintenance",
+    //    "invalidVideoURL",
+    //    "invalidPostVideoURL",
+    //    "retrying"
+    //};
+
+    //public static SocialPublisherTaskStatusType From (string value)
+    //{
+    //    if (!Allowed.Contains(value))
+    //        throw new ArgumentException($"Invalid SocialPublisherTaskStatusType: {value}");
+
+    //    return new SocialPublisherTaskStatusType(value);
+    //}
+
+    public override string ToString ( ) => Value;
 }
