@@ -1,3 +1,4 @@
+using Posty5.Core.Converts;
 using System.Text.Json.Serialization;
 
 namespace Posty5.QRCode.Models;
@@ -559,19 +560,26 @@ public class QRCodeListParamsModel
 }
 
 
-public enum QRCodeTargetType
+
+
+[JsonConverter(typeof(StringValueObjectConverter<QRCodeTargetType>))]
+public readonly record struct QRCodeTargetType (string Value)
 {
-    FreeText=1,
-    Email,
-    Wifi,
-    Call,
-    Sms,
-    Url,
-    Geolocation
+    public static readonly QRCodeTargetType FreeText = new("freeText");
+    public static readonly QRCodeTargetType Email = new("email");
+    public static readonly QRCodeTargetType Wifi = new("wifi");
+    public static readonly QRCodeTargetType Call = new("call");
+    public static readonly QRCodeTargetType Sms = new("sms");
+    public static readonly QRCodeTargetType Url = new("url");
+    public static readonly QRCodeTargetType Geolocation = new("geolocation");
+
+    public override string ToString ( ) => Value;
 }
 
 
 
+
+[JsonConverter(typeof(StringValueObjectConverter<QRCodeStatusType>))]
 public readonly record struct QRCodeStatusType (string Value)
 {
     public static readonly QRCodeStatusType New = new("new");

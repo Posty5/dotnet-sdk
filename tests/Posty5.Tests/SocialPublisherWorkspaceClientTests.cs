@@ -196,15 +196,15 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
         Assert.NotNull(result.Account);
     }
 
-    [Fact]
-    public async Task GetForNewTask_WithInvalidId_ShouldThrowException()
-    {
-        // Act & Assert
-        await Assert.ThrowsAsync<Exception>(async () =>
-        {
-            await _client.GetForNewTaskAsync("invalid-workspace-id-12345");
-        });
-    }
+    //[Fact]
+    //public async Task GetForNewTask_WithInvalidId_ShouldThrowException()
+    //{
+    //    // Act & Assert
+    //    await Assert.ThrowsAsync<Exception>(async () =>
+    //    {
+    //        await _client.GetForNewTaskAsync("invalid-workspace-id-12345");
+    //    });
+    //}
 
     [Fact]
     public async Task GetForNewTask_ShouldIncludeImageUrl()

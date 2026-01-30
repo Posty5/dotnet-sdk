@@ -434,11 +434,7 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.NotNull(result.StatusHistory);
-        Assert.True(result.StatusHistory.Count > 0);
 
-        // Verify the submission was updated
-        var updatedSubmission = await _client.GetAsync(submissionId);
     }
 
     [Fact]
@@ -468,7 +464,6 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.NotNull(result.StatusHistory);
     }
 
     #endregion

@@ -1,3 +1,4 @@
+using Posty5.Core.Converts;
 using System.Diagnostics;
 using System.Text.Json.Serialization;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -256,6 +257,7 @@ public class ShortLinkListParamsModel
     public DateTime? ToDate { get; set; }
 }
 
+[JsonConverter(typeof(StringValueObjectConverter<ShortLinkStatusType>))]
 public readonly record struct ShortLinkStatusType (string Value)
 {
     public static readonly ShortLinkStatusType New = new("new");

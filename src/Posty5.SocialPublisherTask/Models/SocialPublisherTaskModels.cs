@@ -1,3 +1,4 @@
+using Posty5.Core.Converts;
 using System.Text.Json.Serialization;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -567,6 +568,7 @@ public class DefaultSettingsResponse
     public Dictionary<string, object>? ExtensionData { get; set; }
 }
 
+[JsonConverter(typeof(StringValueObjectConverter<SocialPublisherTaskStatusType>))]
 public readonly record struct SocialPublisherTaskStatusType (string Value)
 {
     /// <summary>

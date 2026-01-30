@@ -1,3 +1,6 @@
+using Posty5.Core.Converts;
+using System.Reflection;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Posty5.HtmlHostingFormSubmission.Models;
@@ -236,7 +239,8 @@ public class HtmlHostingFormSubmissionChangeStatusResponseModel
 }
 
 
- 
+[JsonConverter(typeof(StringValueObjectConverter<HtmlHostingFormSubmissionFormStatusType>))]
+
 public readonly record struct HtmlHostingFormSubmissionFormStatusType (string Value)
 {
     public static readonly HtmlHostingFormSubmissionFormStatusType New = new("new");
@@ -276,3 +280,8 @@ public readonly record struct HtmlHostingFormSubmissionFormStatusType (string Va
 
     public override string ToString ( ) => Value;
 }
+
+
+ 
+
+

@@ -104,7 +104,7 @@ public class HtmlHostingFormSubmissionClient
     /// <returns>Response with updated status history</returns>
     /// <exception cref="ArgumentNullException">Thrown when id or request is null</exception>
     /// <exception cref="InvalidOperationException">Thrown when submission not found or user doesn't have permission</exception>
-    public async Task<HtmlHostingFormSubmissionChangeStatusResponseModel> ChangeStatusAsync(
+    public async Task<bool> ChangeStatusAsync(
         string id,
         HtmlHostingFormSubmissionChangeStatusRequestModel request,
         CancellationToken cancellationToken = default)
@@ -114,12 +114,12 @@ public class HtmlHostingFormSubmissionClient
         if (request == null)
             throw new ArgumentNullException(nameof(request));
 
-        var response = await _http.PutAsync<HtmlHostingFormSubmissionChangeStatusResponseModel>(
+        var response = await _http.PutAsync<object>(
             $"{BasePath}/{id}/status",
             request,
             cancellationToken: cancellationToken);
 
-        return response.Result ?? throw new InvalidOperationException("Failed to change status");
+        return response.IsSuccess ? true : false;
     }
 
     /// <summary>

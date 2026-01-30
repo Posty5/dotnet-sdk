@@ -1,3 +1,4 @@
+using Posty5.Core.Converts;
 using System.Text.Json.Serialization;
 
 namespace Posty5.HtmlHosting.Models;
@@ -88,15 +89,6 @@ public class HtmlHostingPageModel
     /// </summary>
     public int? NumberOfReports { get; set; }
 
-    /// <summary>
-    /// Owner user ID
-    /// </summary>
-    public string? UserId { get; set; }
-
-    /// <summary>
-    /// API key ID
-    /// </summary>
-    public string? ApiKeyId { get; set; }
 
     /// <summary>
     /// Enable monetization flag
@@ -469,6 +461,7 @@ public class HtmlHostingListPagesParamsModel
 }
 
 
+[JsonConverter(typeof(StringValueObjectConverter<HtmlHostingStatusType>))]
 public readonly record struct HtmlHostingStatusType (string Value)
 {
     public static readonly HtmlHostingStatusType New = new("new");
