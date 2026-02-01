@@ -31,7 +31,10 @@ jobs:
           dotnet pack src/Posty5.QRCode/Posty5.QRCode.csproj --configuration Release --output ./nupkg --no-build
           dotnet pack src/Posty5.ShortLink/Posty5.ShortLink.csproj --configuration Release --output ./nupkg --no-build
           dotnet pack src/Posty5.HtmlHosting/Posty5.HtmlHosting.csproj --configuration Release --output ./nupkg --no-build
-          dotnet pack src/Posty5.SocialPublisher/Posty5.SocialPublisher.csproj --configuration Release --output ./nupkg --no-build
+          dotnet pack src/Posty5.HtmlHostingVariables/Posty5.HtmlHostingVariables.csproj --configuration Release --output ./nupkg --no-build
+          dotnet pack src/Posty5.HtmlHostingFormSubmission/Posty5.HtmlHostingFormSubmission.csproj --configuration Release --output ./nupkg --no-build
+          dotnet pack src/Posty5.SocialPublisherWorkspace/Posty5.SocialPublisherWorkspace.csproj --configuration Release --output ./nupkg --no-build
+          dotnet pack src/Posty5.SocialPublisherTask/Posty5.SocialPublisherTask.csproj --configuration Release --output ./nupkg --no-build
 
       - name: List created packages
         run: ls -lh ./nupkg/*.nupkg
