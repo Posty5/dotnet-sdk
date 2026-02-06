@@ -90,7 +90,7 @@ public class QRCodeClient
             createdFrom = "dotnetPackage"
         };
 
-        var response = await _http.PostAsync<QRCodeModel>(BasePath, payload, cancellationToken);
+        var response = await _http.PostAsync<QRCodeModel>($"{BasePath}/freetext", payload, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to create free text QR code");
     }
 
@@ -146,7 +146,7 @@ public class QRCodeClient
             createdFrom = "dotnetPackage"
         };
 
-        var response = await _http.PostAsync<QRCodeModel>(BasePath, payload, cancellationToken);
+        var response = await _http.PostAsync<QRCodeModel>($"{BasePath}/email", payload, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to create email QR code");
     }
 
@@ -202,7 +202,7 @@ public class QRCodeClient
             createdFrom = "dotnetPackage"
         };
 
-        var response = await _http.PostAsync<QRCodeModel>(BasePath, payload, cancellationToken);
+        var response = await _http.PostAsync<QRCodeModel>($"{BasePath}/wifi", payload, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to create WiFi QR code");
     }
 
@@ -256,7 +256,7 @@ public class QRCodeClient
             createdFrom = "dotnetPackage"
         };
 
-        var response = await _http.PostAsync<QRCodeModel>(BasePath, payload, cancellationToken);
+        var response = await _http.PostAsync<QRCodeModel>($"{BasePath}/call", payload, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to create call QR code");
     }
 
@@ -311,7 +311,7 @@ public class QRCodeClient
             createdFrom = "dotnetPackage"
         };
 
-        var response = await _http.PostAsync<QRCodeModel>(BasePath, payload, cancellationToken);
+        var response = await _http.PostAsync<QRCodeModel>($"{BasePath}/sms", payload, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to create SMS QR code");
     }
 
@@ -364,7 +364,7 @@ public class QRCodeClient
             createdFrom = "dotnetPackage"
         };
 
-        var response = await _http.PostAsync<QRCodeModel>(BasePath, payload, cancellationToken);
+        var response = await _http.PostAsync<QRCodeModel>($"{BasePath}/url", payload, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to create URL QR code");
     }
 
@@ -419,7 +419,7 @@ public class QRCodeClient
             createdFrom = "dotnetPackage"
         };
 
-        var response = await _http.PostAsync<QRCodeModel>(BasePath, payload, cancellationToken);
+        var response = await _http.PostAsync<QRCodeModel>($"{BasePath}/geolocation", payload, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to create geolocation QR code");
     }
 
