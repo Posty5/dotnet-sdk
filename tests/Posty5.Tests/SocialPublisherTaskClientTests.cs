@@ -285,7 +285,7 @@ public class SocialPublisherTaskClientTests : IDisposable
         // Act
         var result = await _client.ListAsync(
             new ListTasksParams(),
-            new PaginationParams { Page = 1, PageSize = 10 }
+            new PaginationParams { PageSize = 10 }
         );
 
         // Assert
@@ -306,7 +306,7 @@ public class SocialPublisherTaskClientTests : IDisposable
         // Act
         var result = await _client.ListAsync(
             filterParams,
-            new PaginationParams { Page = 1, PageSize = 10 }
+            new PaginationParams { PageSize = 10 }
         );
 
         // Assert
@@ -326,7 +326,7 @@ public class SocialPublisherTaskClientTests : IDisposable
         // Act
         var result = await _client.ListAsync(
             filterParams,
-            new PaginationParams { Page = 1, PageSize = 10 }
+            new PaginationParams { PageSize = 10 }
         );
 
         // Assert
@@ -393,3 +393,4 @@ public class SocialPublisherTaskClientTests : IDisposable
         // Cleanup is handled by test framework
     }
 }
+

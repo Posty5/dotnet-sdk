@@ -146,13 +146,17 @@ public class HtmlHostingVariablesClient
     /// <code>
     /// var result = await client.ListAsync(
     ///     new ListHtmlHostingVariablesParams { Tag = "production" },
-    ///     new PaginationParams { Page = 1, PageSize = 10 }
+    ///     new PaginationParams { Cursor = null, PageSize = 10 }
     /// );
-    /// Console.WriteLine($"Total: {result.Total}");
     /// foreach (var variable in result.Items)
     /// {
     ///     Console.WriteLine($"{variable.Key}: {variable.Value}");
     /// }
+    /// // Get next page
+    /// var nextPage = await client.ListAsync(
+    ///     new ListHtmlHostingVariablesParams { Tag = "production" },
+    ///     new PaginationParams { Cursor = result.Pagination.NextCursor, PageSize = 10 }
+    /// );
     /// </code>
     /// </example>
     public async Task<PaginationResponse<HtmlHostingVariablesVariableModel>> ListAsync(
@@ -178,7 +182,8 @@ public class HtmlHostingVariablesClient
 
         if (pagination != null)
         {
-            queryParams["pageNumber"] = pagination.Page;
+            if (!string.IsNullOrEmpty(pagination.Cursor))
+                queryParams["cursor"] = pagination.Cursor;
             queryParams["pageSize"] = pagination.PageSize;
         }
 

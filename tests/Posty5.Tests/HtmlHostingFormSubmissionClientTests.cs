@@ -34,7 +34,7 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
         // First, list submissions to get a valid ID
         var listResult = await _client.ListAsync(
             new HtmlHostingFormSubmissionListParamsModel { HtmlHostingId = _testHtmlHostingId },
-            new PaginationParams { Page = 1, PageSize = 1 }
+            new PaginationParams { PageSize = 1 }
         );
 
         if (listResult.Items.Count == 0)
@@ -60,7 +60,7 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
         // Arrange
         var listResult = await _client.ListAsync(
             new HtmlHostingFormSubmissionListParamsModel { HtmlHostingId = _testHtmlHostingId },
-            new PaginationParams { Page = 1, PageSize = 1 }
+            new PaginationParams { PageSize = 1 }
         );
 
         if (listResult.Items.Count == 0)
@@ -94,7 +94,7 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
         // Act
         var result = await _client.ListAsync(
             new HtmlHostingFormSubmissionListParamsModel { HtmlHostingId = _testHtmlHostingId },
-            new PaginationParams { Page = 1, PageSize = 10 }
+            new PaginationParams { PageSize = 10 }
         );
 
         // Assert
@@ -116,7 +116,7 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
                 HtmlHostingId = _testHtmlHostingId,
                 FormId = testFormId
             },
-            new PaginationParams { Page = 1, PageSize = 10 }
+            new PaginationParams { PageSize = 10 }
         );
 
         // Assert
@@ -137,7 +137,7 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
                 HtmlHostingId = _testHtmlHostingId,
                 Status = testStatus
             },
-            new PaginationParams { Page = 1, PageSize = 10 }
+            new PaginationParams { PageSize = 10 }
         );
 
         // Assert
@@ -154,7 +154,7 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
         // Act
         var result = await _client.ListAsync(
             new HtmlHostingFormSubmissionListParamsModel { HtmlHostingId = _testHtmlHostingId },
-            new PaginationParams { Page = 1, PageSize = 5 }
+            new PaginationParams { PageSize = 5 }
         );
 
         // Assert
@@ -212,7 +212,7 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
         // Arrange
         var listResult = await _client.ListAsync(
             new HtmlHostingFormSubmissionListParamsModel { HtmlHostingId = _testHtmlHostingId },
-            new PaginationParams { Page = 1, PageSize = 3 }
+            new PaginationParams { PageSize = 3 }
         );
 
         if (listResult.Items.Count < 2)
@@ -238,7 +238,7 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
         // Arrange
         var listResult = await _client.ListAsync(
             new HtmlHostingFormSubmissionListParamsModel { HtmlHostingId = _testHtmlHostingId },
-            new PaginationParams { Page = 1, PageSize = 1 }
+            new PaginationParams { PageSize = 1 }
         );
 
         if (listResult.Items.Count == 0)
@@ -262,7 +262,7 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
         // Arrange
         var listResult = await _client.ListAsync(
             new HtmlHostingFormSubmissionListParamsModel { HtmlHostingId = _testHtmlHostingId },
-            new PaginationParams { Page = 1, PageSize = 2 }
+            new PaginationParams { PageSize = 2 }
         );
 
         if (listResult.Items.Count == 0)
@@ -320,7 +320,7 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
         // Arrange
         var listResult = await _client.ListAsync(
             new HtmlHostingFormSubmissionListParamsModel { HtmlHostingId = _testHtmlHostingId },
-            new PaginationParams { Page = 1, PageSize = 1 }
+            new PaginationParams { PageSize = 1 }
         );
 
         if (listResult.Items.Count == 0)
@@ -355,7 +355,7 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
         // Arrange
         var listResult = await _client.ListAsync(
             new HtmlHostingFormSubmissionListParamsModel { HtmlHostingId = _testHtmlHostingId },
-            new PaginationParams { Page = 1, PageSize = 1 }
+            new PaginationParams { PageSize = 1 }
         );
 
         if (listResult.Items.Count == 0)
@@ -384,7 +384,7 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
         // Arrange
         var listResult = await _client.ListAsync(
             new HtmlHostingFormSubmissionListParamsModel { HtmlHostingId = _testHtmlHostingId },
-            new PaginationParams { Page = 1, PageSize = 1 }
+            new PaginationParams { PageSize = 1 }
         );
 
         if (listResult.Items.Count == 0)
@@ -413,7 +413,7 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
         // Arrange
         var listResult = await _client.ListAsync(
             new HtmlHostingFormSubmissionListParamsModel { HtmlHostingId = _testHtmlHostingId },
-            new PaginationParams { Page = 1, PageSize = 1 }
+            new PaginationParams { PageSize = 1 }
         );
 
         if (listResult.Items.Count == 0)
@@ -443,7 +443,7 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
         // Arrange
         var listResult = await _client.ListAsync(
             new HtmlHostingFormSubmissionListParamsModel { HtmlHostingId = _testHtmlHostingId },
-            new PaginationParams { Page = 1, PageSize = 1 }
+            new PaginationParams { PageSize = 1 }
         );
 
         if (listResult.Items.Count == 0)
@@ -476,7 +476,7 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
         // Step 1: List submissions
         var listResult = await _client.ListAsync(
             new HtmlHostingFormSubmissionListParamsModel { HtmlHostingId = _testHtmlHostingId },
-            new PaginationParams { Page = 1, PageSize = 5 }
+            new PaginationParams { PageSize = 5 }
         );
 
         if (listResult.Items.Count == 0)
@@ -514,3 +514,4 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
         // Cleanup is handled by test framework
     }
 }
+

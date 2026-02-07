@@ -198,7 +198,7 @@ public class HtmlHostingClientTests : IDisposable
     {
         // Act
         var result = await _client.ListAsync(
-            pagination: new PaginationParams { Page = 1, PageSize = 10 }
+            pagination: new PaginationParams { PageSize = 10 }
         );
 
         // Assert
@@ -220,7 +220,7 @@ public class HtmlHostingClientTests : IDisposable
         // Act
         var result = await _client.ListAsync(
             filterParams,
-            new PaginationParams { Page = 1, PageSize = 20 }
+            new PaginationParams { PageSize = 20 }
         );
 
         // Assert
@@ -463,7 +463,7 @@ public class HtmlHostingClientTests : IDisposable
         // Act
         var result = await _client.ListAsync(
             filterParams,
-            new PaginationParams { Page = 1, PageSize = 5 }
+            new PaginationParams { PageSize = 5 }
         );
 
         // Assert
@@ -509,3 +509,4 @@ public class HtmlHostingClientTests : IDisposable
         // Cleanup is handled by test framework if needed
     }
 }
+

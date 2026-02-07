@@ -308,7 +308,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
     {
         // Act
         var result = await _client.ListAsync(
-            pagination: new PaginationParams { Page = 1, PageSize = 10 }
+            pagination: new PaginationParams { PageSize = 10 }
         );
 
         // Assert
@@ -461,7 +461,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
     {
         // Act
         var result = await _client.ListAsync(
-            pagination: new PaginationParams { Page = 1, PageSize = 5 }
+            pagination: new PaginationParams { PageSize = 5 }
         );
 
         // Assert
@@ -562,3 +562,4 @@ public class HtmlHostingVariablesClientTests : IDisposable
         // Cleanup is handled by test framework if needed
     }
 }
+

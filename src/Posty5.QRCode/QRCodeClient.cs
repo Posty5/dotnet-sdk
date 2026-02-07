@@ -872,10 +872,15 @@ public class QRCodeClient
     /// var result = await qrCodeClient.ListAsync();
     /// Console.WriteLine(result.Items);
     /// 
-    /// // List with filters
+    /// // List with filters and cursor pagination
     /// var filtered = await qrCodeClient.ListAsync(
     ///     new QRCodeListParamsModel { Status = "approved", Tag = "marketing" },
-    ///     new PaginationParams { Page = 1, PageSize = 20 }
+    ///     new PaginationParams { Cursor = null, PageSize = 20 }
+    /// );
+    /// // Get next page using cursor from previous response
+    /// var nextPage = await qrCodeClient.ListAsync(
+    ///     new QRCodeListParamsModel { Status = "approved" },
+    ///     new PaginationParams { Cursor = filtered.Pagination.NextCursor, PageSize = 20 }
     /// );
     /// </code>
     /// </example>
@@ -908,7 +913,8 @@ public class QRCodeClient
 
         if (pagination != null)
         {
-            queryParams["pageNumber"] = pagination.Page;
+            if (!string.IsNullOrEmpty(pagination.Cursor))
+                queryParams["cursor"] = pagination.Cursor;
             queryParams["pageSize"] = pagination.PageSize;
         }
 

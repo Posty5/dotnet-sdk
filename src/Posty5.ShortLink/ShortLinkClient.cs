@@ -69,7 +69,8 @@ public class ShortLinkClient
 
         if (pagination != null)
         {
-            queryParams["pageNumber"] = pagination.Page;
+            if (!string.IsNullOrEmpty(pagination.Cursor))
+                queryParams["cursor"] = pagination.Cursor;
             queryParams["pageSize"] = pagination.PageSize;
         }
 

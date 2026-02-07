@@ -60,7 +60,8 @@ public class SocialPublisherTaskClient
 
         if (pagination != null)
         {
-            queryParams["page"] = pagination.Page;
+            if (!string.IsNullOrEmpty(pagination.Cursor))
+                queryParams["cursor"] = pagination.Cursor;
             queryParams["pageSize"] = pagination.PageSize;
         }
 

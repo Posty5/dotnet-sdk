@@ -531,7 +531,7 @@ public class QRCodeClientTests : IDisposable
     {
         // Act
         var result = await _client.ListAsync(
-            pagination: new Core.Models.PaginationParams { Page = 0, PageSize = 10 }
+            pagination: new Core.Models.PaginationParams { PageSize = 10 }
         );
 
         // Assert
@@ -563,7 +563,7 @@ public class QRCodeClientTests : IDisposable
         };
         var result = await _client.ListAsync(
             filterParams,
-            new Core.Models.PaginationParams { Page = 0, PageSize = 10 }
+            new Core.Models.PaginationParams { PageSize = 10 }
         );
 
         // Assert
@@ -596,7 +596,7 @@ public class QRCodeClientTests : IDisposable
         };
         var result = await _client.ListAsync(
             filterParams,
-            new Core.Models.PaginationParams { Page = 0, PageSize = 10 }
+            new Core.Models.PaginationParams { PageSize = 10 }
         );
 
         // Assert
@@ -665,3 +665,4 @@ public class QRCodeClientTests : IDisposable
         // Cleanup is handled by collection fixture if needed
     }
 }
+

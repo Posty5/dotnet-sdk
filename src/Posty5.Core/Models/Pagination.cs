@@ -1,14 +1,14 @@
 namespace Posty5.Core.Models;
 
 /// <summary>
-/// Pagination parameters for list operations
+/// Pagination parameters for cursor-based list operations
 /// </summary>
 public class PaginationParams
 {
     /// <summary>
-    /// Page number (starts from 0)
+    /// Cursor for pagination (opaque string from previous response)
     /// </summary>
-    public int Page { get; set; } = 0;
+    public string? Cursor { get; set; }
 
     /// <summary>
     /// Number of items per page
@@ -28,29 +28,33 @@ public class PaginationResponse<T>
     public List<T> Items { get; set; } = new();
 
     /// <summary>
-    /// Pagination Meta
+    /// Pagination metadata
     /// </summary>
-    public PaginationMeta Pagination { get; set; }
+    public PaginationMeta Pagination { get; set; } = new();
 }
 
+/// <summary>
+/// Cursor-based pagination metadata
+/// </summary>
 public class PaginationMeta
 {
-
-           /// <summary>
-    /// Total count of items
+    /// <summary>
+    /// Cursor for next page (null if no more data)
     /// </summary>
-    public int TotalCount { get; set; }
+    public string? NextCursor { get; set; }
 
     /// <summary>
-    /// Current page number
+    /// Cursor for previous page (null if first page)
     /// </summary>
-    public int Page { get; set; }
+    public string? PreviousCursor { get; set; }
 
     /// <summary>
     /// Page size
     /// </summary>
     public int PageSize { get; set; }
   
-    public int TotalPages { get; set; }
-    public bool NoMoreOfResults { get; set; }
+    /// <summary>
+    /// Indicates if there are more items available
+    /// </summary>
+    public bool HasMore { get; set; }
 }
