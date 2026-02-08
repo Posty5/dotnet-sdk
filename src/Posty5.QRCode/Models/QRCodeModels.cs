@@ -173,6 +173,79 @@ public class QRCodeTargetModel
     /// </summary>
     public string? Text { get; set; }
 }
+ 
+/// <summary>
+/// QR Code template information
+/// </summary>
+public class QRCodeTemplateModel
+{
+    /// <summary>
+    /// Template ID
+    /// </summary>
+    [JsonPropertyName("_id")]
+    public string? Id { get; set; }
+    
+    /// <summary>
+    /// Template name
+    /// </summary>
+    public string? Name { get; set; }
+    
+    /// <summary>
+    /// Number of QR codes using this template
+    /// </summary>
+    public int? NumberOfSubQrCodes { get; set; }
+    
+    /// <summary>
+    /// Number of short links using this template
+    /// </summary>
+    public int? NumberOfSubShortLinks { get; set; }
+    
+    /// <summary>
+    /// QR code download URL
+    /// </summary>
+    public string? QrCodeDownloadURL { get; set; }
+}
+
+/// <summary>
+/// QR Code styling options
+/// </summary>
+public class QRCodeOptionsModel
+{
+    public string? Text { get; set; }
+    public int? Width { get; set; }
+    public int? Height { get; set; }
+    public int? CorrectLevel { get; set; }
+    public double? DotScale { get; set; }
+    public double? DotScaleTiming_H { get; set; }
+    public double? DotScaleTiming_V { get; set; }
+    public double? DotScaleAO { get; set; }
+    public double? DotScaleAI { get; set; }
+    public int? QuietZone { get; set; }
+    public string? QuietZoneColor { get; set; }
+    public string? ColorDark { get; set; }
+    public string? ColorLight { get; set; }
+    public string? PO_TL { get; set; }
+    public string? PO_TR { get; set; }
+    public string? PO_BL { get; set; }
+    public string? PI_TL { get; set; }
+    public string? PI_TR { get; set; }
+    public string? PI_BL { get; set; }
+    public string? AI { get; set; }
+    public string? AO { get; set; }
+    public string? Timing_V { get; set; }
+    public string? Timing_H { get; set; }
+    public string? Title { get; set; }
+    public string? TitleFont { get; set; }
+    public string? TitleColor { get; set; }
+    public string? TitleBackgroundColor { get; set; }
+    public int? TitleHeight { get; set; }
+    public int? TitleTop { get; set; }
+    public string? Logo { get; set; }
+    public int? LogoWidth { get; set; }
+    public int? LogoHeight { get; set; }
+    public string? LogoBackgroundColor { get; set; }
+    public bool? LogoBackgroundTransparent { get; set; }
+}
 
 /// <summary>
 /// Preview reason (moderation score)
@@ -232,6 +305,17 @@ public class QRCodeModel
     /// </summary>
     public int? NumberOfVisitors { get; set; }
     
+ 
+    /// <summary>
+    /// Whether landing page is enabled
+    /// </summary>
+    public bool? IsEnableLandingPage { get; set; }
+    
+    /// <summary>
+    /// Template name
+    /// </summary>
+    public string? TemplateName { get; set; }
+ 
     /// <summary>
     /// Last visitor date
     /// </summary>
@@ -278,8 +362,48 @@ public class QRCodeModel
     /// Updated timestamp
     /// </summary>
     public DateTime? UpdatedAt { get; set; }
+}
 
-
+/// <summary>
+/// QR Code full details model with all populated fields
+/// </summary>
+public class QRCodeFullDetailsModel : QRCodeModel
+{
+      
+    /// <summary>
+    /// Template object (populated)
+    /// </summary>
+    public QRCodeTemplateModel? Template { get; set; }
+    
+    /// <summary>
+    /// Template type
+    /// </summary>
+    public string? TemplateType { get; set; }
+     
+ 
+    /// <summary>
+    /// QR code styling options
+    /// </summary>
+    public QRCodeOptionsModel? Options { get; set; }
+    
+    /// <summary>
+    /// Number of likes
+    /// </summary>
+    public int? NumberOfLikes { get; set; }
+    
+    /// <summary>
+    /// Number of comments
+    /// </summary>
+    public int? NumberOfComments { get; set; }
+    
+    /// <summary>
+    /// Source platform where QR code was created
+    /// </summary>
+    public string? CreatedFrom { get; set; }
+    
+       
+   
+    
  
 }
 
@@ -588,4 +712,15 @@ public readonly record struct QRCodeStatusType (string Value)
     public static readonly QRCodeStatusType Approved = new("approved");
 
     public override string ToString ( ) => Value;
+}
+
+/// <summary>
+/// Delete response model
+/// </summary>
+public class DeleteResponse
+{
+    /// <summary>
+    /// Success message
+    /// </summary>
+    public string Message { get; set; } = string.Empty;
 }

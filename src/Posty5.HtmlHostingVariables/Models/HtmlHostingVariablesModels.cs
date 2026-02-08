@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 
 namespace Posty5.HtmlHostingVariables.Models;
-
+  
 /// <summary>
 /// HTML hosting variable model
 /// </summary>
@@ -28,6 +28,8 @@ public class HtmlHostingVariablesVariableModel
     /// </summary>
     public string Value { get; set; } = string.Empty;
     
+ 
+ 
        /// <summary>
     /// Custom tag for filtering/categorization
     /// </summary>
@@ -111,4 +113,15 @@ public class HtmlHostingVariablesListParamsModel
     /// Filter by external reference ID
     /// </summary>
     public string? RefId { get; set; }
+}
+
+/// <summary>
+/// Delete response model
+/// </summary>
+public class DeleteResponse
+{
+    /// <summary>
+    /// Success message
+    /// </summary>
+    public string Message { get; set; } = string.Empty;
 }

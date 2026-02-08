@@ -123,16 +123,19 @@ public class HtmlHostingVariablesClient
     /// </summary>
     /// <param name="id">Variable ID to delete</param>
     /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Deletion confirmation response</returns>
     /// <example>
     /// <code>
-    /// await client.DeleteAsync("variable_id_123");
+    /// var result = await client.DeleteAsync("variable_id_123");
+    /// Console.WriteLine(result.Message);
     /// </code>
     /// </example>
-    public async Task DeleteAsync(
+    public async Task<DeleteResponse> DeleteAsync(
         string id,
         CancellationToken cancellationToken = default)
     {
-        await _http.DeleteAsync<object>($"{BasePath}/{id}", cancellationToken);
+        var response = await _http.DeleteAsync<DeleteResponse>($"{BasePath}/{id}", cancellationToken);
+        return response.Result ?? new DeleteResponse { Message = "Deleted" };
     }
 
     /// <summary>

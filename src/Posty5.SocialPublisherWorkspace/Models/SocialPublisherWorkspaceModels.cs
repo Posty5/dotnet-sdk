@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 
 namespace Posty5.SocialPublisherWorkspace.Models;
+ 
 
 /// <summary>
 /// Account details for a social media platform
@@ -86,9 +87,21 @@ public class SocialPublisherWorkspaceModel
     public string Name { get; set; } = string.Empty;
     
     /// <summary>
+    /// Workspace description
+    /// </summary>
+    public string? Description { get; set; }
+   
+    
+    /// <summary>
+    /// Workspace logo/image URL
+    /// </summary>
+    public string? ImageUrl { get; set; }
+    
+    /// <summary>
     /// Social media accounts associated with this workspace
     /// </summary>
     public SocialPublisherWorkspaceAccountModel Account { get; set; } = new();
+    
 }
 
 /// <summary>
@@ -116,6 +129,7 @@ public class SocialPublisherWorkspaceSampleDetailsModel
     /// Workspace logo/image URL
     /// </summary>
     public string? ImageUrl { get; set; }
+   
     
     /// <summary>
     /// Created timestamp
@@ -223,6 +237,17 @@ public class SocialPublisherWorkspaceListParamsModel
     /// Filter by external reference ID
     /// </summary>
     public string? RefId { get; set; }
+}
+
+/// <summary>
+/// Delete response model
+/// </summary>
+public class DeleteResponse
+{
+    /// <summary>
+    /// Success message
+    /// </summary>
+    public string Message { get; set; } = string.Empty;
 }
 
 /// <summary>

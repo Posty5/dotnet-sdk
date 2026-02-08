@@ -5,8 +5,320 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 namespace Posty5.SocialPublisherTask.Models;
 
 // ============================================================================
+// HELPER MODELS
+// ============================================================================
+ 
+/// <summary>
+/// Status history grouped by day
+/// </summary>
+public class StatusHistoryGroupedDay
+{
+    /// <summary>
+    /// Date
+    /// </summary>
+    public DateTime Date { get; set; }
+    
+    /// <summary>
+    /// Status timeline for that day
+    /// </summary>
+    public List<StatusHistoryItem> StatusHistory { get; set; } = new();
+}
+
+/// <summary>
+/// Status history item
+/// </summary>
+public class StatusHistoryItem
+{
+    /// <summary>
+    /// Task status
+    /// </summary>
+    public SocialPublisherTaskStatusType Status { get; set; }
+    
+    /// <summary>
+    /// Error message (if any)
+    /// </summary>
+    public string? Error { get; set; }
+    
+    /// <summary>
+    /// Changed timestamp
+    /// </summary>
+    public DateTime ChangedAt { get; set; }
+}
+
+/// <summary>
+/// Social publisher account details
+/// </summary>
+public class SocialPublisherAccountModel
+{
+    /// <summary>
+    /// Account ID
+    /// </summary>
+    [JsonPropertyName("_id")]
+    public string Id { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Account status
+    /// </summary>
+    public string Status { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Account link/URL
+    /// </summary>
+    public string Link { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Account name
+    /// </summary>
+    public string Name { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Account thumbnail URL
+    /// </summary>
+    public string Thumbnail { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Platform account ID
+    /// </summary>
+    public string PlatformAccountId { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Workspace details for status page
+/// </summary>
+public class WorkspaceModel
+{
+    /// <summary>
+    /// Workspace ID
+    /// </summary>
+    [JsonPropertyName("_id")]
+    public string Id { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Workspace name
+    /// </summary>
+    public string Name { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Workspace description
+    /// </summary>
+    public string? Description { get; set; }
+    
+    /// <summary>
+    /// Created timestamp
+    /// </summary>
+    public DateTime CreatedAt { get; set; }
+    
+    /// <summary>
+    /// Connected social accounts
+    /// </summary>
+    public WorkspaceAccountsModel Account { get; set; } = new();
+}
+
+/// <summary>
+/// Workspace connected accounts
+/// </summary>
+public class WorkspaceAccountsModel
+{
+    /// <summary>
+    /// YouTube account
+    /// </summary>
+    public SocialPublisherAccountModel? Youtube { get; set; }
+    
+    /// <summary>
+    /// TikTok account
+    /// </summary>
+    public SocialPublisherAccountModel? Tiktok { get; set; }
+    
+    /// <summary>
+    /// Facebook account
+    /// </summary>
+    public SocialPublisherAccountModel? Facebook { get; set; }
+    
+    /// <summary>
+    /// Instagram account
+    /// </summary>
+    public SocialPublisherAccountModel? Instagram { get; set; }
+}
+
+/// <summary>
+/// Post info for platform
+/// </summary>
+public class PostInfoModel
+{
+    /// <summary>
+    /// Whether posting is allowed for this platform
+    /// </summary>
+    public bool IsAllow { get; set; }
+    
+    /// <summary>
+    /// Current status for this platform
+    /// </summary>
+    public SocialPublisherTaskStatusType CurrentStatus { get; set; }
+    
+    /// <summary>
+    /// Status history grouped by day
+    /// </summary>
+    public List<StatusHistoryGroupedDay> StatusHistoryGrouped { get; set; } = new();
+    
+    /// <summary>
+    /// Video URL on platform
+    /// </summary>
+    public string? VideoURL { get; set; }
+    
+    /// <summary>
+    /// Social publisher account details
+    /// </summary>
+    public SocialPublisherAccountModel? SocialPublisherAccount { get; set; }
+}
+
+// ============================================================================
 // PLATFORM CONFIGURATION MODELS
 // ============================================================================
+
+/// <summary>
+/// YouTube-specific configuration for status page
+/// </summary>
+public class YouTubeFullDetailsConfig
+{
+    /// <summary>
+    /// Video title
+    /// </summary>
+    public string Title { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Video description
+    /// </summary>
+    public string Description { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Video tags
+    /// </summary>
+    public List<string> Tags { get; set; } = new();
+    
+    /// <summary>
+    /// Made for kids flag
+    /// </summary>
+    public bool? MadeForKids { get; set; }
+    
+    /// <summary>
+    /// Default language
+    /// </summary>
+    public string? DefaultLanguage { get; set; }
+    
+    /// <summary>
+    /// Default audio language
+    /// </summary>
+    public string? DefaultAudioLanguage { get; set; }
+    
+    /// <summary>
+    /// Category ID
+    /// </summary>
+    public string? CategoryId { get; set; }
+    
+    /// <summary>
+    /// Localization languages
+    /// </summary>
+    public List<string>? LocalizationLanguages { get; set; }
+    
+    /// <summary>
+    /// Localizations map
+    /// </summary>
+    public Dictionary<string, object>? Localizations { get; set; }
+    
+    /// <summary>
+    /// Post information
+    /// </summary>
+    public PostInfoModel PostInfo { get; set; } = new();
+}
+
+/// <summary>
+/// TikTok-specific configuration for status page
+/// </summary>
+public class TikTokFullDetailsConfig
+{
+    /// <summary>
+    /// Video caption
+    /// </summary>
+    public string Caption { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Disable duet
+    /// </summary>
+    [JsonPropertyName("disable_duet")]
+    public bool DisableDuet { get; set; }
+    
+    /// <summary>
+    /// Disable stitch
+    /// </summary>
+    [JsonPropertyName("disable_stitch")]
+    public bool DisableStitch { get; set; }
+    
+    /// <summary>
+    /// Disable comments
+    /// </summary>
+    [JsonPropertyName("disable_comment")]
+    public bool DisableComment { get; set; }
+    
+    /// <summary>
+    /// Privacy level
+    /// </summary>
+    [JsonPropertyName("privacy_level")]
+    public string PrivacyLevel { get; set; } = "PUBLIC";
+    
+    /// <summary>
+    /// Post information
+    /// </summary>
+    public PostInfoModel PostInfo { get; set; } = new();
+}
+
+/// <summary>
+/// Facebook-specific configuration for status page
+/// </summary>
+public class FacebookFullDetailsConfig
+{
+    /// <summary>
+    /// Post description
+    /// </summary>
+    public string Description { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Post title
+    /// </summary>
+    public string? Title { get; set; }
+    
+    /// <summary>
+    /// Post information
+    /// </summary>
+    public PostInfoModel PostInfo { get; set; } = new();
+}
+
+/// <summary>
+/// Instagram-specific configuration for status page
+/// </summary>
+public class InstagramFullDetailsConfig
+{
+    /// <summary>
+    /// Post description
+    /// </summary>
+    public string Description { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Share to feed
+    /// </summary>
+    [JsonPropertyName("share_to_feed")]
+    public bool? ShareToFeed { get; set; }
+    
+    /// <summary>
+    /// Publish to both feed and story
+    /// </summary>
+    [JsonPropertyName("is_published_to_both_feed_and_story")]
+    public bool? IsPublishedToBothFeedAndStory { get; set; }
+    
+    /// <summary>
+    /// Post information
+    /// </summary>
+    public PostInfoModel PostInfo { get; set; } = new();
+}
 
 /// <summary>
 /// YouTube-specific configuration
@@ -469,6 +781,8 @@ public class TaskModel
     /// Custom tag
     /// </summary>
     public string? Tag { get; set; }
+ 
+    
     public TaskModelIsAllowAccount IisAllow { get; set; }
     public TaskModeWorkspace Workspace { get; set; }
     public ScheduleConfig Schedule { get; set; }
@@ -491,7 +805,122 @@ public class TaskModeWorkspace
 
 
 /// <summary>
-/// Task status response with full details
+/// Task status response with full details for status page
+/// </summary>
+public class TaskStatusFullDetailsResponse
+{
+    /// <summary>
+    /// MongoDB document ID
+    /// </summary>
+    [JsonPropertyName("_id")]
+    public string Id { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Task numbering
+    /// </summary>
+    public string Numbering { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Task type (shortVideo)
+    /// </summary>
+    public string Type { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Source type (file, url, facebook, tiktok, youtube)
+    /// </summary>
+    public string Source { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Source URLs for video, thumbnail, and post
+    /// </summary>
+    public SourceURLsModel SourceURLs { get; set; } = new();
+    
+    /// <summary>
+    /// Current task status
+    /// </summary>
+    public SocialPublisherTaskStatusType CurrentStatus { get; set; }
+    
+    /// <summary>
+    /// Current error message
+    /// </summary>
+    public string? CurrentError { get; set; }
+    
+    /// <summary>
+    /// Current status changed timestamp
+    /// </summary>
+    public string CurrentStatusChangedAt { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Status history grouped by day
+    /// </summary>
+    public List<StatusHistoryGroupedDay> StatusHistoryGrouped { get; set; } = new();
+    
+    /// <summary>
+    /// TikTok platform configuration (if enabled)
+    /// </summary>
+    public TikTokFullDetailsConfig? Tiktok { get; set; }
+    
+    /// <summary>
+    /// Facebook platform configuration (if enabled)
+    /// </summary>
+    public FacebookFullDetailsConfig? Facebook { get; set; }
+    
+    /// <summary>
+    /// Instagram platform configuration (if enabled)
+    /// </summary>
+    public InstagramFullDetailsConfig? Instagram { get; set; }
+    
+    /// <summary>
+    /// YouTube platform configuration (if enabled)
+    /// </summary>
+    public YouTubeFullDetailsConfig? Youtube { get; set; }
+    
+    /// <summary>
+    /// Workspace details with connected accounts
+    /// </summary>
+    public WorkspaceModel Workspace { get; set; } = new();
+    
+    /// <summary>
+    /// Created timestamp
+    /// </summary>
+    public DateTime CreatedAt { get; set; }
+    
+    /// <summary>
+    /// Started timestamp
+    /// </summary>
+    public DateTime? StartedAt { get; set; }
+    
+    /// <summary>
+    /// Schedule configuration
+    /// </summary>
+    public ScheduleConfig Schedule { get; set; } = new();
+    
+ 
+}
+
+/// <summary>
+/// Source URLs for task media
+/// </summary>
+public class SourceURLsModel
+{
+    /// <summary>
+    /// Thumbnail URL
+    /// </summary>
+    public string? ThumbURL { get; set; }
+    
+    /// <summary>
+    /// Video URL
+    /// </summary>
+    public string? VideoURL { get; set; }
+    
+    /// <summary>
+    /// Post URL (for platform sources like facebook, tiktok, youtube)
+    /// </summary>
+    public string? PostURL { get; set; }
+}
+
+/// <summary>
+/// Task status response (simplified, for backward compatibility)
 /// </summary>
 public class TaskStatusResponse
 {
@@ -650,4 +1079,15 @@ public readonly record struct SocialPublisherTaskStatusType (string Value)
     //}
 
     public override string ToString ( ) => Value;
+}
+
+/// <summary>
+/// Delete response model
+/// </summary>
+public class DeleteResponse
+{
+    /// <summary>
+    /// Success message
+    /// </summary>
+    public string Message { get; set; } = string.Empty;
 }

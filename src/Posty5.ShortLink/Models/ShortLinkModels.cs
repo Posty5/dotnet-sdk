@@ -4,6 +4,75 @@ using System.Text.Json.Serialization;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Posty5.ShortLink.Models;
+ 
+/// <summary>
+/// QR Code template information
+/// </summary>
+public class QRCodeTemplateModel
+{
+    /// <summary>
+    /// Template ID
+    /// </summary>
+    [JsonPropertyName("_id")]
+    public string? Id { get; set; }
+    
+    /// <summary>
+    /// Template name
+    /// </summary>
+    public string? Name { get; set; }
+    
+    /// <summary>
+    /// Number of QR codes using this template
+    /// </summary>
+    public int? NumberOfSubQrCodes { get; set; }
+    
+    /// <summary>
+    /// Number of short links using this template
+    /// </summary>
+    public int? NumberOfSubShortLinks { get; set; }
+    
+    /// <summary>
+    /// QR code download URL
+    /// </summary>
+    public string? QrCodeDownloadURL { get; set; }
+}
+
+/// <summary>
+/// Short link metadata information
+/// </summary>
+public class ShortLinkMetaDataModel
+{
+    /// <summary>
+    /// Meta image URL
+    /// </summary>
+    public string? Image { get; set; }
+    
+    /// <summary>
+    /// Meta title
+    /// </summary>
+    public string? Title { get; set; }
+    
+    /// <summary>
+    /// Meta description
+    /// </summary>
+    public string? Description { get; set; }
+}
+
+/// <summary>
+/// Preview reason (moderation score)
+/// </summary>
+public class ShortLinkPreviewReasonModel
+{
+    /// <summary>
+    /// Category name
+    /// </summary>
+    public string Category { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Score value
+    /// </summary>
+    public double Score { get; set; }
+}
 
 /// <summary>
 /// Page information for landing page customization
@@ -69,6 +138,40 @@ public class ShortLinkModel
     public int? NumberOfVisitors { get; set; }
     
     /// <summary>
+    /// Number of reports/flags
+    /// </summary>
+    public int? NumberOfReports { get; set; }
+    
+    /// <summary>
+    /// iOS deep link URL support
+    /// </summary>
+    public bool? IsSupportIOSDeepUrl { get; set; }
+    
+    /// <summary>
+    /// Android deep link URL support
+    /// </summary>
+    public bool? IsSupportAndroidDeepUrl { get; set; }
+    
+   
+    
+    /// <summary>
+    /// QR code template name
+    /// </summary>
+    public string? QrCodeTemplateName { get; set; }
+    
+    /// <summary>
+    /// Whether landing page is enabled
+    /// </summary>
+    public bool? IsEnableLandingPage { get; set; }
+    
+    /// <summary>
+    /// Whether monetization is enabled
+    /// </summary>
+    public bool? IsEnableMonetization { get; set; }
+    
+ 
+ 
+    /// <summary>
     /// Last visitor date
     /// 
     /// </summary>
@@ -102,7 +205,39 @@ public class ShortLinkModel
     public DateTime? UpdatedAt { get; set; }
 
     public ShortLinkStatusType? Status { get; set; }
+}
 
+/// <summary>
+/// Short link full details model with all populated fields
+/// </summary>
+public class ShortLinkFullDetailsModel : ShortLinkModel
+{
+    /// <summary>
+    /// Android deep link URL
+    /// </summary>
+    public string? AndroidUrl { get; set; }
+    
+    /// <summary>
+    /// iOS deep link URL
+    /// </summary>
+    public string? IosUrl { get; set; }
+    
+    
+    /// <summary>
+    /// Template type
+    /// </summary>
+    public string? TemplateType { get; set; }
+    
+    /// <summary>
+    /// Template object (populated)
+    /// </summary>
+    public QRCodeTemplateModel? Template { get; set; }
+     
+    /// <summary>
+    /// Link metadata for social sharing
+    /// </summary>
+    public ShortLinkMetaDataModel? LinkMetaData { get; set; }
+       
 }
 
 /// <summary>
@@ -266,4 +401,15 @@ public readonly record struct ShortLinkStatusType (string Value)
     public static readonly ShortLinkStatusType Approved = new("approved");
 
     public override string ToString ( ) => Value;
+}
+
+/// <summary>
+/// Delete response model
+/// </summary>
+public class DeleteResponse
+{
+    /// <summary>
+    /// Success message
+    /// </summary>
+    public string Message { get; set; } = string.Empty;
 }

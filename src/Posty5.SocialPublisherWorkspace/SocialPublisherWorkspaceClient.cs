@@ -226,11 +226,13 @@ public class SocialPublisherWorkspaceClient
     /// </summary>
     /// <param name="id">Workspace ID to delete</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    public async Task DeleteAsync(
+    /// <returns>Deletion confirmation response</returns>
+    public async Task<DeleteResponse> DeleteAsync(
         string id,
         CancellationToken cancellationToken = default)
     {
-        await _http.DeleteAsync<object>($"{BasePath}/{id}", cancellationToken);
+        var response = await _http.DeleteAsync<DeleteResponse>($"{BasePath}/{id}", cancellationToken);
+        return response.Result ?? new DeleteResponse { Message = "Deleted" };
     }
 
     /// <summary>

@@ -87,13 +87,13 @@ public class SocialPublisherTaskClient
     }
 
     /// <summary>
-    /// Get task status by ID
+    /// Get task status by ID with full details including platform configurations
     /// </summary>
-    public async Task<TaskStatusResponse> GetStatusAsync(
+    public async Task<TaskStatusFullDetailsResponse> GetStatusAsync(
         string id,
         CancellationToken cancellationToken = default)
     {
-        var response = await _http.GetAsync<TaskStatusResponse>(
+        var response = await _http.GetAsync<TaskStatusFullDetailsResponse>(
             $"{BasePath}/{id}",
             cancellationToken: cancellationToken);
 

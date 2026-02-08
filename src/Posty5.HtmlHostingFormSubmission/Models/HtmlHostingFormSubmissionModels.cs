@@ -6,6 +6,70 @@ using System.Text.Json.Serialization;
 namespace Posty5.HtmlHostingFormSubmission.Models;
 
 // ============================================================================
+// HELPER MODELS
+// ============================================================================
+
+/// <summary>
+/// HTML hosting object (populated)
+/// </summary>
+public class HtmlHostingModel
+{
+    /// <summary>
+    /// HTML hosting ID
+    /// </summary>
+    [JsonPropertyName("_id")]
+    public string? Id { get; set; }
+    
+    /// <summary>
+    /// HTML hosting name
+    /// </summary>
+    public string? Name { get; set; }
+    
+    /// <summary>
+    /// Custom landing ID
+    /// </summary>
+    public string? CustomLandingId { get; set; }
+}
+
+/// <summary>
+/// Form configuration object (populated)
+/// </summary>
+public class FormModel
+{
+    /// <summary>
+    /// Form ID
+    /// </summary>
+    [JsonPropertyName("_id")]
+    public string? Id { get; set; }
+    
+    /// <summary>
+    /// Form name
+    /// </summary>
+    public string? Name { get; set; }
+    
+    /// <summary>
+    /// Form fields configuration
+    /// </summary>
+    public List<object>? Fields { get; set; }
+}
+
+/// <summary>
+/// Status history grouped by day
+/// </summary>
+public class StatusHistoryGroupedDay
+{
+    /// <summary>
+    /// Date
+    /// </summary>
+    public DateTime Date { get; set; }
+    
+    /// <summary>
+    /// Status entries for that day
+    /// </summary>
+    public List<object> StatusHistory { get; set; } = new();
+}
+
+// ============================================================================
 // REQUEST MODELS
 // ============================================================================
 
@@ -156,15 +220,43 @@ public class HtmlHostingFormSubmissionModel
     /// Form fields list
     /// </summary>
     public List<string>? Fields { get; set; }
+
+    
+    /// <summary>
+    /// External reference ID
+    /// </summary>
+    public string? RefId { get; set; }
+    
+    /// <summary>
+    /// Custom tag
+    /// </summary>
+    public string? Tag { get; set; }
     
     /// <summary>
     /// Current status
     /// </summary>
     public HtmlHostingFormSubmissionFormStatusType Status { get; set; } = HtmlHostingFormSubmissionFormStatusType.New;
+}
+
+/// <summary>
+/// HTML hosting form submission full details model (from GET by ID)
+/// </summary>
+public class HtmlHostingFormSubmissionFullDetailsModel : HtmlHostingFormSubmissionModel
+{
+    /// <summary>
+    /// HTML hosting object (populated)
+    /// </summary>
+    public HtmlHostingModel? HtmlHosting { get; set; }
     
     /// <summary>
-    /// Status history
+    /// Form configuration object (populated)
     /// </summary>
+    public FormModel? Form { get; set; }
+    
+    /// <summary>
+    /// Status history grouped by day
+    /// </summary>
+    public List<StatusHistoryGroupedDay>? StatusHistoryGrouped { get; set; }   /// </summary>
     public List<HtmlHostingFormSubmissionStatusHistoryEntryModel> StatusHistory { get; set; } = new();
     
     /// <summary>
@@ -281,7 +373,16 @@ public readonly record struct HtmlHostingFormSubmissionFormStatusType (string Va
     public override string ToString ( ) => Value;
 }
 
-
+/// <summary>
+/// Delete response from delete submission operation
+/// </summary>
+public class DeleteResponse
+{
+    /// <summary>
+    /// Message confirming deletion
+    /// </summary>
+    public string Message { get; set; } = string.Empty;
+}
  
 
 

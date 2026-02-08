@@ -26,12 +26,12 @@ public class HtmlHostingFormSubmissionClient
     /// </summary>
     /// <param name="id">Submission ID</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Form submission details with form data</returns>
-    public async Task<HtmlHostingFormSubmissionModel> GetAsync(
+    /// <returns>Form submission full details with form data and populated references</returns>
+    public async Task<HtmlHostingFormSubmissionFullDetailsModel> GetAsync(
         string id,
         CancellationToken cancellationToken = default)
     {
-        var response = await _http.GetAsync<HtmlHostingFormSubmissionModel>(
+        var response = await _http.GetAsync<HtmlHostingFormSubmissionFullDetailsModel>(
             $"{BasePath}/{id}",
             cancellationToken: cancellationToken);
 
@@ -128,10 +128,12 @@ public class HtmlHostingFormSubmissionClient
     /// </summary>
     /// <param name="id">Submission ID to delete</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    public async Task DeleteAsync(
+    /// <returns>Delete confirmation response</returns>
+    public async Task<DeleteResponse> DeleteAsync(
         string id,
         CancellationToken cancellationToken = default)
     {
-        await _http.DeleteAsync<object>($"{BasePath}/{id}", cancellationToken);
+        var response = await _http.DeleteAsync<DeleteResponse>($"{BasePath}/{id}", cancellationToken);
+        return response.Result ?? new DeleteResponse { Message = "Deleted" };
     }
 }

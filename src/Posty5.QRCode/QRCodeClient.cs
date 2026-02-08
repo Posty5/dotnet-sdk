@@ -826,21 +826,24 @@ public class QRCodeClient
     #region CRUD Methods
 
     /// <summary>
-    /// Get a QR code by ID
+    /// Get a QR code by ID with full details
     /// </summary>
     /// <param name="id">QR code ID</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>QR code details</returns>
+    /// <returns>QR code full details including populated template, user, and API key</returns>
     /// <example>
     /// <code>
     /// var qrCode = await qrCodeClient.GetAsync("qr123");
     /// Console.WriteLine(qrCode.Name);
     /// Console.WriteLine(qrCode.NumberOfVisitors);
+    /// Console.WriteLine(qrCode.Template?.Name); // Access populated template
+    /// Console.WriteLine(qrCode.User?.FullName); // Access user who created it
+    /// Console.WriteLine(qrCode.Options?.ColorDark); // Access styling options
     /// </code>
     /// </example>
-    public async Task<QRCodeModel> GetAsync(string id, CancellationToken cancellationToken = default)
+    public async Task<QRCodeFullDetailsModel> GetAsync(string id, CancellationToken cancellationToken = default)
     {
-        var response = await _http.GetAsync<QRCodeModel>($"{BasePath}/{id}", cancellationToken: cancellationToken);
+        var response = await _http.GetAsync<QRCodeFullDetailsModel>($"{BasePath}/{id}", cancellationToken: cancellationToken);
         return response.Result ?? throw new InvalidOperationException("QR code not found");
     }
 
@@ -849,14 +852,17 @@ public class QRCodeClient
     /// </summary>
     /// <param name="id">QR code ID</param>
     /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Deletion confirmation response</returns>
     /// <example>
     /// <code>
-    /// await qrCodeClient.DeleteAsync("qr123");
+    /// var result = await qrCodeClient.DeleteAsync("qr123");
+    /// Console.WriteLine(result.Message); // "Deleted" or success message
     /// </code>
     /// </example>
-    public async Task DeleteAsync(string id, CancellationToken cancellationToken = default)
+    public async Task<DeleteResponse> DeleteAsync(string id, CancellationToken cancellationToken = default)
     {
-        await _http.DeleteAsync<object>($"{BasePath}/{id}", cancellationToken);
+        var response = await _http.DeleteAsync<DeleteResponse>($"{BasePath}/{id}", cancellationToken);
+        return response.Result ?? new DeleteResponse { Message = "Deleted" };
     }
 
     /// <summary>

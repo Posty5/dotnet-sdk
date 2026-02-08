@@ -83,14 +83,14 @@ public class ShortLinkClient
     }
 
     /// <summary>
-    /// Get a short link by ID
+    /// Get a short link by ID with full details
     /// </summary>
     /// <param name="id">Short link ID</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Short link full details</returns>
-    public async Task<ShortLinkModel> GetAsync(string id, CancellationToken cancellationToken = default)
+    /// <returns>Short link full details including populated template, user, API key, and metadata</returns>
+    public async Task<ShortLinkFullDetailsModel> GetAsync(string id, CancellationToken cancellationToken = default)
     {
-        var response = await _http.GetAsync<ShortLinkModel>($"{BasePath}/{id}", cancellationToken: cancellationToken);
+        var response = await _http.GetAsync<ShortLinkFullDetailsModel>($"{BasePath}/{id}", cancellationToken: cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Short link not found");
     }
 
@@ -139,8 +139,10 @@ public class ShortLinkClient
     /// </summary>
     /// <param name="id">Short link ID</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    public async Task DeleteAsync(string id, CancellationToken cancellationToken = default)
+    /// <returns>Deletion confirmation response</returns>
+    public async Task<DeleteResponse> DeleteAsync(string id, CancellationToken cancellationToken = default)
     {
-        await _http.DeleteAsync<object>($"{BasePath}/{id}", cancellationToken);
+        var response = await _http.DeleteAsync<DeleteResponse>($"{BasePath}/{id}", cancellationToken);
+        return response.Result ?? new DeleteResponse { Message = "Deleted" };
     }
 }
