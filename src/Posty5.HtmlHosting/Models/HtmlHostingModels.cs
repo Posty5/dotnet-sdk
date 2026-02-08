@@ -301,7 +301,7 @@ public class HtmlHostingUpdatePageGithubRequestModel : HtmlHostingPageRequestBas
 
 /// <summary>
 /// Response from create/update operations with upload config
-/// Note: API has typo "uplaodFileConfig" instead of "uploadFileConfig"
+/// Note: API has typo "uploadFileConfig" instead of "uploadFileConfig"
 /// </summary>
 public class HtmlHostingCreatePageResponseModel
 {
@@ -309,7 +309,7 @@ public class HtmlHostingCreatePageResponseModel
     /// Upload configuration for R2 storage
     /// Note: Property name has intentional typo to match API
     /// </summary>
-    [JsonPropertyName("uplaodFileConfig")]
+    [JsonPropertyName("uploadFileConfig")]
     public HtmlHostingUploadFileConfigModel? UploadFileConfig { get; set; }
     
     /// <summary>

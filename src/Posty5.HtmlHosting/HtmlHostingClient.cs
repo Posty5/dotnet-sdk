@@ -24,7 +24,7 @@ public class HtmlHostingClient
 
     /// <summary>
     /// Create an HTML page by uploading a file to R2 storage
-    /// This is a 3-step process: create record, upload file, publish page
+    /// Auto-publishes after file upload is complete
     /// </summary>
     /// <param name="data">Create request data with file information</param>
     /// <param name="fileStream">HTML file stream to upload</param>
@@ -47,19 +47,17 @@ public class HtmlHostingClient
             data.AutoSaveInGoogleSheet,
             data.RefId,
             data.Tag,
-            sourceType = "file",
             createdFrom = "dotnetPackage"
         };
 
-        var response = await _http.PostAsync<HtmlHostingCreatePageResponseModel>(BasePath, payload, cancellationToken);
+        var response = await _http.PostAsync<HtmlHostingCreatePageResponseModel>($"{BasePath}/file", payload, cancellationToken);
         var result = response.Result?.Details ?? throw new InvalidOperationException("Failed to create HTML page");
         var uploadConfig = response.Result?.UploadFileConfig ?? throw new InvalidOperationException("Upload configuration not provided");
 
         // Step 2: Upload HTML file to R2 storage
         await UploadToR2Async(uploadConfig.UploadUrl, fileStream, contentType, cancellationToken);
 
-        // Step 3: Publish the HTML page
-        await PublishAsync(result.Id!, cancellationToken);
+        // Page is auto-published by backend after file upload
 
         return new HtmlHostingPageFileResponseModel
         {
@@ -71,7 +69,7 @@ public class HtmlHostingClient
 
     /// <summary>
     /// Create an HTML page from a GitHub repository
-    /// The API will automatically fetch and deploy the file from GitHub
+    /// The API will automatically fetch and deploy the file from GitHub and publish it
     /// </summary>
     /// <param name="data">Create request data with GitHub file URL</param>
     /// <param name="cancellationToken">Cancellation token</param>
@@ -89,12 +87,13 @@ public class HtmlHostingClient
             data.AutoSaveInGoogleSheet,
             data.RefId,
             data.Tag,
-            sourceType = "github",
             createdFrom = "dotnetPackage"
         };
 
-        var response = await _http.PostAsync<HtmlHostingCreatePageResponseModel>(BasePath, payload, cancellationToken);
+        var response = await _http.PostAsync<HtmlHostingCreatePageResponseModel>($"{BasePath}/github", payload, cancellationToken);
         var result = response.Result?.Details ?? throw new InvalidOperationException("Failed to create HTML page");
+
+        // Page is auto-published by backend
 
         return new HtmlHostingPageGithubResponseModel
         {
@@ -199,7 +198,7 @@ public class HtmlHostingClient
 
     /// <summary>
     /// Update an HTML page with a new file upload to R2 storage
-    /// This is a 3-step process: update record, upload file (if needed), publish page
+    /// Auto-publishes after file upload is complete
     /// </summary>
     /// <param name="id">HTML page ID to update</param>
     /// <param name="data">Update request data with file information</param>
@@ -222,11 +221,10 @@ public class HtmlHostingClient
             data.CustomLandingId,
             data.IsEnableMonetization,
             data.AutoSaveInGoogleSheet,
-            sourceType = "file",
             isNewFile = true
         };
 
-        var response = await _http.PutAsync<HtmlHostingCreatePageResponseModel>($"{BasePath}/{id}", payload, cancellationToken);
+        var response = await _http.PutAsync<HtmlHostingCreatePageResponseModel>($"{BasePath}/{id}/file", payload, cancellationToken);
         var result = response.Result?.Details ?? throw new InvalidOperationException("Failed to update HTML page");
         var uploadConfig = response.Result?.UploadFileConfig;
 
@@ -236,8 +234,7 @@ public class HtmlHostingClient
             await UploadToR2Async(uploadConfig.UploadUrl, fileStream, contentType, cancellationToken);
         }
 
-        // Step 3: Publish the HTML page
-        await PublishAsync(result.Id!, cancellationToken);
+        // Page is auto-published by backend
 
         return new HtmlHostingPageFileResponseModel
         {
@@ -249,7 +246,7 @@ public class HtmlHostingClient
 
     /// <summary>
     /// Update an HTML page with a new GitHub repository file
-    /// The API will automatically fetch and deploy the file from GitHub
+    /// The API will automatically fetch, deploy, and publish the file from GitHub
     /// </summary>
     /// <param name="id">HTML page ID to update</param>
     /// <param name="data">Update request data with GitHub file URL</param>
@@ -266,11 +263,10 @@ public class HtmlHostingClient
             data.GithubInfo,
             data.CustomLandingId,
             data.IsEnableMonetization,
-            data.AutoSaveInGoogleSheet,
-            sourceType = "github"
+            data.AutoSaveInGoogleSheet
         };
 
-        var response = await _http.PutAsync<HtmlHostingCreatePageResponseModel>($"{BasePath}/{id}", payload, cancellationToken);
+        var response = await _http.PutAsync<HtmlHostingCreatePageResponseModel>($"{BasePath}/{id}/github", payload, cancellationToken);
         var result = response.Result?.Details ?? throw new InvalidOperationException("Failed to update HTML page");
 
         return new HtmlHostingPageGithubResponseModel
@@ -320,15 +316,5 @@ public class HtmlHostingClient
 
         var response = await client.PutAsync(uploadUrl, content, cancellationToken);
         response.EnsureSuccessStatusCode();
-    }
-
-    /// <summary>
-    /// Publish an HTML page to make it live and accessible
-    /// </summary>
-    /// <param name="id">HTML page ID</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    private async Task PublishAsync(string id, CancellationToken cancellationToken)
-    {
-        await _http.PutAsync<object>($"{BasePath}/publish/{id}", new { }, cancellationToken);
     }
 }
