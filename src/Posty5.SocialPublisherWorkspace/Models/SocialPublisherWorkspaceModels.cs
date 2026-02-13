@@ -58,16 +58,6 @@ public class SocialPublisherWorkspaceAccountModel
     /// TikTok account details
     /// </summary>
     public SocialPublisherWorkspaceAccountDetailsModel? Tiktok { get; set; }
-    
-    /// <summary>
-    /// Facebook platform page ID
-    /// </summary>
-    public string? FacebookPlatformPageId { get; set; }
-    
-    /// <summary>
-    /// Instagram platform account ID
-    /// </summary>
-    public string? InstagramPlatformAccountId { get; set; }
 }
 
 /// <summary>

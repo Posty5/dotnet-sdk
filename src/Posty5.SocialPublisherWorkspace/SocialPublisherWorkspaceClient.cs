@@ -101,7 +101,6 @@ public class SocialPublisherWorkspaceClient
     /// if (workspace.Account.Facebook != null)
     /// {
     ///     Console.WriteLine($"Facebook Page: {workspace.Account.Facebook.Name}");
-    ///     Console.WriteLine($"Page ID: {workspace.Account.FacebookPlatformPageId}");
     /// }
     /// </code>
     /// </example>
