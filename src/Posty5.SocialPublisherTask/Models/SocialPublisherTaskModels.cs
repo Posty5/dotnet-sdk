@@ -464,9 +464,14 @@ public class ScheduleConfig
 public class TaskSettings
 {
     /// <summary>
-    /// Workspace ID (required)
+    /// Workspace ID (optional if AccountId is set)
     /// </summary>
-    public string WorkspaceId { get; set; } = string.Empty;
+    public string? WorkspaceId { get; set; }
+    
+    /// <summary>
+    /// Account ID (optional if WorkspaceId is set)
+    /// </summary>
+    public string? AccountId { get; set; }
     
     /// <summary>
     /// Enable YouTube publishing
@@ -538,6 +543,92 @@ public class CreateSocialPublisherTaskRequest
     /// Workspace ID (required)
     /// </summary>
     public string WorkspaceId { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Source type (video-file, video-url, facebook-video, youtube-video, tiktok-video )
+    /// </summary>
+    public string Source { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Enable YouTube publishing
+    /// </summary>
+    public bool IsAllowYouTube { get; set; }
+    
+    /// <summary>
+    /// Enable TikTok publishing
+    /// </summary>
+    public bool IsAllowTiktok { get; set; }
+    
+    /// <summary>
+    /// Enable Facebook publishing
+    /// </summary>
+    public bool IsAllowFacebookPage { get; set; }
+    
+    /// <summary>
+    /// Enable Instagram publishing
+    /// </summary>
+    public bool IsAllowInstagram { get; set; }
+    
+    /// <summary>
+    /// YouTube configuration
+    /// </summary>
+    public YouTubeConfig? YouTube { get; set; }
+    
+    /// <summary>
+    /// TikTok configuration
+    /// </summary>
+    public TikTokConfig? Tiktok { get; set; }
+    
+    /// <summary>
+    /// Facebook configuration
+    /// </summary>
+    public FacebookPageConfig? Facebook { get; set; }
+    
+    /// <summary>
+    /// Instagram configuration
+    /// </summary>
+    public InstagramConfig? Instagram { get; set; }
+    
+    /// <summary>
+    /// Video URL (for url/repost sources)
+    /// </summary>
+    public string? VideoURL { get; set; }
+    
+    /// <summary>
+    /// Thumbnail URL
+    /// </summary>
+    public string? ThumbURL { get; set; }
+    
+    /// <summary>
+    /// Post URL (for repost sources)
+    /// </summary>
+    public string? PostURL { get; set; }
+    
+    /// <summary>
+    /// Schedule configuration
+    /// </summary>
+    public ScheduleConfig? Schedule { get; set; }
+    
+    /// <summary>
+    /// Custom tag
+    /// </summary>
+    public string? Tag { get; set; }
+    
+    /// <summary>
+    /// External reference ID
+    /// </summary>
+    public string? RefId { get; set; }
+}
+
+/// <summary>
+/// Create social publisher task to account request
+/// </summary>
+public class CreateSocialPublisherAccountTaskRequest
+{
+    /// <summary>
+    /// Account ID (required)
+    /// </summary>
+    public string AccountId { get; set; } = string.Empty;
 
     /// <summary>
     /// Source type (video-file, video-url, facebook-video, youtube-video, tiktok-video )

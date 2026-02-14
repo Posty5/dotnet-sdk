@@ -8,7 +8,7 @@ namespace Posty5.Tests.Integration;
 /// <summary>
 /// Tests for Social Publisher Task SDK
 /// Based on TypeScript test file: social-publisher-task.test.ts
-/// Uses unified PublishShortVideoAsync() method with auto-detection
+/// Uses unified PublishShortVideoToWorkspaceAsync() method with auto-detection
 /// </summary>
 [Collection("Sequential")]
 public class SocialPublisherTaskClientTests : IDisposable
@@ -17,6 +17,7 @@ public class SocialPublisherTaskClientTests : IDisposable
     private readonly string _testVideoPath;
     private readonly string _testThumbnailPath;
     private readonly string _workspaceId;
+    private readonly string _accountId;
     private string? _createdTaskId;
 
     // Test URLs from TypeScript tests
@@ -35,6 +36,7 @@ public class SocialPublisherTaskClientTests : IDisposable
         
         // TODO: Replace with actual workspace ID from setup
         _workspaceId = "69693ef08810cf26d95ad905";
+        _accountId = "69693ef08810cf26d95ad906";
     }
 
     #region CREATE - Video File Upload Tests
@@ -45,8 +47,8 @@ public class SocialPublisherTaskClientTests : IDisposable
         // Arrange
         using var videoStream = File.OpenRead(_testVideoPath);
 
-        // Act - Using unified PublishShortVideoAsync
-        var taskId = await _client.PublishShortVideoAsync(
+        // Act - Using unified PublishShortVideoToWorkspaceAsync
+        var taskId = await _client.PublishShortVideoToWorkspaceAsync(
             workspaceId: _workspaceId,
             video: videoStream,
             thumbnail: ThumbnailURL,
@@ -75,7 +77,7 @@ public class SocialPublisherTaskClientTests : IDisposable
         using var thumbStream = File.OpenRead(_testThumbnailPath);
 
         // Act - Auto-detects file upload
-        var taskId = await _client.PublishShortVideoAsync(
+        var taskId = await _client.PublishShortVideoToWorkspaceAsync(
             workspaceId: _workspaceId,
             video: videoStream,
             thumbnail: thumbStream,
@@ -108,7 +110,7 @@ public class SocialPublisherTaskClientTests : IDisposable
         using var thumbStream = File.OpenRead(_testThumbnailPath);
 
         // Act - Auto-detects URL
-        var taskId = await _client.PublishShortVideoAsync(
+        var taskId = await _client.PublishShortVideoToWorkspaceAsync(
             workspaceId: _workspaceId,
             video: VideoURL,
             thumbnail: thumbStream,
@@ -131,7 +133,7 @@ public class SocialPublisherTaskClientTests : IDisposable
     public async Task PublishShortVideo_VideoURLWithThumbnailURL_MultiPlatform_ShouldSucceed()
     {
         // Act - Multi-platform publishing
-        var taskId = await _client.PublishShortVideoAsync(
+        var taskId = await _client.PublishShortVideoToWorkspaceAsync(
             workspaceId: _workspaceId,
             video: VideoURL,
             thumbnail: ThumbnailURL,
@@ -165,7 +167,7 @@ public class SocialPublisherTaskClientTests : IDisposable
     public async Task PublishShortVideo_FacebookReelURL_ShouldAutoDetectAndRepost()
     {
         // Act - Auto-detects Facebook repost
-        var taskId = await _client.PublishShortVideoAsync(
+        var taskId = await _client.PublishShortVideoToWorkspaceAsync(
             workspaceId: _workspaceId,
             video: FacebookReelURL,
             platforms: new List<string> { "youtube" },
@@ -186,7 +188,7 @@ public class SocialPublisherTaskClientTests : IDisposable
     public async Task PublishShortVideo_YouTubeShortsURL_ShouldAutoDetectAndRepost()
     {
         // Act - Auto-detects YouTube Shorts repost
-        var taskId = await _client.PublishShortVideoAsync(
+        var taskId = await _client.PublishShortVideoToWorkspaceAsync(
             workspaceId: _workspaceId,
             video: YouTubeShortsURL,
             platforms: new List<string> { "tiktok" },
@@ -209,7 +211,7 @@ public class SocialPublisherTaskClientTests : IDisposable
     public async Task PublishShortVideo_TikTokVideoURL_ShouldAutoDetectAndRepost()
     {
         // Act - Auto-detects TikTok repost
-        var taskId = await _client.PublishShortVideoAsync(
+        var taskId = await _client.PublishShortVideoToWorkspaceAsync(
             workspaceId: _workspaceId,
             video: TikTokVideoURL,
             platforms: new List<string> { "youtube" },
@@ -218,6 +220,83 @@ public class SocialPublisherTaskClientTests : IDisposable
                 Title = $"Reposted from TikTok - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
                 Description = "Testing TikTok repost with auto-detection",
                 Tags = new List<string> { "repost", "tiktok" }
+            }
+        );
+
+        // Assert
+        Assert.NotNull(taskId);
+        TestConfig.CreatedResources.Tasks.Add(taskId);
+    }
+
+    #endregion
+
+    #region CREATE - Account Tests
+
+    [Fact]
+    public async Task PublishShortVideoToAccount_VideoFile_ShouldSucceed()
+    {
+        // Arrange
+        using var videoStream = File.OpenRead(_testVideoPath);
+        using var thumbStream = File.OpenRead(_testThumbnailPath);
+
+        // Act
+        var taskId = await _client.PublishShortVideoToAccountAsync(
+            accountId: _accountId,
+            video: videoStream,
+            thumbnail: thumbStream,
+            platforms: new List<string> { "tiktok" },
+            tiktok: new TikTokConfig
+            {
+                Caption = $"Account Video File - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
+                PrivacyLevel = "SELF_ONLY"
+            },
+            videoContentType: "video/mp4",
+            thumbnailContentType: "image/jpeg"
+        );
+
+        // Assert
+        Assert.NotNull(taskId);
+        TestConfig.CreatedResources.Tasks.Add(taskId);
+    }
+
+    [Fact]
+    public async Task PublishShortVideoToAccount_VideoURL_ShouldSucceed()
+    {
+        // Arrange
+        using var thumbStream = File.OpenRead(_testThumbnailPath);
+
+        // Act
+        var taskId = await _client.PublishShortVideoToAccountAsync(
+            accountId: _accountId,
+            video: VideoURL,
+            thumbnail: thumbStream,
+            platforms: new List<string> { "youtube" },
+            youtube: new YouTubeConfig
+            {
+                Title = $"Account Video URL - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
+                Description = "Testing account publishing via URL",
+                Tags = new List<string> { "test", "account" }
+            },
+            thumbnailContentType: "image/jpeg"
+        );
+
+        // Assert
+        Assert.NotNull(taskId);
+        TestConfig.CreatedResources.Tasks.Add(taskId);
+    }
+
+    [Fact]
+    public async Task PublishShortVideoToAccount_Repost_ShouldSucceed()
+    {
+        // Act
+        var taskId = await _client.PublishShortVideoToAccountAsync(
+            accountId: _accountId,
+            video: YouTubeShortsURL,
+            platforms: new List<string> { "tiktok" },
+            tiktok: new TikTokConfig
+            {
+                Caption = "Account Repost Test",
+                PrivacyLevel = "SELF_ONLY"
             }
         );
 
@@ -345,7 +424,7 @@ public class SocialPublisherTaskClientTests : IDisposable
         var scheduleDate = DateTime.UtcNow.AddHours(2);
 
         // Act - Schedule for future
-        var taskId = await _client.PublishShortVideoAsync(
+        var taskId = await _client.PublishShortVideoToWorkspaceAsync(
             workspaceId: _workspaceId,
             video: VideoURL,
             platforms: new List<string> { "youtube" },
@@ -367,7 +446,7 @@ public class SocialPublisherTaskClientTests : IDisposable
     public async Task PublishShortVideo_WithTagAndRefId_ShouldSucceed()
     {
         // Act
-        var taskId = await _client.PublishShortVideoAsync(
+        var taskId = await _client.PublishShortVideoToWorkspaceAsync(
             workspaceId: _workspaceId,
             video: VideoURL,
             platforms: new List<string> { "youtube" },

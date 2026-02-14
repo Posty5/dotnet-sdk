@@ -135,10 +135,10 @@ public class SocialPublisherTaskClient
 
     /// <summary>
     /// Publish a short video to multiple social media platforms with auto-detection.
-    /// This is the main recommended method - matches TypeScript publishShortVideo().
+    /// This is the main recommended method - now explicitly for workspaces.
     /// Automatically detects video source type (file upload, URL, or repost) and handles accordingly.
     /// </summary>
-    public async Task<string> PublishShortVideoAsync(
+    public async Task<string> PublishShortVideoToWorkspaceAsync(
         string workspaceId,
         object video,
         object? thumbnail = null,
@@ -193,21 +193,110 @@ public class SocialPublisherTaskClient
         // Route to appropriate private method
         return sourceType switch
         {
-            "file" => await PublishShortVideoByFileAsync(settings, (Stream)video, videoContentType ?? "video/mp4",
+            "file" => await PublishShortVideoToWorkspaceByFileAsync(settings, (Stream)video, videoContentType ?? "video/mp4",
                 thumbnail as Stream, thumbnailContentType, thumbnail as string, cancellationToken),
-            "url" => await PublishShortVideoByUrlAsync(settings, (string)video, thumbnail as Stream,
+            "url" => await PublishShortVideoToWorkspaceByUrlAsync(settings, (string)video, thumbnail as Stream,
                 thumbnailContentType, thumbnail as string, cancellationToken),
-            "repost" => await PublishRepostVideoAsync(settings, (string)video, thumbnail as Stream,
+            "repost" => await PublishRepostVideoToWorkspaceAsync(settings, (string)video, thumbnail as Stream,
                 thumbnailContentType, thumbnail as string, cancellationToken),
             _ => throw new InvalidOperationException($"Unknown video source type: {sourceType}")
         };
+    }
+
+    /// <summary>
+    /// Publish a short video to multiple social media platforms with auto-detection via Account.
+    /// Automatically detects video source type (file upload, URL, or repost) and handles accordingly.
+    /// </summary>
+    public async Task<string> PublishShortVideoToAccountAsync(
+        string accountId,
+        object video,
+        object? thumbnail = null,
+        List<string>? platforms = null,
+        YouTubeConfig? youtube = null,
+        TikTokConfig? tiktok = null,
+        FacebookPageConfig? facebook = null,
+        InstagramConfig? instagram = null,
+        object? schedule = null,
+        string? tag = null,
+        string? refId = null,
+        string? videoContentType = null,
+        string? thumbnailContentType = null,
+        CancellationToken cancellationToken = default)
+    {
+        // Build task settings
+        var settings = new TaskSettings
+        {
+            AccountId = accountId,
+            IsAllowYouTube = platforms?.Contains("youtube") ?? false,
+            IsAllowTiktok = platforms?.Contains("tiktok") ?? false,
+            IsAllowFacebookPage = platforms?.Contains("facebook") ?? false,
+            IsAllowInstagram = platforms?.Contains("instagram") ?? false,
+            YouTube = youtube,
+            Tiktok = tiktok,
+            Facebook = facebook,
+            Instagram = instagram,
+            Tag = tag,
+            RefId = refId
+        };
+
+        // Handle schedule
+        if (schedule != null)
+        {
+            if (schedule is string scheduleStr && scheduleStr == "now")
+            {
+                settings.Schedule = new ScheduleConfig { Type = "now" };
+            }
+            else if (schedule is DateTime scheduleDate)
+            {
+                settings.Schedule = new ScheduleConfig
+                {
+                    Type = "schedule",
+                    ScheduledAt = scheduleDate
+                };
+            }
+        }
+
+        // Detect source type
+        var sourceType = DetectVideoSource(video);
+
+        // Route to appropriate private method
+        return sourceType switch
+        {
+            "file" => await PublishShortVideoToAccountByFileAsync(settings, (Stream)video, videoContentType ?? "video/mp4",
+                thumbnail as Stream, thumbnailContentType, thumbnail as string, cancellationToken),
+            "url" => await PublishShortVideoToAccountByUrlAsync(settings, (string)video, thumbnail as Stream,
+                thumbnailContentType, thumbnail as string, cancellationToken),
+            "repost" => await PublishRepostVideoToAccountAsync(settings, (string)video, thumbnail as Stream,
+                thumbnailContentType, thumbnail as string, cancellationToken),
+            _ => throw new InvalidOperationException($"Unknown video source type: {sourceType}")
+        };
+    }
+
+    [Obsolete("Use PublishShortVideoToWorkspaceAsync instead")]
+    public Task<string> PublishShortVideoAsync(
+        string workspaceId,
+        object video,
+        object? thumbnail = null,
+        List<string>? platforms = null,
+        YouTubeConfig? youtube = null,
+        TikTokConfig? tiktok = null,
+        FacebookPageConfig? facebook = null,
+        InstagramConfig? instagram = null,
+        object? schedule = null,
+        string? tag = null,
+        string? refId = null,
+        string? videoContentType = null,
+        string? thumbnailContentType = null,
+        CancellationToken cancellationToken = default)
+    {
+        return PublishShortVideoToWorkspaceAsync(workspaceId, video, thumbnail, platforms, youtube, tiktok, facebook, instagram, schedule, tag, refId, videoContentType, thumbnailContentType, cancellationToken);
     }
 
     // ============================================================================
     // PRIVATE PUBLISHING METHODS
     // ============================================================================
 
-    private async Task<string> PublishShortVideoByFileAsync(
+    private async Task<string> PublishShortVideoToWorkspaceByFileAsync(
         TaskSettings settings, Stream videoStream, string videoContentType,
         Stream? thumbnailStream, string? thumbnailContentType, string? thumbnailUrl,
         CancellationToken cancellationToken)
@@ -226,7 +315,7 @@ public class SocialPublisherTaskClient
         var thumbUrl = await HandleThumbnailUploadAsync(thumbnailStream, thumbnailContentType, thumbnailUrl,
             uploadConfig.Thumb, cancellationToken);
 
-        return await CreateByFileAsync(new CreateSocialPublisherTaskRequest
+        return await CreateToWorkspaceByFileAsync(new CreateSocialPublisherTaskRequest
         {
             WorkspaceId = settings.WorkspaceId,
             Source = "file",
@@ -246,7 +335,7 @@ public class SocialPublisherTaskClient
         }, uploadConfig.TaskId, cancellationToken);
     }
 
-    private async Task<string> PublishShortVideoByUrlAsync(
+    private async Task<string> PublishShortVideoToWorkspaceByUrlAsync(
         TaskSettings settings, string videoUrl,
         Stream? thumbnailStream, string? thumbnailContentType, string? thumbnailUrl,
         CancellationToken cancellationToken)
@@ -270,7 +359,7 @@ public class SocialPublisherTaskClient
             thumbUrl = thumbnailUrl;
         }
 
-        return await CreateByUrlAsync(new CreateSocialPublisherTaskRequest
+        return await CreateToWorkspaceByUrlAsync(new CreateSocialPublisherTaskRequest
         {
             WorkspaceId = settings.WorkspaceId,
             Source = "url",
@@ -290,7 +379,7 @@ public class SocialPublisherTaskClient
         }, taskId, cancellationToken);
     }
 
-    private async Task<string> PublishRepostVideoAsync(
+    private async Task<string> PublishRepostVideoToWorkspaceAsync(
         TaskSettings settings, string videoUrl,
         Stream? thumbnailStream, string? thumbnailContentType, string? thumbnailUrl,
         CancellationToken cancellationToken)
@@ -314,9 +403,136 @@ public class SocialPublisherTaskClient
             thumbUrl = thumbnailUrl;
         }
 
-        return await CreateByUrlAsync(new CreateSocialPublisherTaskRequest
+        return await CreateToWorkspaceByUrlAsync(new CreateSocialPublisherTaskRequest
         {
             WorkspaceId = settings.WorkspaceId,
+            Source = "repost",
+            PostURL = videoUrl,
+            ThumbURL = thumbUrl,
+            IsAllowYouTube = settings.IsAllowYouTube,
+            IsAllowTiktok = settings.IsAllowTiktok,
+            IsAllowFacebookPage = settings.IsAllowFacebookPage,
+            IsAllowInstagram = settings.IsAllowInstagram,
+            YouTube = settings.YouTube,
+            Tiktok = settings.Tiktok,
+            Facebook = settings.Facebook,
+            Instagram = settings.Instagram,
+            Schedule = settings.Schedule,
+            Tag = settings.Tag,
+            RefId = settings.RefId
+        }, taskId, cancellationToken);
+    }
+
+    private async Task<string> PublishShortVideoToAccountByFileAsync(
+        TaskSettings settings, Stream videoStream, string videoContentType,
+        Stream? thumbnailStream, string? thumbnailContentType, string? thumbnailUrl,
+        CancellationToken cancellationToken)
+    {
+        var uploadConfig = await GenerateUploadUrlsAsync(new GenerateUploadUrlsRequest
+        {
+            VideoFileType = videoContentType,
+            ThumbFileType = thumbnailContentType
+        }, cancellationToken);
+
+        if (string.IsNullOrEmpty(uploadConfig.Video.UploadFileURL))
+            throw new InvalidOperationException("Video upload URL not provided");
+
+        await UploadToR2Async(uploadConfig.Video.UploadFileURL, videoStream, videoContentType, cancellationToken);
+
+        var thumbUrl = await HandleThumbnailUploadAsync(thumbnailStream, thumbnailContentType, thumbnailUrl,
+            uploadConfig.Thumb, cancellationToken);
+
+        return await CreateToAccountByFileAsync(new CreateSocialPublisherAccountTaskRequest
+        {
+            AccountId = settings.AccountId!,
+            Source = "file",
+            VideoURL = uploadConfig.Video.FileURL,
+            ThumbURL = thumbUrl,
+            IsAllowYouTube = settings.IsAllowYouTube,
+            IsAllowTiktok = settings.IsAllowTiktok,
+            IsAllowFacebookPage = settings.IsAllowFacebookPage,
+            IsAllowInstagram = settings.IsAllowInstagram,
+            YouTube = settings.YouTube,
+            Tiktok = settings.Tiktok,
+            Facebook = settings.Facebook,
+            Instagram = settings.Instagram,
+            Schedule = settings.Schedule,
+            Tag = settings.Tag,
+            RefId = settings.RefId
+        }, uploadConfig.TaskId, cancellationToken);
+    }
+
+    private async Task<string> PublishShortVideoToAccountByUrlAsync(
+        TaskSettings settings, string videoUrl,
+        Stream? thumbnailStream, string? thumbnailContentType, string? thumbnailUrl,
+        CancellationToken cancellationToken)
+    {
+        string? thumbUrl = null;
+        string? taskId = null;
+
+        if (thumbnailStream != null)
+        {
+            var uploadConfig = await GenerateUploadUrlsAsync(new GenerateUploadUrlsRequest
+            {
+                ThumbFileType = thumbnailContentType
+            }, cancellationToken);
+
+            thumbUrl = await HandleThumbnailUploadAsync(thumbnailStream, thumbnailContentType, thumbnailUrl,
+                uploadConfig.Thumb, cancellationToken);
+            taskId = uploadConfig.TaskId;
+        }
+        else
+        {
+            thumbUrl = thumbnailUrl;
+        }
+
+        return await CreateToAccountByUrlAsync(new CreateSocialPublisherAccountTaskRequest
+        {
+            AccountId = settings.AccountId!,
+            Source = "url",
+            VideoURL = videoUrl,
+            ThumbURL = thumbUrl,
+            IsAllowYouTube = settings.IsAllowYouTube,
+            IsAllowTiktok = settings.IsAllowTiktok,
+            IsAllowFacebookPage = settings.IsAllowFacebookPage,
+            IsAllowInstagram = settings.IsAllowInstagram,
+            YouTube = settings.YouTube,
+            Tiktok = settings.Tiktok,
+            Facebook = settings.Facebook,
+            Instagram = settings.Instagram,
+            Schedule = settings.Schedule,
+            Tag = settings.Tag,
+            RefId = settings.RefId
+        }, taskId, cancellationToken);
+    }
+
+    private async Task<string> PublishRepostVideoToAccountAsync(
+        TaskSettings settings, string videoUrl,
+        Stream? thumbnailStream, string? thumbnailContentType, string? thumbnailUrl,
+        CancellationToken cancellationToken)
+    {
+        string? thumbUrl = null;
+        string? taskId = null;
+
+        if (thumbnailStream != null)
+        {
+            var uploadConfig = await GenerateUploadUrlsAsync(new GenerateUploadUrlsRequest
+            {
+                ThumbFileType = thumbnailContentType
+            }, cancellationToken);
+
+            thumbUrl = await HandleThumbnailUploadAsync(thumbnailStream, thumbnailContentType, thumbnailUrl,
+                uploadConfig.Thumb, cancellationToken);
+            taskId = uploadConfig.TaskId;
+        }
+        else
+        {
+            thumbUrl = thumbnailUrl;
+        }
+
+        return await CreateToAccountByUrlAsync(new CreateSocialPublisherAccountTaskRequest
+        {
+            AccountId = settings.AccountId!,
             Source = "repost",
             PostURL = videoUrl,
             ThumbURL = thumbUrl,
@@ -338,10 +554,10 @@ public class SocialPublisherTaskClient
     // PRIVATE CREATE METHODS - Matches TypeScript createByFile/createByURL
     // ============================================================================
 
-    private async Task<string> CreateByFileAsync(
+    private async Task<string> CreateToWorkspaceByFileAsync(
         CreateSocialPublisherTaskRequest request, string? id, CancellationToken cancellationToken)
     {
-        var path = string.IsNullOrEmpty(id) ? $"{BasePath}/short-video/by-file" : $"{BasePath}/short-video/by-file/{id}";
+        var path = string.IsNullOrEmpty(id) ? $"{BasePath}/short-video/workspace/by-file" : $"{BasePath}/short-video/workspace/by-file/{id}";
         var payload = new
         {
             request.WorkspaceId, request.Source, request.IsAllowYouTube, request.IsAllowTiktok,
@@ -357,13 +573,51 @@ public class SocialPublisherTaskClient
         throw new InvalidOperationException("Failed to create task");
     }
 
-    private async Task<string> CreateByUrlAsync(
+    private async Task<string> CreateToWorkspaceByUrlAsync(
         CreateSocialPublisherTaskRequest request, string? id, CancellationToken cancellationToken)
     {
-        var path = string.IsNullOrEmpty(id) ? $"{BasePath}/short-video/by-url" : $"{BasePath}/short-video/by-url/{id}";
+        var path = string.IsNullOrEmpty(id) ? $"{BasePath}/short-video/workspace/by-url" : $"{BasePath}/short-video/workspace/by-url/{id}";
         var payload = new
         {
             request.WorkspaceId, request.Source, request.IsAllowYouTube, request.IsAllowTiktok,
+            request.IsAllowFacebookPage, request.IsAllowInstagram, request.YouTube, request.Tiktok,
+            request.Facebook, request.Instagram, request.VideoURL, request.ThumbURL, request.PostURL,
+            request.Schedule, request.Tag, request.RefId, createdFrom = "dotnetPackage"
+        };
+
+        var response = await _http.PostAsync<Dictionary<string, object>>(path, payload, cancellationToken);
+        if (response.Result != null && response.Result.TryGetValue("_id", out var taskIdObj))
+            return taskIdObj?.ToString() ?? throw new InvalidOperationException("Task ID not returned");
+
+        throw new InvalidOperationException("Failed to create task");
+    }
+
+    private async Task<string> CreateToAccountByFileAsync(
+        CreateSocialPublisherAccountTaskRequest request, string? id, CancellationToken cancellationToken)
+    {
+        var path = string.IsNullOrEmpty(id) ? $"{BasePath}/short-video/account/by-file" : $"{BasePath}/short-video/account/by-file/{id}";
+        var payload = new
+        {
+            request.AccountId, request.Source, request.IsAllowYouTube, request.IsAllowTiktok,
+            request.IsAllowFacebookPage, request.IsAllowInstagram, request.YouTube, request.Tiktok,
+            request.Facebook, request.Instagram, request.VideoURL, request.ThumbURL, request.PostURL,
+            request.Schedule, request.Tag, request.RefId, createdFrom = "dotnetPackage"
+        };
+
+        var response = await _http.PostAsync<Dictionary<string, object>>(path, payload, cancellationToken);
+        if (response.Result != null && response.Result.TryGetValue("_id", out var taskIdObj))
+            return taskIdObj?.ToString() ?? throw new InvalidOperationException("Task ID not returned");
+
+        throw new InvalidOperationException("Failed to create task");
+    }
+
+    private async Task<string> CreateToAccountByUrlAsync(
+        CreateSocialPublisherAccountTaskRequest request, string? id, CancellationToken cancellationToken)
+    {
+        var path = string.IsNullOrEmpty(id) ? $"{BasePath}/short-video/account/by-url" : $"{BasePath}/short-video/account/by-url/{id}";
+        var payload = new
+        {
+            request.AccountId, request.Source, request.IsAllowYouTube, request.IsAllowTiktok,
             request.IsAllowFacebookPage, request.IsAllowInstagram, request.YouTube, request.Tiktok,
             request.Facebook, request.Instagram, request.VideoURL, request.ThumbURL, request.PostURL,
             request.Schedule, request.Tag, request.RefId, createdFrom = "dotnetPackage"
