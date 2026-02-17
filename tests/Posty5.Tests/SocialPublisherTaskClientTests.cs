@@ -17,7 +17,8 @@ public class SocialPublisherTaskClientTests : IDisposable
     private readonly string _testVideoPath;
     private readonly string _testThumbnailPath;
     private readonly string _workspaceId;
-    private readonly string _accountId;
+    private readonly string _youtubeAccountId;
+    private readonly string _tiktokAccountId;
     private string? _createdTaskId;
 
     // Test URLs from TypeScript tests
@@ -35,8 +36,9 @@ public class SocialPublisherTaskClientTests : IDisposable
         _testThumbnailPath = Path.Combine("Assets", "thumb.jpg");
         
         // TODO: Replace with actual workspace ID from setup
-        _workspaceId = "69693ef08810cf26d95ad905";
-        _accountId = "69693ef08810cf26d95ad906";
+        _workspaceId = "69922068aa6ee6fa8eb8f9c2";
+        _youtubeAccountId = "69921cc7aa6ee6fa8eb8f8a9";
+        _tiktokAccountId = "69921c96aa6ee6fa8eb8f88f";
     }
 
     #region CREATE - Video File Upload Tests
@@ -241,7 +243,7 @@ public class SocialPublisherTaskClientTests : IDisposable
 
         // Act
         var taskId = await _client.PublishShortVideoToAccountAsync(
-            accountId: _accountId,
+            accountId: _tiktokAccountId,
             video: videoStream,
             thumbnail: thumbStream,
             platforms: new List<string> { "tiktok" },
@@ -267,7 +269,7 @@ public class SocialPublisherTaskClientTests : IDisposable
 
         // Act
         var taskId = await _client.PublishShortVideoToAccountAsync(
-            accountId: _accountId,
+            accountId: _youtubeAccountId,
             video: VideoURL,
             thumbnail: thumbStream,
             platforms: new List<string> { "youtube" },
@@ -290,7 +292,7 @@ public class SocialPublisherTaskClientTests : IDisposable
     {
         // Act
         var taskId = await _client.PublishShortVideoToAccountAsync(
-            accountId: _accountId,
+            accountId: _tiktokAccountId,
             video: YouTubeShortsURL,
             platforms: new List<string> { "tiktok" },
             tiktok: new TikTokConfig

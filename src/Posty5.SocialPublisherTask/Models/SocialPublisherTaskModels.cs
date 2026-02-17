@@ -496,7 +496,7 @@ public class TaskSettings
     /// <summary>
     /// YouTube configuration (required if IsAllowYouTube is true)
     /// </summary>
-    public YouTubeConfig? YouTube { get; set; }
+    public YouTubeConfig? Youtube { get; set; }
     
     /// <summary>
     /// TikTok configuration (required if IsAllowTiktok is true)
@@ -568,11 +568,12 @@ public class CreateSocialPublisherTaskRequest
     /// Enable Instagram publishing
     /// </summary>
     public bool IsAllowInstagram { get; set; }
-    
+
     /// <summary>
     /// YouTube configuration
     /// </summary>
-    public YouTubeConfig? YouTube { get; set; }
+    
+    public YouTubeConfig? Youtube { get; set; }
     
     /// <summary>
     /// TikTok configuration
@@ -658,7 +659,7 @@ public class CreateSocialPublisherAccountTaskRequest
     /// <summary>
     /// YouTube configuration
     /// </summary>
-    public YouTubeConfig? YouTube { get; set; }
+    public YouTubeConfig? Youtube { get; set; }
     
     /// <summary>
     /// TikTok configuration
@@ -889,7 +890,7 @@ public class TaskModelIsAllowAccount
 
 public class TaskModeWorkspace
 {
-    [JsonPropertyName("workspace._id")]
+    [JsonPropertyName("_id")]
     public string Id { get; set; }
     public string Name { get; set; }
 }
@@ -905,6 +906,11 @@ public class TaskStatusFullDetailsResponse
     /// </summary>
     [JsonPropertyName("_id")]
     public string Id { get; set; } = string.Empty;
+
+    /// <summary>
+    /// User Info
+    /// </summary>
+    public object? User { get; set; }
     
     /// <summary>
     /// Task numbering

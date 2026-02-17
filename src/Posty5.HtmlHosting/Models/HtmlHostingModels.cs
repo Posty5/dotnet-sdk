@@ -80,6 +80,21 @@ public class HtmlHostingPageModel
     public DateTime? LastVisitorDate { get; set; }
 
     /// <summary>
+    /// Creation date
+    /// </summary>
+    public DateTime? CreatedAt { get; set; }
+
+    /// <summary>
+    /// Last update date
+    /// </summary>
+    public DateTime? UpdatedAt { get; set; }
+
+    /// <summary>
+    /// Owner user ID
+    /// </summary>
+    public string? User { get; set; }
+
+    /// <summary>
     /// Number of visitors/views
     /// </summary>
     public int? NumberOfVisitors { get; set; }

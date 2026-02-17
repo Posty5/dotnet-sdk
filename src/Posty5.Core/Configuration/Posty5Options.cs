@@ -23,7 +23,7 @@ public class Posty5Options
     /// <summary>
     /// Request timeout in seconds
     /// </summary>
-    public readonly int TimeoutSeconds = 30;
+    public readonly int TimeoutSeconds = 120;
 
     /// <summary>
     /// Maximum number of retry attempts

@@ -162,7 +162,7 @@ public class SocialPublisherTaskClient
             IsAllowTiktok = platforms?.Contains("tiktok") ?? false,
             IsAllowFacebookPage = platforms?.Contains("facebook") ?? false,
             IsAllowInstagram = platforms?.Contains("instagram") ?? false,
-            YouTube = youtube,
+            Youtube = youtube,
             Tiktok = tiktok,
             Facebook = facebook,
             Instagram = instagram,
@@ -231,7 +231,7 @@ public class SocialPublisherTaskClient
             IsAllowTiktok = platforms?.Contains("tiktok") ?? false,
             IsAllowFacebookPage = platforms?.Contains("facebook") ?? false,
             IsAllowInstagram = platforms?.Contains("instagram") ?? false,
-            YouTube = youtube,
+            Youtube = youtube,
             Tiktok = tiktok,
             Facebook = facebook,
             Instagram = instagram,
@@ -325,7 +325,7 @@ public class SocialPublisherTaskClient
             IsAllowTiktok = settings.IsAllowTiktok,
             IsAllowFacebookPage = settings.IsAllowFacebookPage,
             IsAllowInstagram = settings.IsAllowInstagram,
-            YouTube = settings.YouTube,
+            Youtube = settings.Youtube,
             Tiktok = settings.Tiktok,
             Facebook = settings.Facebook,
             Instagram = settings.Instagram,
@@ -369,7 +369,7 @@ public class SocialPublisherTaskClient
             IsAllowTiktok = settings.IsAllowTiktok,
             IsAllowFacebookPage = settings.IsAllowFacebookPage,
             IsAllowInstagram = settings.IsAllowInstagram,
-            YouTube = settings.YouTube,
+            Youtube = settings.Youtube,
             Tiktok = settings.Tiktok,
             Facebook = settings.Facebook,
             Instagram = settings.Instagram,
@@ -413,7 +413,7 @@ public class SocialPublisherTaskClient
             IsAllowTiktok = settings.IsAllowTiktok,
             IsAllowFacebookPage = settings.IsAllowFacebookPage,
             IsAllowInstagram = settings.IsAllowInstagram,
-            YouTube = settings.YouTube,
+            Youtube = settings.Youtube,
             Tiktok = settings.Tiktok,
             Facebook = settings.Facebook,
             Instagram = settings.Instagram,
@@ -452,7 +452,7 @@ public class SocialPublisherTaskClient
             IsAllowTiktok = settings.IsAllowTiktok,
             IsAllowFacebookPage = settings.IsAllowFacebookPage,
             IsAllowInstagram = settings.IsAllowInstagram,
-            YouTube = settings.YouTube,
+            Youtube = settings.Youtube,
             Tiktok = settings.Tiktok,
             Facebook = settings.Facebook,
             Instagram = settings.Instagram,
@@ -496,7 +496,7 @@ public class SocialPublisherTaskClient
             IsAllowTiktok = settings.IsAllowTiktok,
             IsAllowFacebookPage = settings.IsAllowFacebookPage,
             IsAllowInstagram = settings.IsAllowInstagram,
-            YouTube = settings.YouTube,
+            Youtube = settings.Youtube,
             Tiktok = settings.Tiktok,
             Facebook = settings.Facebook,
             Instagram = settings.Instagram,
@@ -540,7 +540,7 @@ public class SocialPublisherTaskClient
             IsAllowTiktok = settings.IsAllowTiktok,
             IsAllowFacebookPage = settings.IsAllowFacebookPage,
             IsAllowInstagram = settings.IsAllowInstagram,
-            YouTube = settings.YouTube,
+            Youtube = settings.Youtube,
             Tiktok = settings.Tiktok,
             Facebook = settings.Facebook,
             Instagram = settings.Instagram,
@@ -561,7 +561,7 @@ public class SocialPublisherTaskClient
         var payload = new
         {
             request.WorkspaceId, request.Source, request.IsAllowYouTube, request.IsAllowTiktok,
-            request.IsAllowFacebookPage, request.IsAllowInstagram, request.YouTube, request.Tiktok,
+            request.IsAllowFacebookPage, request.IsAllowInstagram, request.Youtube, request.Tiktok,
             request.Facebook, request.Instagram, request.VideoURL, request.ThumbURL, request.PostURL,
             request.Schedule, request.Tag, request.RefId, createdFrom = "dotnetPackage"
         };
@@ -580,7 +580,7 @@ public class SocialPublisherTaskClient
         var payload = new
         {
             request.WorkspaceId, request.Source, request.IsAllowYouTube, request.IsAllowTiktok,
-            request.IsAllowFacebookPage, request.IsAllowInstagram, request.YouTube, request.Tiktok,
+            request.IsAllowFacebookPage, request.IsAllowInstagram, request.Youtube, request.Tiktok,
             request.Facebook, request.Instagram, request.VideoURL, request.ThumbURL, request.PostURL,
             request.Schedule, request.Tag, request.RefId, createdFrom = "dotnetPackage"
         };
@@ -599,7 +599,7 @@ public class SocialPublisherTaskClient
         var payload = new
         {
             request.AccountId, request.Source, request.IsAllowYouTube, request.IsAllowTiktok,
-            request.IsAllowFacebookPage, request.IsAllowInstagram, request.YouTube, request.Tiktok,
+            request.IsAllowFacebookPage, request.IsAllowInstagram, request.Youtube, request.Tiktok,
             request.Facebook, request.Instagram, request.VideoURL, request.ThumbURL, request.PostURL,
             request.Schedule, request.Tag, request.RefId, createdFrom = "dotnetPackage"
         };
@@ -618,7 +618,7 @@ public class SocialPublisherTaskClient
         var payload = new
         {
             request.AccountId, request.Source, request.IsAllowYouTube, request.IsAllowTiktok,
-            request.IsAllowFacebookPage, request.IsAllowInstagram, request.YouTube, request.Tiktok,
+            request.IsAllowFacebookPage, request.IsAllowInstagram, request.Youtube, request.Tiktok,
             request.Facebook, request.Instagram, request.VideoURL, request.ThumbURL, request.PostURL,
             request.Schedule, request.Tag, request.RefId, createdFrom = "dotnetPackage"
         };

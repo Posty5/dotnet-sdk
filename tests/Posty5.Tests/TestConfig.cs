@@ -39,7 +39,7 @@ public static class TestConfig
     }
 
     // Template ID for testing
-    public const string TemplateId = "68d190bc4b42b89ef76e1398";
+    public const string TemplateId = "698a268af42b052d15e8f93c";
 
     // Store created resource IDs for cleanup
     public static class CreatedResources

@@ -90,7 +90,7 @@ public class QRCodeClient
             createdFrom = "dotnetPackage"
         };
 
-        var response = await _http.PostAsync<QRCodeModel>($"{BasePath}/freetext", payload, cancellationToken);
+        var response = await _http.PostAsync<QRCodeModel>($"{BasePath}/freeText", payload, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to create free text QR code");
     }
 
@@ -476,7 +476,7 @@ public class QRCodeClient
             createdFrom = "dotnetPackage"
         };
 
-        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/{id}", payload, cancellationToken);
+        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/freeText/{id}", payload, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to update free text QR code");
     }
 
@@ -534,7 +534,7 @@ public class QRCodeClient
             createdFrom = "dotnetPackage"
         };
 
-        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/{id}", payload, cancellationToken);
+        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/email/{id}", payload, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to update email QR code");
     }
 
@@ -592,7 +592,7 @@ public class QRCodeClient
             createdFrom = "dotnetPackage"
         };
 
-        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/{id}", payload, cancellationToken);
+        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/wifi/{id}", payload, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to update WiFi QR code");
     }
 
@@ -648,7 +648,7 @@ public class QRCodeClient
             createdFrom = "dotnetPackage"
         };
 
-        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/{id}", payload, cancellationToken);
+        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/call/{id}", payload, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to update call QR code");
     }
 
@@ -705,7 +705,7 @@ public class QRCodeClient
             createdFrom = "dotnetPackage"
         };
 
-        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/{id}", payload, cancellationToken);
+        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/sms/{id}", payload, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to update SMS QR code");
     }
 
@@ -760,7 +760,7 @@ public class QRCodeClient
             createdFrom = "dotnetPackage"
         };
 
-        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/{id}", payload, cancellationToken);
+        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/url/{id}", payload, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to update URL QR code");
     }
 
@@ -817,7 +817,7 @@ public class QRCodeClient
             createdFrom = "dotnetPackage"
         };
 
-        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/{id}", payload, cancellationToken);
+        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/geolocation/{id}", payload, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to update geolocation QR code");
     }
 
