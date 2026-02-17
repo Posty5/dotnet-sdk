@@ -19,7 +19,7 @@ $replacements = @{
         "CreateWorkspaceRequest" = "SocialPublisherWorkspaceCreateWorkspaceRequestModel"
         "UpdateWorkspaceRequest" = "SocialPublisherWorkspaceUpdateWorkspaceRequestModel"
         "ListWorkspacesParams" = "SocialPublisherWorkspaceListWorkspacesParamsModel"
-        "WorkspaceForNewTaskModel" = "SocialPublisherWorkspaceWorkspaceForNewTaskModel"
+        "WorkspaceForNewPostModel" = "SocialPublisherWorkspaceWorkspaceForNewPostModel"
     }
 }
 

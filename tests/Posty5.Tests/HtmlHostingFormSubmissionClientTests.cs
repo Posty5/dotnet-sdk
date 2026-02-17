@@ -28,7 +28,7 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
     #region Get Tests
 
     [Fact]
-    public async Task Get_WithValidId_ShouldReturnSubmission()
+    public async Post Get_WithValidId_ShouldReturnSubmission()
     {
         // Arrange
         // First, list submissions to get a valid ID
@@ -55,7 +55,7 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
     }
 
     [Fact]
-    public async Task Get_ShouldReturnFormData()
+    public async Post Get_ShouldReturnFormData()
     {
         // Arrange
         var listResult = await _client.ListAsync(
@@ -89,7 +89,7 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
     #region List Tests
 
     [Fact]
-    public async Task List_WithHtmlHostingId_ShouldReturnSubmissions()
+    public async Post List_WithHtmlHostingId_ShouldReturnSubmissions()
     {
         // Act
         var result = await _client.ListAsync(
@@ -104,7 +104,7 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
     }
 
     [Fact]
-    public async Task List_FilterByFormId_ShouldReturnFilteredResults()
+    public async Post List_FilterByFormId_ShouldReturnFilteredResults()
     {
         // Arrange
         var testFormId = "apply-job";
@@ -125,7 +125,7 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
     }
 
     [Fact]
-    public async Task List_FilterByStatus_ShouldReturnFilteredResults()
+    public async Post List_FilterByStatus_ShouldReturnFilteredResults()
     {
         // Arrange
         var testStatus = HtmlHostingFormSubmissionFormStatusType.New;
@@ -149,7 +149,7 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
     }
 
     [Fact]
-    public async Task List_WithPagination_ShouldRespectPageSize()
+    public async Post List_WithPagination_ShouldRespectPageSize()
     {
         // Act
         var result = await _client.ListAsync(
@@ -163,7 +163,7 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
     }
 
     [Fact]
-    public async Task List_WithFilteredFields_ShouldSearch()
+    public async Post List_WithFilteredFields_ShouldSearch()
     {
         // Arrange
         var filteredFields = "name,email,phone";
@@ -183,7 +183,7 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
     }
 
     [Fact]
-    public async Task List_WithNumbering_ShouldFilterByNumber()
+    public async Post List_WithNumbering_ShouldFilterByNumber()
     {
         // Arrange
         var numbering = "001";
@@ -207,7 +207,7 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
     #region Navigation Tests
 
     [Fact]
-    public async Task GetNextPrevious_WithValidId_ShouldReturnNavigation()
+    public async Post GetNextPrevious_WithValidId_ShouldReturnNavigation()
     {
         // Arrange
         var listResult = await _client.ListAsync(
@@ -233,7 +233,7 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
     }
 
     [Fact]
-    public async Task GetNextPrevious_FirstSubmission_ShouldHaveNoNext()
+    public async Post GetNextPrevious_FirstSubmission_ShouldHaveNoNext()
     {
         // Arrange
         var listResult = await _client.ListAsync(
@@ -257,7 +257,7 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
     }
 
     [Fact]
-    public async Task GetNextPrevious_NavigationIds_ShouldBeAccessible()
+    public async Post GetNextPrevious_NavigationIds_ShouldBeAccessible()
     {
         // Arrange
         var listResult = await _client.ListAsync(
@@ -294,7 +294,7 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
     #region Delete Tests
 
     [Fact]
-    public async Task Delete_WithValidId_ShouldSucceed()
+    public async Post Delete_WithValidId_ShouldSucceed()
     {
         // Arrange
         // Note: In a real test, you would create a submission first
@@ -315,7 +315,7 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
     #region Form Data Access Tests
 
     [Fact]
-    public async Task Get_ShouldProvideAccessToFormFields()
+    public async Post Get_ShouldProvideAccessToFormFields()
     {
         // Arrange
         var listResult = await _client.ListAsync(
@@ -350,7 +350,7 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
     }
 
     [Fact]
-    public async Task Get_ShouldIncludeStatusHistory()
+    public async Post Get_ShouldIncludeStatusHistory()
     {
         // Arrange
         var listResult = await _client.ListAsync(
@@ -379,7 +379,7 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
     }
 
     [Fact]
-    public async Task Get_ShouldIncludeSyncingStatus()
+    public async Post Get_ShouldIncludeSyncingStatus()
     {
         // Arrange
         var listResult = await _client.ListAsync(
@@ -408,7 +408,7 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
     #region ChangeStatus Tests
 
     [Fact]
-    public async Task ChangeStatus_WithValidData_ShouldUpdateStatus()
+    public async Post ChangeStatus_WithValidData_ShouldUpdateStatus()
     {
         // Arrange
         var listResult = await _client.ListAsync(
@@ -438,7 +438,7 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
     }
 
     [Fact]
-    public async Task ChangeStatus_WithRejectedReason_ShouldIncludeReason()
+    public async Post ChangeStatus_WithRejectedReason_ShouldIncludeReason()
     {
         // Arrange
         var listResult = await _client.ListAsync(
@@ -471,7 +471,7 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
     #region Combined Workflow Tests
 
     [Fact]
-    public async Task  Workflow_ListGetNavigate_ShouldSucceed()
+    public async Post  Workflow_ListGetNavigate_ShouldSucceed()
     {
         // Step 1: List submissions
         var listResult = await _client.ListAsync(

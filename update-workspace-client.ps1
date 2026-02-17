@@ -35,8 +35,8 @@ $replacements = @(
     @("ListWorkspacesParams", "SocialPublisherWorkspaceListWorkspacesParamsModel"),
     @("Task<WorkspaceModel>", "Task<SocialPublisherWorkspaceWorkspaceModel>"),
     @("GetAsync<WorkspaceModel>", "GetAsync<SocialPublisherWorkspaceWorkspaceModel>"),
-    @("Task<WorkspaceForNewTaskModel>", "Task<SocialPublisherWorkspaceWorkspaceForNewTaskModel>"),
-    @("GetAsync<WorkspaceForNewTaskModel>", "GetAsync<SocialPublisherWorkspaceWorkspaceForNewTaskModel>"),
+    @("Task<WorkspaceForNewPostModel>", "Task<SocialPublisherWorkspaceWorkspaceForNewPostModel>"),
+    @("GetAsync<WorkspaceForNewPostModel>", "GetAsync<SocialPublisherWorkspaceWorkspaceForNewPostModel>"),
     @("CreateWorkspaceRequest", "SocialPublisherWorkspaceCreateWorkspaceRequestModel"),
     @("UpdateWorkspaceRequest", "SocialPublisherWorkspaceUpdateWorkspaceRequestModel"),
     @("PostAsync<CreateWorkspaceResponse>", "PostAsync<SocialPublisherWorkspaceCreateWorkspaceResponseModel>"),
@@ -58,7 +58,8 @@ Pop-Location
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host "  ✓ Build successful!" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "  ✗ Build failed!" -ForegroundColor Red
     Write-Host $result
 }

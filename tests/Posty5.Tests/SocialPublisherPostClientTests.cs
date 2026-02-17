@@ -1,25 +1,25 @@
 using Xunit;
-using Posty5.SocialPublisherTask;
-using Posty5.SocialPublisherTask.Models;
+using Posty5.SocialPublisherPost;
+using Posty5.SocialPublisherPost.Models;
 using Posty5.Core.Models;
 
 namespace Posty5.Tests.Integration;
 
 /// <summary>
-/// Tests for Social Publisher Task SDK
-/// Based on TypeScript test file: social-publisher-task.test.ts
+/// Tests for Social Publisher Post SDK
+/// Based on TypeScript test file: social-publisher-post.test.ts
 /// Uses unified PublishShortVideoToWorkspaceAsync() method with auto-detection
 /// </summary>
 [Collection("Sequential")]
-public class SocialPublisherTaskClientTests : IDisposable
+public class SocialPublisherPostClientTests : IDisposable
 {
-    private readonly SocialPublisherTaskClient _client;
+    private readonly SocialPublisherPostClient _client;
     private readonly string _testVideoPath;
     private readonly string _testThumbnailPath;
     private readonly string _workspaceId;
     private readonly string _youtubeAccountId;
     private readonly string _tiktokAccountId;
-    private string? _createdTaskId;
+    private string? _createdPostId;
 
     // Test URLs from TypeScript tests
     private const string ThumbnailURL = "https://images.unsplash.com/3/GoWildImages_MtEverest_NEP0555.jpg";
@@ -28,10 +28,10 @@ public class SocialPublisherTaskClientTests : IDisposable
     private const string YouTubeShortsURL = "https://www.youtube.com/shorts/jkiHUTnDJnk";
     private const string TikTokVideoURL = "https://www.tiktok.com/@tamra.ai/video/7592228093834841362";
 
-    public SocialPublisherTaskClientTests()
+    public SocialPublisherPostClientTests()
     {
         var httpClient = TestConfig.CreateHttpClient();
-        _client = new SocialPublisherTaskClient(httpClient);
+        _client = new SocialPublisherPostClient(httpClient);
         _testVideoPath = Path.Combine("Assets", "video.mp4");
         _testThumbnailPath = Path.Combine("Assets", "thumb.jpg");
         
@@ -44,13 +44,13 @@ public class SocialPublisherTaskClientTests : IDisposable
     #region CREATE - Video File Upload Tests
 
     [Fact]
-    public async Task PublishShortVideo_VideoFileWithThumbnailURL_ShouldSucceed()
+    public async Post PublishShortVideo_VideoFileWithThumbnailURL_ShouldSucceed()
     {
         // Arrange
         using var videoStream = File.OpenRead(_testVideoPath);
 
         // Act - Using unified PublishShortVideoToWorkspaceAsync
-        var taskId = await _client.PublishShortVideoToWorkspaceAsync(
+        var postId = await _client.PublishShortVideoToWorkspaceAsync(
             workspaceId: _workspaceId,
             video: videoStream,
             thumbnail: ThumbnailURL,
@@ -65,21 +65,21 @@ public class SocialPublisherTaskClientTests : IDisposable
         );
 
         // Assert
-        Assert.NotNull(taskId);
-        Assert.NotEmpty(taskId);
-        _createdTaskId = taskId;
-        TestConfig.CreatedResources.Tasks.Add(taskId);
+        Assert.NotNull(postId);
+        Assert.NotEmpty(postId);
+        _createdPostId = postId;
+        TestConfig.CreatedResources.Posts.Add(postId);
     }
 
     [Fact]
-    public async Task PublishShortVideo_VideoFileWithThumbnailFile_ShouldSucceed()
+    public async Post PublishShortVideo_VideoFileWithThumbnailFile_ShouldSucceed()
     {
         // Arrange
         using var videoStream = File.OpenRead(_testVideoPath);
         using var thumbStream = File.OpenRead(_testThumbnailPath);
 
         // Act - Auto-detects file upload
-        var taskId = await _client.PublishShortVideoToWorkspaceAsync(
+        var postId = await _client.PublishShortVideoToWorkspaceAsync(
             workspaceId: _workspaceId,
             video: videoStream,
             thumbnail: thumbStream,
@@ -97,8 +97,8 @@ public class SocialPublisherTaskClientTests : IDisposable
         );
 
         // Assert
-        Assert.NotNull(taskId);
-        TestConfig.CreatedResources.Tasks.Add(taskId);
+        Assert.NotNull(postId);
+        TestConfig.CreatedResources.Posts.Add(postId);
     }
 
     #endregion
@@ -106,13 +106,13 @@ public class SocialPublisherTaskClientTests : IDisposable
     #region CREATE - Video URL Tests
 
     [Fact]
-    public async Task PublishShortVideo_VideoURLWithThumbnailFile_ShouldSucceed()
+    public async Post PublishShortVideo_VideoURLWithThumbnailFile_ShouldSucceed()
     {
         // Arrange
         using var thumbStream = File.OpenRead(_testThumbnailPath);
 
         // Act - Auto-detects URL
-        var taskId = await _client.PublishShortVideoToWorkspaceAsync(
+        var postId = await _client.PublishShortVideoToWorkspaceAsync(
             workspaceId: _workspaceId,
             video: VideoURL,
             thumbnail: thumbStream,
@@ -127,15 +127,15 @@ public class SocialPublisherTaskClientTests : IDisposable
         );
 
         // Assert
-        Assert.NotNull(taskId);
-        TestConfig.CreatedResources.Tasks.Add(taskId);
+        Assert.NotNull(postId);
+        TestConfig.CreatedResources.Posts.Add(postId);
     }
 
     [Fact]
-    public async Task PublishShortVideo_VideoURLWithThumbnailURL_MultiPlatform_ShouldSucceed()
+    public async Post PublishShortVideo_VideoURLWithThumbnailURL_MultiPlatform_ShouldSucceed()
     {
         // Act - Multi-platform publishing
-        var taskId = await _client.PublishShortVideoToWorkspaceAsync(
+        var postId = await _client.PublishShortVideoToWorkspaceAsync(
             workspaceId: _workspaceId,
             video: VideoURL,
             thumbnail: ThumbnailURL,
@@ -157,8 +157,8 @@ public class SocialPublisherTaskClientTests : IDisposable
         );
 
         // Assert
-        Assert.NotNull(taskId);
-        TestConfig.CreatedResources.Tasks.Add(taskId);
+        Assert.NotNull(postId);
+        TestConfig.CreatedResources.Posts.Add(postId);
     }
 
     #endregion
@@ -166,10 +166,10 @@ public class SocialPublisherTaskClientTests : IDisposable
     #region CREATE - Repost Tests (Auto-Detection)
 
     [Fact]
-    public async Task PublishShortVideo_FacebookReelURL_ShouldAutoDetectAndRepost()
+    public async Post PublishShortVideo_FacebookReelURL_ShouldAutoDetectAndRepost()
     {
         // Act - Auto-detects Facebook repost
-        var taskId = await _client.PublishShortVideoToWorkspaceAsync(
+        var postId = await _client.PublishShortVideoToWorkspaceAsync(
             workspaceId: _workspaceId,
             video: FacebookReelURL,
             platforms: new List<string> { "youtube" },
@@ -182,15 +182,15 @@ public class SocialPublisherTaskClientTests : IDisposable
         );
 
         // Assert
-        Assert.NotNull(taskId);
-        TestConfig.CreatedResources.Tasks.Add(taskId);
+        Assert.NotNull(postId);
+        TestConfig.CreatedResources.Posts.Add(postId);
     }
 
     [Fact]
-    public async Task PublishShortVideo_YouTubeShortsURL_ShouldAutoDetectAndRepost()
+    public async Post PublishShortVideo_YouTubeShortsURL_ShouldAutoDetectAndRepost()
     {
         // Act - Auto-detects YouTube Shorts repost
-        var taskId = await _client.PublishShortVideoToWorkspaceAsync(
+        var postId = await _client.PublishShortVideoToWorkspaceAsync(
             workspaceId: _workspaceId,
             video: YouTubeShortsURL,
             platforms: new List<string> { "tiktok" },
@@ -205,15 +205,15 @@ public class SocialPublisherTaskClientTests : IDisposable
         );
 
         // Assert
-        Assert.NotNull(taskId);
-        TestConfig.CreatedResources.Tasks.Add(taskId);
+        Assert.NotNull(postId);
+        TestConfig.CreatedResources.Posts.Add(postId);
     }
 
     [Fact]
-    public async Task PublishShortVideo_TikTokVideoURL_ShouldAutoDetectAndRepost()
+    public async Post PublishShortVideo_TikTokVideoURL_ShouldAutoDetectAndRepost()
     {
         // Act - Auto-detects TikTok repost
-        var taskId = await _client.PublishShortVideoToWorkspaceAsync(
+        var postId = await _client.PublishShortVideoToWorkspaceAsync(
             workspaceId: _workspaceId,
             video: TikTokVideoURL,
             platforms: new List<string> { "youtube" },
@@ -226,8 +226,8 @@ public class SocialPublisherTaskClientTests : IDisposable
         );
 
         // Assert
-        Assert.NotNull(taskId);
-        TestConfig.CreatedResources.Tasks.Add(taskId);
+        Assert.NotNull(postId);
+        TestConfig.CreatedResources.Posts.Add(postId);
     }
 
     #endregion
@@ -235,14 +235,14 @@ public class SocialPublisherTaskClientTests : IDisposable
     #region CREATE - Account Tests
 
     [Fact]
-    public async Task PublishShortVideoToAccount_VideoFile_ShouldSucceed()
+    public async Post PublishShortVideoToAccount_VideoFile_ShouldSucceed()
     {
         // Arrange
         using var videoStream = File.OpenRead(_testVideoPath);
         using var thumbStream = File.OpenRead(_testThumbnailPath);
 
         // Act
-        var taskId = await _client.PublishShortVideoToAccountAsync(
+        var postId = await _client.PublishShortVideoToAccountAsync(
             accountId: _tiktokAccountId,
             video: videoStream,
             thumbnail: thumbStream,
@@ -257,18 +257,18 @@ public class SocialPublisherTaskClientTests : IDisposable
         );
 
         // Assert
-        Assert.NotNull(taskId);
-        TestConfig.CreatedResources.Tasks.Add(taskId);
+        Assert.NotNull(postId);
+        TestConfig.CreatedResources.Posts.Add(postId);
     }
 
     [Fact]
-    public async Task PublishShortVideoToAccount_VideoURL_ShouldSucceed()
+    public async Post PublishShortVideoToAccount_VideoURL_ShouldSucceed()
     {
         // Arrange
         using var thumbStream = File.OpenRead(_testThumbnailPath);
 
         // Act
-        var taskId = await _client.PublishShortVideoToAccountAsync(
+        var postId = await _client.PublishShortVideoToAccountAsync(
             accountId: _youtubeAccountId,
             video: VideoURL,
             thumbnail: thumbStream,
@@ -283,15 +283,15 @@ public class SocialPublisherTaskClientTests : IDisposable
         );
 
         // Assert
-        Assert.NotNull(taskId);
-        TestConfig.CreatedResources.Tasks.Add(taskId);
+        Assert.NotNull(postId);
+        TestConfig.CreatedResources.Posts.Add(postId);
     }
 
     [Fact]
-    public async Task PublishShortVideoToAccount_Repost_ShouldSucceed()
+    public async Post PublishShortVideoToAccount_Repost_ShouldSucceed()
     {
         // Act
-        var taskId = await _client.PublishShortVideoToAccountAsync(
+        var postId = await _client.PublishShortVideoToAccountAsync(
             accountId: _tiktokAccountId,
             video: YouTubeShortsURL,
             platforms: new List<string> { "tiktok" },
@@ -303,8 +303,8 @@ public class SocialPublisherTaskClientTests : IDisposable
         );
 
         // Assert
-        Assert.NotNull(taskId);
-        TestConfig.CreatedResources.Tasks.Add(taskId);
+        Assert.NotNull(postId);
+        TestConfig.CreatedResources.Posts.Add(postId);
     }
 
     #endregion
@@ -312,7 +312,7 @@ public class SocialPublisherTaskClientTests : IDisposable
     #region Utility Method Tests
 
     [Fact]
-    public async Task GetDefaultSettings_ShouldReturnSettings()
+    public async Post GetDefaultSettings_ShouldReturnSettings()
     {
         // Act
         var result = await _client.GetDefaultSettingsAsync();
@@ -322,38 +322,38 @@ public class SocialPublisherTaskClientTests : IDisposable
     }
 
     [Fact]
-    public async Task GetStatus_WithValidId_ShouldReturnStatus()
+    public async Post GetStatus_WithValidId_ShouldReturnStatus()
     {
         // Arrange
-        if (_createdTaskId == null)
+        if (_createdPostId == null)
         {
-            // Skip if no task created
+            // Skip if no post created
             return;
         }
 
         // Act
-        var result = await _client.GetStatusAsync(_createdTaskId);
+        var result = await _client.GetStatusAsync(_createdPostId);
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(_createdTaskId, result.Id);
+        Assert.Equal(_createdPostId, result.Id);
     }
 
     [Fact]
-    public async Task GetNextAndPrevious_WithValidId_ShouldReturnNavigation()
+    public async Post GetNextAndPrevious_WithValidId_ShouldReturnNavigation()
     {
         // Arrange
-        if (_createdTaskId == null)
+        if (_createdPostId == null)
         {
             return;
         }
 
         // Act
-        var result = await _client.GetNextAndPreviousAsync(_createdTaskId);
+        var result = await _client.GetNextAndPreviousAsync(_createdPostId);
 
         // Assert
         Assert.NotNull(result);
-        // NextId and PreviousId may be null if this is the only/first/last task
+        // NextId and PreviousId may be null if this is the only/first/last post
     }
 
     #endregion
@@ -361,11 +361,11 @@ public class SocialPublisherTaskClientTests : IDisposable
     #region List and Filter Tests
 
     [Fact]
-    public async Task List_WithPagination_ShouldReturnResults()
+    public async Post List_WithPagination_ShouldReturnResults()
     {
         // Act
         var result = await _client.ListAsync(
-            new ListTasksParams(),
+            new ListPostsParams(),
             new PaginationParams { PageSize = 10 }
         );
 
@@ -376,10 +376,10 @@ public class SocialPublisherTaskClientTests : IDisposable
     }
 
     [Fact]
-    public async Task List_FilterByWorkspace_ShouldReturnFilteredResults()
+    public async Post List_FilterByWorkspace_ShouldReturnFilteredResults()
     {
         // Arrange
-        var filterParams = new ListTasksParams
+        var filterParams = new ListPostsParams
         {
             WorkspaceId = _workspaceId
         };
@@ -396,12 +396,12 @@ public class SocialPublisherTaskClientTests : IDisposable
     }
 
     [Fact]
-    public async Task List_FilterByStatus_ShouldReturnFilteredResults()
+    public async Post List_FilterByStatus_ShouldReturnFilteredResults()
     {
         // Arrange
-        var filterParams = new ListTasksParams
+        var filterParams = new ListPostsParams
         {
-            CurrentStatus = SocialPublisherTaskStatusType.Pending
+            CurrentStatus = SocialPublisherPostStatusType.Pending
         };
 
         // Act
@@ -420,13 +420,13 @@ public class SocialPublisherTaskClientTests : IDisposable
     #region Advanced Tests
 
     [Fact]
-    public async Task PublishShortVideo_WithScheduling_ShouldSucceed()
+    public async Post PublishShortVideo_WithScheduling_ShouldSucceed()
     {
         // Arrange
         var scheduleDate = DateTime.UtcNow.AddHours(2);
 
         // Act - Schedule for future
-        var taskId = await _client.PublishShortVideoToWorkspaceAsync(
+        var postId = await _client.PublishShortVideoToWorkspaceAsync(
             workspaceId: _workspaceId,
             video: VideoURL,
             platforms: new List<string> { "youtube" },
@@ -440,15 +440,15 @@ public class SocialPublisherTaskClientTests : IDisposable
         );
 
         // Assert
-        Assert.NotNull(taskId);
-        TestConfig.CreatedResources.Tasks.Add(taskId);
+        Assert.NotNull(postId);
+        TestConfig.CreatedResources.Posts.Add(postId);
     }
 
     [Fact]
-    public async Task PublishShortVideo_WithTagAndRefId_ShouldSucceed()
+    public async Post PublishShortVideo_WithTagAndRefId_ShouldSucceed()
     {
         // Act
-        var taskId = await _client.PublishShortVideoToWorkspaceAsync(
+        var postId = await _client.PublishShortVideoToWorkspaceAsync(
             workspaceId: _workspaceId,
             video: VideoURL,
             platforms: new List<string> { "youtube" },
@@ -463,8 +463,8 @@ public class SocialPublisherTaskClientTests : IDisposable
         );
 
         // Assert
-        Assert.NotNull(taskId);
-        TestConfig.CreatedResources.Tasks.Add(taskId);
+        Assert.NotNull(postId);
+        TestConfig.CreatedResources.Posts.Add(postId);
     }
 
     #endregion

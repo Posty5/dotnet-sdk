@@ -1,18 +1,18 @@
 using System.Net.Http.Headers;
 using Posty5.Core.Http;
 using Posty5.Core.Models;
-using Posty5.SocialPublisherTask.Models;
+using Posty5.SocialPublisherPost.Models;
 
-namespace Posty5.SocialPublisherTask;
+namespace Posty5.SocialPublisherPost;
 
 /// <summary>
- /// Client for managing social publisher tasks via Posty5 API
+ /// Client for managing social publisher posts via Posty5 API
 /// Supports publishing videos to YouTube, TikTok, Facebook, and Instagram
 /// </summary>
-public class SocialPublisherTaskClient
+public class SocialPublisherPostClient
 {
     private readonly Posty5HttpClient _http;
-    private const string BasePath = "/api/social-publisher-task";
+    private const string BasePath = "/api/social-publisher-post";
     
     /// <summary>
     /// Maximum video upload size (4GB)
@@ -20,10 +20,10 @@ public class SocialPublisherTaskClient
     public const long MaxVideoUploadSizeBytes = 4L * 1024 * 1024 * 1024;
 
     /// <summary>
-    /// Creates a new Social Publisher Task client
+    /// Creates a new Social Publisher Post client
     /// </summary>
     /// <param name="httpClient">HTTP client instance from Posty5.Core</param>
-    public SocialPublisherTaskClient(Posty5HttpClient httpClient)
+    public SocialPublisherPostClient(Posty5HttpClient httpClient)
     {
         _http = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
     }
@@ -33,10 +33,10 @@ public class SocialPublisherTaskClient
     // ============================================================================
 
     /// <summary>
-    /// List/search tasks with pagination and filters
+    /// List/search posts with pagination and filters
     /// </summary>
-    public async Task<PaginationResponse<TaskModel>> ListAsync(
-        ListTasksParams? listParams = null,
+    public async Task<PaginationResponse<PostModel>> ListAsync(
+        ListPostsParams? listParams = null,
         PaginationParams? pagination = null,
         CancellationToken cancellationToken = default)
     {
@@ -65,12 +65,12 @@ public class SocialPublisherTaskClient
             queryParams["pageSize"] = pagination.PageSize;
         }
 
-        var response = await _http.GetAsync<PaginationResponse<TaskModel>>(
+        var response = await _http.GetAsync<PaginationResponse<PostModel>>(
             BasePath,
             queryParams,
             cancellationToken);
 
-        return response.Result ?? new PaginationResponse<TaskModel>();
+        return response.Result ?? new PaginationResponse<PostModel>();
     }
 
     /// <summary>
@@ -87,17 +87,17 @@ public class SocialPublisherTaskClient
     }
 
     /// <summary>
-    /// Get task status by ID with full details including platform configurations
+    /// Get post status by ID with full details including platform configurations
     /// </summary>
-    public async Task<TaskStatusFullDetailsResponse> GetStatusAsync(
+    public async Task<PostStatusFullDetailsResponse> GetStatusAsync(
         string id,
         CancellationToken cancellationToken = default)
     {
-        var response = await _http.GetAsync<TaskStatusFullDetailsResponse>(
+        var response = await _http.GetAsync<PostStatusFullDetailsResponse>(
             $"{BasePath}/{id}",
             cancellationToken: cancellationToken);
 
-        return response.Result ?? throw new InvalidOperationException("Task not found");
+        return response.Result ?? throw new InvalidOperationException("Post not found");
     }
 
     /// <summary>
@@ -116,7 +116,7 @@ public class SocialPublisherTaskClient
     }
 
     /// <summary>
-    /// Get next and previous task IDs for navigation
+    /// Get next and previous post IDs for navigation
     /// </summary>
     public async Task<NextPreviousResponse> GetNextAndPreviousAsync(
         string id,
@@ -154,8 +154,8 @@ public class SocialPublisherTaskClient
         string? thumbnailContentType = null,
         CancellationToken cancellationToken = default)
     {
-        // Build task settings
-        var settings = new TaskSettings
+        // Build post settings
+        var settings = new PostSettings
         {
             WorkspaceId = workspaceId,
             IsAllowYouTube = platforms?.Contains("youtube") ?? false,
@@ -223,8 +223,8 @@ public class SocialPublisherTaskClient
         string? thumbnailContentType = null,
         CancellationToken cancellationToken = default)
     {
-        // Build task settings
-        var settings = new TaskSettings
+        // Build post settings
+        var settings = new PostSettings
         {
             AccountId = accountId,
             IsAllowYouTube = platforms?.Contains("youtube") ?? false,
@@ -297,7 +297,7 @@ public class SocialPublisherTaskClient
     // ============================================================================
 
     private async Task<string> PublishShortVideoToWorkspaceByFileAsync(
-        TaskSettings settings, Stream videoStream, string videoContentType,
+        PostSettings settings, Stream videoStream, string videoContentType,
         Stream? thumbnailStream, string? thumbnailContentType, string? thumbnailUrl,
         CancellationToken cancellationToken)
     {
@@ -315,7 +315,7 @@ public class SocialPublisherTaskClient
         var thumbUrl = await HandleThumbnailUploadAsync(thumbnailStream, thumbnailContentType, thumbnailUrl,
             uploadConfig.Thumb, cancellationToken);
 
-        return await CreateToWorkspaceByFileAsync(new CreateSocialPublisherTaskRequest
+        return await CreateToWorkspaceByFileAsync(new CreateSocialPublisherPostRequest
         {
             WorkspaceId = settings.WorkspaceId,
             Source = "file",
@@ -332,16 +332,16 @@ public class SocialPublisherTaskClient
             Schedule = settings.Schedule,
             Tag = settings.Tag,
             RefId = settings.RefId
-        }, uploadConfig.TaskId, cancellationToken);
+        }, uploadConfig.PostId, cancellationToken);
     }
 
     private async Task<string> PublishShortVideoToWorkspaceByUrlAsync(
-        TaskSettings settings, string videoUrl,
+        PostSettings settings, string videoUrl,
         Stream? thumbnailStream, string? thumbnailContentType, string? thumbnailUrl,
         CancellationToken cancellationToken)
     {
         string? thumbUrl = null;
-        string? taskId = null;
+        string? postId = null;
 
         if (thumbnailStream != null)
         {
@@ -352,14 +352,14 @@ public class SocialPublisherTaskClient
 
             thumbUrl = await HandleThumbnailUploadAsync(thumbnailStream, thumbnailContentType, thumbnailUrl,
                 uploadConfig.Thumb, cancellationToken);
-            taskId = uploadConfig.TaskId;
+            postId = uploadConfig.PostId;
         }
         else
         {
             thumbUrl = thumbnailUrl;
         }
 
-        return await CreateToWorkspaceByUrlAsync(new CreateSocialPublisherTaskRequest
+        return await CreateToWorkspaceByUrlAsync(new CreateSocialPublisherPostRequest
         {
             WorkspaceId = settings.WorkspaceId,
             Source = "url",
@@ -376,16 +376,16 @@ public class SocialPublisherTaskClient
             Schedule = settings.Schedule,
             Tag = settings.Tag,
             RefId = settings.RefId
-        }, taskId, cancellationToken);
+        }, postId, cancellationToken);
     }
 
     private async Task<string> PublishRepostVideoToWorkspaceAsync(
-        TaskSettings settings, string videoUrl,
+        PostSettings settings, string videoUrl,
         Stream? thumbnailStream, string? thumbnailContentType, string? thumbnailUrl,
         CancellationToken cancellationToken)
     {
         string? thumbUrl = null;
-        string? taskId = null;
+        string? postId = null;
 
         if (thumbnailStream != null)
         {
@@ -396,14 +396,14 @@ public class SocialPublisherTaskClient
 
             thumbUrl = await HandleThumbnailUploadAsync(thumbnailStream, thumbnailContentType, thumbnailUrl,
                 uploadConfig.Thumb, cancellationToken);
-            taskId = uploadConfig.TaskId;
+            postId = uploadConfig.PostId;
         }
         else
         {
             thumbUrl = thumbnailUrl;
         }
 
-        return await CreateToWorkspaceByUrlAsync(new CreateSocialPublisherTaskRequest
+        return await CreateToWorkspaceByUrlAsync(new CreateSocialPublisherPostRequest
         {
             WorkspaceId = settings.WorkspaceId,
             Source = "repost",
@@ -420,11 +420,11 @@ public class SocialPublisherTaskClient
             Schedule = settings.Schedule,
             Tag = settings.Tag,
             RefId = settings.RefId
-        }, taskId, cancellationToken);
+        }, postId, cancellationToken);
     }
 
     private async Task<string> PublishShortVideoToAccountByFileAsync(
-        TaskSettings settings, Stream videoStream, string videoContentType,
+        PostSettings settings, Stream videoStream, string videoContentType,
         Stream? thumbnailStream, string? thumbnailContentType, string? thumbnailUrl,
         CancellationToken cancellationToken)
     {
@@ -442,7 +442,7 @@ public class SocialPublisherTaskClient
         var thumbUrl = await HandleThumbnailUploadAsync(thumbnailStream, thumbnailContentType, thumbnailUrl,
             uploadConfig.Thumb, cancellationToken);
 
-        return await CreateToAccountByFileAsync(new CreateSocialPublisherAccountTaskRequest
+        return await CreateToAccountByFileAsync(new CreateSocialPublisherAccountPostRequest
         {
             AccountId = settings.AccountId!,
             Source = "file",
@@ -459,16 +459,16 @@ public class SocialPublisherTaskClient
             Schedule = settings.Schedule,
             Tag = settings.Tag,
             RefId = settings.RefId
-        }, uploadConfig.TaskId, cancellationToken);
+        }, uploadConfig.PostId, cancellationToken);
     }
 
     private async Task<string> PublishShortVideoToAccountByUrlAsync(
-        TaskSettings settings, string videoUrl,
+        PostSettings settings, string videoUrl,
         Stream? thumbnailStream, string? thumbnailContentType, string? thumbnailUrl,
         CancellationToken cancellationToken)
     {
         string? thumbUrl = null;
-        string? taskId = null;
+        string? postId = null;
 
         if (thumbnailStream != null)
         {
@@ -479,14 +479,14 @@ public class SocialPublisherTaskClient
 
             thumbUrl = await HandleThumbnailUploadAsync(thumbnailStream, thumbnailContentType, thumbnailUrl,
                 uploadConfig.Thumb, cancellationToken);
-            taskId = uploadConfig.TaskId;
+            postId = uploadConfig.PostId;
         }
         else
         {
             thumbUrl = thumbnailUrl;
         }
 
-        return await CreateToAccountByUrlAsync(new CreateSocialPublisherAccountTaskRequest
+        return await CreateToAccountByUrlAsync(new CreateSocialPublisherAccountPostRequest
         {
             AccountId = settings.AccountId!,
             Source = "url",
@@ -503,16 +503,16 @@ public class SocialPublisherTaskClient
             Schedule = settings.Schedule,
             Tag = settings.Tag,
             RefId = settings.RefId
-        }, taskId, cancellationToken);
+        }, postId, cancellationToken);
     }
 
     private async Task<string> PublishRepostVideoToAccountAsync(
-        TaskSettings settings, string videoUrl,
+        PostSettings settings, string videoUrl,
         Stream? thumbnailStream, string? thumbnailContentType, string? thumbnailUrl,
         CancellationToken cancellationToken)
     {
         string? thumbUrl = null;
-        string? taskId = null;
+        string? postId = null;
 
         if (thumbnailStream != null)
         {
@@ -523,14 +523,14 @@ public class SocialPublisherTaskClient
 
             thumbUrl = await HandleThumbnailUploadAsync(thumbnailStream, thumbnailContentType, thumbnailUrl,
                 uploadConfig.Thumb, cancellationToken);
-            taskId = uploadConfig.TaskId;
+            postId = uploadConfig.PostId;
         }
         else
         {
             thumbUrl = thumbnailUrl;
         }
 
-        return await CreateToAccountByUrlAsync(new CreateSocialPublisherAccountTaskRequest
+        return await CreateToAccountByUrlAsync(new CreateSocialPublisherAccountPostRequest
         {
             AccountId = settings.AccountId!,
             Source = "repost",
@@ -547,7 +547,7 @@ public class SocialPublisherTaskClient
             Schedule = settings.Schedule,
             Tag = settings.Tag,
             RefId = settings.RefId
-        }, taskId, cancellationToken);
+        }, postId, cancellationToken);
     }
 
     // ============================================================================
@@ -555,7 +555,7 @@ public class SocialPublisherTaskClient
     // ============================================================================
 
     private async Task<string> CreateToWorkspaceByFileAsync(
-        CreateSocialPublisherTaskRequest request, string? id, CancellationToken cancellationToken)
+        CreateSocialPublisherPostRequest request, string? id, CancellationToken cancellationToken)
     {
         var path = string.IsNullOrEmpty(id) ? $"{BasePath}/short-video/workspace/by-file" : $"{BasePath}/short-video/workspace/by-file/{id}";
         var payload = new
@@ -567,14 +567,14 @@ public class SocialPublisherTaskClient
         };
 
         var response = await _http.PostAsync<Dictionary<string, object>>(path, payload, cancellationToken);
-        if (response.Result != null && response.Result.TryGetValue("_id", out var taskIdObj))
-            return taskIdObj?.ToString() ?? throw new InvalidOperationException("Task ID not returned");
+        if (response.Result != null && response.Result.TryGetValue("_id", out var postIdObj))
+            return postIdObj?.ToString() ?? throw new InvalidOperationException("Post ID not returned");
 
-        throw new InvalidOperationException("Failed to create task");
+        throw new InvalidOperationException("Failed to create post");
     }
 
     private async Task<string> CreateToWorkspaceByUrlAsync(
-        CreateSocialPublisherTaskRequest request, string? id, CancellationToken cancellationToken)
+        CreateSocialPublisherPostRequest request, string? id, CancellationToken cancellationToken)
     {
         var path = string.IsNullOrEmpty(id) ? $"{BasePath}/short-video/workspace/by-url" : $"{BasePath}/short-video/workspace/by-url/{id}";
         var payload = new
@@ -586,14 +586,14 @@ public class SocialPublisherTaskClient
         };
 
         var response = await _http.PostAsync<Dictionary<string, object>>(path, payload, cancellationToken);
-        if (response.Result != null && response.Result.TryGetValue("_id", out var taskIdObj))
-            return taskIdObj?.ToString() ?? throw new InvalidOperationException("Task ID not returned");
+        if (response.Result != null && response.Result.TryGetValue("_id", out var postIdObj))
+            return postIdObj?.ToString() ?? throw new InvalidOperationException("Post ID not returned");
 
-        throw new InvalidOperationException("Failed to create task");
+        throw new InvalidOperationException("Failed to create post");
     }
 
     private async Task<string> CreateToAccountByFileAsync(
-        CreateSocialPublisherAccountTaskRequest request, string? id, CancellationToken cancellationToken)
+        CreateSocialPublisherAccountPostRequest request, string? id, CancellationToken cancellationToken)
     {
         var path = string.IsNullOrEmpty(id) ? $"{BasePath}/short-video/account/by-file" : $"{BasePath}/short-video/account/by-file/{id}";
         var payload = new
@@ -605,14 +605,14 @@ public class SocialPublisherTaskClient
         };
 
         var response = await _http.PostAsync<Dictionary<string, object>>(path, payload, cancellationToken);
-        if (response.Result != null && response.Result.TryGetValue("_id", out var taskIdObj))
-            return taskIdObj?.ToString() ?? throw new InvalidOperationException("Task ID not returned");
+        if (response.Result != null && response.Result.TryGetValue("_id", out var postIdObj))
+            return postIdObj?.ToString() ?? throw new InvalidOperationException("Post ID not returned");
 
-        throw new InvalidOperationException("Failed to create task");
+        throw new InvalidOperationException("Failed to create post");
     }
 
     private async Task<string> CreateToAccountByUrlAsync(
-        CreateSocialPublisherAccountTaskRequest request, string? id, CancellationToken cancellationToken)
+        CreateSocialPublisherAccountPostRequest request, string? id, CancellationToken cancellationToken)
     {
         var path = string.IsNullOrEmpty(id) ? $"{BasePath}/short-video/account/by-url" : $"{BasePath}/short-video/account/by-url/{id}";
         var payload = new
@@ -624,10 +624,10 @@ public class SocialPublisherTaskClient
         };
 
         var response = await _http.PostAsync<Dictionary<string, object>>(path, payload, cancellationToken);
-        if (response.Result != null && response.Result.TryGetValue("_id", out var taskIdObj))
-            return taskIdObj?.ToString() ?? throw new InvalidOperationException("Task ID not returned");
+        if (response.Result != null && response.Result.TryGetValue("_id", out var postIdObj))
+            return postIdObj?.ToString() ?? throw new InvalidOperationException("Post ID not returned");
 
-        throw new InvalidOperationException("Failed to create task");
+        throw new InvalidOperationException("Failed to create post");
     }
 
     // ============================================================================
@@ -663,7 +663,7 @@ public class SocialPublisherTaskClient
         throw new ArgumentException("Invalid video type. Must be Stream or string URL");
     }
 
-    private async Task UploadToR2Async(string uploadUrl, Stream fileStream, string contentType, CancellationToken cancellationToken)
+    private async Post UploadToR2Async(string uploadUrl, Stream fileStream, string contentType, CancellationToken cancellationToken)
     {
         using var client = new HttpClient();
         using var content = new StreamContent(fileStream);

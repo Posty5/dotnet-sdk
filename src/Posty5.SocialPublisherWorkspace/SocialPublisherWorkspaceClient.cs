@@ -81,15 +81,15 @@ public class SocialPublisherWorkspaceClient
     }
 
     /// <summary>
-    /// Get workspace details for creating new task
+    /// Get workspace details for creating new post
     /// </summary>
     /// <param name="id">Workspace ID</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Workspace details with populated account information</returns>
     /// <example>
     /// <code>
-    /// // Get workspace details for task creation
-    /// var workspace = await client.GetForNewTaskAsync("workspace-id");
+    /// // Get workspace details for post creation
+    /// var workspace = await client.GetForNewPostAsync("workspace-id");
     /// 
     /// // Access account details
     /// if (workspace.Account.Youtube != null)
@@ -104,12 +104,12 @@ public class SocialPublisherWorkspaceClient
     /// }
     /// </code>
     /// </example>
-    public async Task<SocialPublisherWorkspaceForNewTaskModel> GetForNewTaskAsync(
+    public async Task<SocialPublisherWorkspaceForNewPostModel> GetForNewPostAsync(
         string id,
         CancellationToken cancellationToken = default)
     {
-        var response = await _http.GetAsync<SocialPublisherWorkspaceForNewTaskModel>(
-            $"{BasePath}/{id}/for-new-task",
+        var response = await _http.GetAsync<SocialPublisherWorkspaceForNewPostModel>(
+            $"{BasePath}/{id}/for-new-post",
             cancellationToken: cancellationToken);
 
         return response.Result ?? throw new InvalidOperationException("Workspace not found");
@@ -193,7 +193,7 @@ public class SocialPublisherWorkspaceClient
     /// await client.UpdateAsync("workspace-id", request, newLogo);
     /// </code>
     /// </example>
-    public async Task UpdateAsync(
+    public async Post UpdateAsync(
         string id,
         SocialPublisherWorkspaceUpdateRequestModel data,
         Stream? logoStream = null,
@@ -241,7 +241,7 @@ public class SocialPublisherWorkspaceClient
     /// <param name="imageStream">Image stream to upload</param>
     /// <param name="contentType">Content type of the image</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    private async Task UploadImageAsync(
+    private async Post UploadImageAsync(
         string uploadUrl,
         Stream imageStream,
         string contentType,

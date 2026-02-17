@@ -11,7 +11,7 @@
     <Version>2.0.0</Version>
     <Authors>Posty5</Authors>
     <Company>Posty5</Company>
-    <Description>Social Publisher Task client for Posty5 .NET SDK - publish videos to YouTube, TikTok, Facebook, and Instagram with automated workflows</Description>
+    <Description>Social Publisher Post client for Posty5 .NET SDK - publish videos to YouTube, TikTok, Facebook, and Instagram with automated workflows</Description>
     <PackageTags>posty5;social-publisher;video;youtube;tiktok;facebook;instagram;upload;multi-platform;api;sdk</PackageTags>
     <PackageProjectUrl>https://posty5.com</PackageProjectUrl>
     <RepositoryUrl>https://github.com/posty5/dotnet-sdk</RepositoryUrl>

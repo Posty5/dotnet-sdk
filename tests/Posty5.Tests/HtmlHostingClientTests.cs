@@ -22,7 +22,7 @@ public class HtmlHostingClientTests : IDisposable
     #region Create Tests
 
     [Fact]
-    public async Task CreateWithFile_ShouldReturnValidResponse()
+    public async Post CreateWithFile_ShouldReturnValidResponse()
     {
         // Arrange
         var fileName = $"test-page-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}.html";
@@ -49,7 +49,7 @@ public class HtmlHostingClientTests : IDisposable
     }
 
     [Fact]
-    public async Task CreateWithFile_FromMemoryStream_ShouldSucceed()
+    public async Post CreateWithFile_FromMemoryStream_ShouldSucceed()
     {
         // Arrange
         var htmlContent = @"
@@ -86,7 +86,7 @@ public class HtmlHostingClientTests : IDisposable
     }
 
     [Fact]
-    public async Task CreateWithGithubFile_ShouldReturnValidResponse()
+    public async Post CreateWithGithubFile_ShouldReturnValidResponse()
     {
         // Arrange
         var request = new HtmlHostingCreatePageGithubRequestModel
@@ -113,7 +113,7 @@ public class HtmlHostingClientTests : IDisposable
     }
 
     [Fact]
-    public async Task CreateWithFile_WithCustomLandingId_ShouldContainSlug()
+    public async Post CreateWithFile_WithCustomLandingId_ShouldContainSlug()
     {
         // Arrange
         var customSlug = $"html-test-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
@@ -139,7 +139,7 @@ public class HtmlHostingClientTests : IDisposable
     }
 
     [Fact]
-    public async Task CreateWithFile_WithAutoSaveGoogleSheet_ShouldSucceed()
+    public async Post CreateWithFile_WithAutoSaveGoogleSheet_ShouldSucceed()
     {
         // Arrange
         var request = new HtmlHostingCreatePageFileRequestModel
@@ -167,7 +167,7 @@ public class HtmlHostingClientTests : IDisposable
     #region Read Tests
 
     [Fact]
-    public async Task Get_WithValidId_ShouldReturnPage()
+    public async Post Get_WithValidId_ShouldReturnPage()
     {
         // Arrange - Create a page first
         var createRequest = new HtmlHostingCreatePageFileRequestModel
@@ -194,7 +194,7 @@ public class HtmlHostingClientTests : IDisposable
     }
 
     [Fact]
-    public async Task List_ShouldReturnPaginatedResults()
+    public async Post List_ShouldReturnPaginatedResults()
     {
         // Act
         var result = await _client.ListAsync(
@@ -208,7 +208,7 @@ public class HtmlHostingClientTests : IDisposable
     }
 
     [Fact]
-    public async Task List_WithFilters_ShouldFilterResults()
+    public async Post List_WithFilters_ShouldFilterResults()
     {
         // Arrange
         var filterParams = new HtmlHostingListPagesParamsModel
@@ -238,7 +238,7 @@ public class HtmlHostingClientTests : IDisposable
     }
 
     [Fact]
-    public async Task List_WithNameSearch_ShouldFilterByName()
+    public async Post List_WithNameSearch_ShouldFilterByName()
     {
         // Arrange
         var searchParams = new HtmlHostingListPagesParamsModel
@@ -255,7 +255,7 @@ public class HtmlHostingClientTests : IDisposable
     }
 
     [Fact]
-    public async Task Lookup_ShouldReturnSimplifiedList()
+    public async Post Lookup_ShouldReturnSimplifiedList()
     {
         // Act
         var result = await _client.LookupAsync();
@@ -274,7 +274,7 @@ public class HtmlHostingClientTests : IDisposable
     }
 
     [Fact]
-    public async Task LookupForms_WithValidPageId_ShouldReturnForms()
+    public async Post LookupForms_WithValidPageId_ShouldReturnForms()
     {
         // Arrange - Create a page with a form first
         var createRequest = new HtmlHostingCreatePageFileRequestModel
@@ -288,7 +288,7 @@ public class HtmlHostingClientTests : IDisposable
         TestConfig.CreatedResources.HtmlHostings.Add(created.Id!);
 
         // Wait a bit for form processing
-        await Task.Delay(2000);
+        await Post.Delay(2000);
 
         // Act
         var result = await _client.LookupFormsAsync(created.Id!);
@@ -303,7 +303,7 @@ public class HtmlHostingClientTests : IDisposable
     #region Update Tests
 
     [Fact]
-    public async Task UpdateWithFile_ShouldUpdateSuccessfully()
+    public async Post UpdateWithFile_ShouldUpdateSuccessfully()
     {
         // Arrange - Create a page first
         var createRequest = new HtmlHostingCreatePageFileRequestModel
@@ -336,7 +336,7 @@ public class HtmlHostingClientTests : IDisposable
     }
 
     [Fact]
-    public async Task UpdateWithGithubFile_ShouldUpdateSuccessfully()
+    public async Post UpdateWithGithubFile_ShouldUpdateSuccessfully()
     {
         // Arrange - Create a GitHub page first
         var createRequest = new HtmlHostingCreatePageGithubRequestModel
@@ -374,7 +374,7 @@ public class HtmlHostingClientTests : IDisposable
     #region Delete and Cache Tests
 
     [Fact]
-    public async Task Delete_ShouldDeleteSuccessfully()
+    public async Post Delete_ShouldDeleteSuccessfully()
     {
         // Arrange - Create a page first
         var createRequest = new HtmlHostingCreatePageFileRequestModel
@@ -395,7 +395,7 @@ public class HtmlHostingClientTests : IDisposable
     }
 
     [Fact]
-    public async Task CleanCache_WithValidId_ShouldSucceed()
+    public async Post CleanCache_WithValidId_ShouldSucceed()
     {
         // Arrange - Create a page first
         var createRequest = new HtmlHostingCreatePageFileRequestModel
@@ -421,7 +421,7 @@ public class HtmlHostingClientTests : IDisposable
     #region Edge Cases and Validation Tests
 
     [Fact]
-    public async Task CreateWithFile_WithAllParameters_ShouldSucceed()
+    public async Post CreateWithFile_WithAllParameters_ShouldSucceed()
     {
         // Arrange - Test all optional parameters
         var request = new HtmlHostingCreatePageFileRequestModel
@@ -450,7 +450,7 @@ public class HtmlHostingClientTests : IDisposable
     }
 
     [Fact]
-    public async Task List_WithMultipleFilters_ShouldCombineFilters()
+    public async Post List_WithMultipleFilters_ShouldCombineFilters()
     {
         // Arrange
         var filterParams = new HtmlHostingListPagesParamsModel
@@ -473,7 +473,7 @@ public class HtmlHostingClientTests : IDisposable
     }
 
     [Fact]
-    public async Task CreateAndRetrieve_Workflow_ShouldMaintainData()
+    public async Post CreateAndRetrieve_Workflow_ShouldMaintainData()
     {
         // Arrange
         var testTag = $"workflow-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";

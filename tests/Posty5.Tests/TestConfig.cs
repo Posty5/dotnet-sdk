@@ -48,6 +48,6 @@ public static class TestConfig
         public static List<string> ShortLinks { get; } = new();
         public static List<string> HtmlHostings { get; } = new();
         public static List<string> Workspaces { get; } = new();
-        public static List<string> Tasks { get; } = new();
+        public static List<string> Posts { get; } = new();
     }
 }

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -29,7 +29,7 @@
     <ProjectReference Include="..\..\src\Posty5.HtmlHosting\Posty5.HtmlHosting.csproj" />
     <ProjectReference Include="..\..\src\Posty5.HtmlHostingVariables\Posty5.HtmlHostingVariables.csproj" />
     <ProjectReference Include="..\..\src\Posty5.SocialPublisherWorkspace\Posty5.SocialPublisherWorkspace.csproj" />
-    <ProjectReference Include="..\..\src\Posty5.SocialPublisherTask\Posty5.SocialPublisherTask.csproj" />
+    <ProjectReference Include="..\..\src\Posty5.SocialPublisherPost\Posty5.SocialPublisherPost.csproj" />
     <ProjectReference Include="..\..\src\Posty5.HtmlHostingFormSubmission\Posty5.HtmlHostingFormSubmission.csproj" />
   </ItemGroup>
 

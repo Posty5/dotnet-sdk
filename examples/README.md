@@ -59,9 +59,9 @@ This folder contains comprehensive examples demonstrating how to use the Posty5 
 ### Social Publisher Examples
 
 - Create workspace
-- Create scheduled task
-- Publish task immediately
-- List tasks by workspace
+- Create scheduled post
+- Publish post immediately
+- List posts by workspace
 
 ## Example Code Structure
 

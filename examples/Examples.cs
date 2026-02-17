@@ -16,7 +16,7 @@ namespace Posty5.Examples;
 /// </summary>
 public class Examples
 {
-    public static async Task Main(string[] args)
+    public static async Post Main(string[] args)
     {
         // Initialize the HTTP client
         var options = new Posty5Options
@@ -41,7 +41,7 @@ public class Examples
         await SocialPublisherExamples(httpClient);
     }
     
-    static async Task QRCodeExamples(Posty5HttpClient httpClient)
+    static async Post QRCodeExamples(Posty5HttpClient httpClient)
     {
         Console.WriteLine("\n=== QR Code Examples ===\n");
         
@@ -89,7 +89,7 @@ public class Examples
         Console.WriteLine($"Found {qrCodes.TotalCount} QR codes");
     }
     
-    static async Task ShortLinkExamples(Posty5HttpClient httpClient)
+    static async Post ShortLinkExamples(Posty5HttpClient httpClient)
     {
         Console.WriteLine("\n=== Short Link Examples ===\n");
         
@@ -122,7 +122,7 @@ public class Examples
         Console.WriteLine($"Found {shortLinks.TotalCount} short links");
     }
     
-    static async Task HtmlHostingExamples(Posty5HttpClient httpClient)
+    static async Post HtmlHostingExamples(Posty5HttpClient httpClient)
     {
         Console.WriteLine("\n=== HTML Hosting Examples ===\n");
         
@@ -164,12 +164,12 @@ public class Examples
         Console.WriteLine($"Found {pages.TotalCount} HTML pages");
     }
     
-    static async Task SocialPublisherExamples(Posty5HttpClient httpClient)
+    static async Post SocialPublisherExamples(Posty5HttpClient httpClient)
     {
         Console.WriteLine("\n=== Social Publisher Examples ===\n");
         
         var workspaceClient = new WorkspaceClient(httpClient);
-        var taskClient = new TaskClient(httpClient);
+        var postClient = new PostClient(httpClient);
         
         // Create a workspace
         var workspace = await workspaceClient.CreateAsync(new CreateWorkspaceRequest
@@ -179,8 +179,8 @@ public class Examples
         });
         Console.WriteLine($"Created Workspace: {workspace.Name}");
         
-        // Create a scheduled task
-        var task = await taskClient.CreateAsync(new CreateTaskRequest
+        // Create a scheduled post
+        var post = await postClient.CreateAsync(new CreatePostRequest
         {
             WorkspaceId = workspace.Id!,
             Title = "Product Launch Announcement",
@@ -193,18 +193,18 @@ public class Examples
             },
             ScheduledAt = DateTime.UtcNow.AddHours(3)
         });
-        Console.WriteLine($"Created Task: {task.Title} (scheduled for {task.ScheduledAt})");
+        Console.WriteLine($"Created Post: {post.Title} (scheduled for {post.ScheduledAt})");
         
-        // List tasks in workspace
-        var tasks = await taskClient.ListAsync(new ListTasksParams
+        // List posts in workspace
+        var posts = await postClient.ListAsync(new ListPostsParams
         {
             WorkspaceId = workspace.Id,
-            Status = TaskStatus.Scheduled
+            Status = PostStatus.Scheduled
         });
-        Console.WriteLine($"Found {tasks.TotalCount} scheduled tasks");
+        Console.WriteLine($"Found {posts.TotalCount} scheduled posts");
         
         // Publish immediately
-        await taskClient.PublishAsync(task.Id!);
-        Console.WriteLine("Task published immediately!");
+        await postClient.PublishAsync(post.Id!);
+        Console.WriteLine("Post published immediately!");
     }
 }

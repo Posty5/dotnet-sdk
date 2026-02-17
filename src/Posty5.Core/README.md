@@ -67,7 +67,7 @@ Install-Package Posty5.Core
 - `Posty5.ShortLink` - For URL shortening
 - `Posty5.QRCode` - For QR code generation
 - `Posty5.HtmlHosting` - For HTML page hosting
-- `Posty5.SocialPublisher` - For social media workspace and task management
+- `Posty5.SocialPublisher` - For social media workspace and post management
 
 For most use cases, you should install the specific tool package you need, which will automatically include `Posty5.Core` as a dependency.
 
@@ -148,10 +148,10 @@ var httpClient = serviceProvider.GetRequiredService<Posty5HttpClient>();
 
 ### Posty5Options
 
-| Property         | Type     | Default                    | Description                      |
-| ---------------- | -------- | -------------------------- | -------------------------------- |
-| `ApiKey`         | `string` | `""`                       | Your Posty5 API key (required)   |
-| `Debug`          | `bool`   | `false`                    | Enable debug logging             |
+| Property | Type     | Default | Description                    |
+| -------- | -------- | ------- | ------------------------------ |
+| `ApiKey` | `string` | `""`    | Your Posty5 API key (required) |
+| `Debug`  | `bool`   | `false` | Enable debug logging           |
 
 ---
 
@@ -263,16 +263,16 @@ var options = new Posty5Options
 
 This SDK ecosystem contains the following tool packages:
 
-| Package | Description | Version | NuGet |
-| --- | --- | --- | --- |
-| [Posty5.Core](../Posty5.Core) | Core HTTP client and models | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.Core) |
-| [Posty5.ShortLink](../Posty5.ShortLink) | URL shortener client | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.ShortLink) |
-| [Posty5.QRCode](../Posty5.QRCode) | QR code generator client | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.QRCode) |
-| [Posty5.HtmlHosting](../Posty5.HtmlHosting) | HTML hosting client | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHosting) |
-| [Posty5.HtmlHostingVariables](../Posty5.HtmlHostingVariables) | Variable management | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHostingVariables) |
-| [Posty5.HtmlHostingFormSubmission](../Posty5.HtmlHostingFormSubmission) | Form submission management | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHostingFormSubmission) |
-| [Posty5.SocialPublisherWorkspace](../Posty5.SocialPublisherWorkspace) | Social workspace management | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.SocialPublisherWorkspace) |
-| [Posty5.SocialPublisherTask](../Posty5.SocialPublisherTask) | Social publishing task client | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.SocialPublisherTask) |
+| Package                                                                 | Description                   | Version | NuGet                                                                       |
+| ----------------------------------------------------------------------- | ----------------------------- | ------- | --------------------------------------------------------------------------- |
+| [Posty5.Core](../Posty5.Core)                                           | Core HTTP client and models   | 1.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.Core)                      |
+| [Posty5.ShortLink](../Posty5.ShortLink)                                 | URL shortener client          | 1.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.ShortLink)                 |
+| [Posty5.QRCode](../Posty5.QRCode)                                       | QR code generator client      | 1.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.QRCode)                    |
+| [Posty5.HtmlHosting](../Posty5.HtmlHosting)                             | HTML hosting client           | 1.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHosting)               |
+| [Posty5.HtmlHostingVariables](../Posty5.HtmlHostingVariables)           | Variable management           | 1.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHostingVariables)      |
+| [Posty5.HtmlHostingFormSubmission](../Posty5.HtmlHostingFormSubmission) | Form submission management    | 1.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHostingFormSubmission) |
+| [Posty5.SocialPublisherWorkspace](../Posty5.SocialPublisherWorkspace)   | Social workspace management   | 1.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.SocialPublisherWorkspace)  |
+| [Posty5.SocialPublisherPost](../Posty5.SocialPublisherPost)             | Social publishing post client | 1.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.SocialPublisherPost)       |
 
 ---
 

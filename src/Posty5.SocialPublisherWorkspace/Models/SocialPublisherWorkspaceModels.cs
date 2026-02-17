@@ -241,9 +241,9 @@ public class DeleteResponse
 }
 
 /// <summary>
-/// Workspace details formatted for new task creation with populated account information
+/// Workspace details formatted for new post creation with populated account information
 /// </summary>
-public class SocialPublisherWorkspaceForNewTaskModel
+public class SocialPublisherWorkspaceForNewPostModel
 {
     /// <summary>
     /// MongoDB document ID

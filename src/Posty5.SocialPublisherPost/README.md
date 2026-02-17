@@ -1,6 +1,6 @@
-# Posty5.SocialPublisherTask
+# Posty5.SocialPublisherPost
 
-Official Posty5 SDK for managing social media publishing tasks. Publish videos to YouTube Shorts, TikTok, Facebook Reels, and Instagram Reels with a unified, developer-friendly C# API.
+Official Posty5 SDK for managing social media publishing posts. Publish videos to YouTube Shorts, TikTok, Facebook Reels, and Instagram Reels with a unified, developer-friendly C# API.
 
 ---
 
@@ -22,7 +22,7 @@ Posty5 empowers businesses, marketers, and developers to streamline their online
 
 ## 📦 About This Package
 
-`Posty5.SocialPublisherTask` is the **task management client** for the Posty5 Social Media Publisher. This package enables you to programmatically publish short-form videos to multiple social media platforms simultaneously from a single API call.
+`Posty5.SocialPublisherPost` is the **post management client** for the Posty5 Social Media Publisher. This package enables you to programmatically publish short-form videos to multiple social media platforms simultaneously from a single API call.
 
 ### Key Capabilities
 
@@ -32,10 +32,10 @@ Posty5 empowers businesses, marketers, and developers to streamline their online
 - **Platform-Specific Configuration** - Customize titles, descriptions, captions, tags, and privacy settings per platform
 - **Schedule Publishing** - Publish immediately or schedule for optimal engagement times
 - **Repost Detection** - Automatically detect and repost from Facebook, TikTok, and YouTube Shorts URLs
-- **Task Status Tracking** - Monitor publishing progress and platform-specific status
-- **Tag & Reference System** - Organize tasks using custom tags and reference IDs
+- **Post Status Tracking** - Monitor publishing progress and platform-specific status
+- **Tag & Reference System** - Organize posts using custom tags and reference IDs
 - **🔐 API Key Filtering** - Scope resources by API key for multi-tenant applications
-- **Pagination & Filtering** - Search tasks by workspace, status, tag, or reference ID
+- **Pagination & Filtering** - Search posts by workspace, status, tag, or reference ID
 
 ---
 
@@ -44,13 +44,13 @@ Posty5 empowers businesses, marketers, and developers to streamline their online
 Install via NuGet Package Manager:
 
 ```bash
-dotnet add package Posty5.SocialPublisherTask
+dotnet add package Posty5.SocialPublisherPost
 ```
 
 Or via Package Manager Console:
 
 ```powershell
-Install-Package Posty5.SocialPublisherTask
+Install-Package Posty5.SocialPublisherPost
 ```
 
 ---
@@ -62,8 +62,8 @@ Here's a minimal example to get you started:
 ```csharp
 using Posty5.Core.Configuration;
 using Posty5.Core.Http;
-using Posty5.SocialPublisherTask;
-using Posty5.SocialPublisherTask.Models;
+using Posty5.SocialPublisherPost;
+using Posty5.SocialPublisherPost.Models;
 
 // Initialize the HTTP client with your API key
 var options = new Posty5Options
@@ -72,14 +72,14 @@ var options = new Posty5Options
 };
 var httpClient = new Posty5HttpClient(options);
 
-// Create task client
-var client = new SocialPublisherTaskClient(httpClient);
+// Create post client
+var client = new SocialPublisherPostClient(httpClient);
 
 // Read video file
 using var videoStream = File.OpenRead("video.mp4");
 
 // Publish video to YouTube Shorts
-var taskId = await client.PublishShortVideoAsync(
+var postId = await client.PublishShortVideoAsync(
     workspaceId: "workspace-123", // Your workspace ID
     video: videoStream,
     platforms: new List<string> { "youtube" },
@@ -91,10 +91,10 @@ var taskId = await client.PublishShortVideoAsync(
     }
 );
 
-Console.WriteLine($"Task created: {taskId}");
+Console.WriteLine($"Post created: {postId}");
 
-// Check task status
-var status = await client.GetStatusAsync(taskId);
+// Check post status
+var status = await client.GetStatusAsync(postId);
 Console.WriteLine($"Publishing status: {status.CurrentStatus}");
 Console.WriteLine($"YouTube: {status.YouTube?.PostInfo?.CurrentStatus}");
 ```
@@ -105,7 +105,7 @@ Console.WriteLine($"YouTube: {status.YouTube?.PostInfo?.CurrentStatus}");
 
 ### PublishShortVideoAsync
 
-Publish a short video to one or more social media platforms. This is the main method for creating publishing tasks. It automatically detects video source type (Stream for file upload, string for URL or platform-specific repost URL) and handles all upload logic.
+Publish a short video to one or more social media platforms. This is the main method for creating publishing posts. It automatically detects video source type (Stream for file upload, string for URL or platform-specific repost URL) and handles all upload logic.
 
 **Parameters:**
 
@@ -123,7 +123,7 @@ Publish a short video to one or more social media platforms. This is the main me
 - `videoContentType` (string?, optional): Content type for video file (default: "video/mp4")
 - `thumbnailContentType` (string?, optional): Content type for thumbnail file
 
-**Returns:** `Task<string>` - Created task ID
+**Returns:** `Task<string>` - Created post ID
 
 #### Example - Upload Video File
 
@@ -131,7 +131,7 @@ Publish a short video to one or more social media platforms. This is the main me
 using var videoStream = File.OpenRead("video.mp4");
 using var thumbStream = File.OpenRead("thumb.jpg");
 
-var taskId = await client.PublishShortVideoAsync(
+var postId = await client.PublishShortVideoAsync(
     workspaceId: "workspace-123",
     video: videoStream,
     thumbnail: thumbStream,
@@ -147,14 +147,14 @@ var taskId = await client.PublishShortVideoAsync(
     refId: "PROD-LAUNCH-001"
 );
 
-Console.WriteLine($"Published to YouTube: {taskId}");
+Console.WriteLine($"Published to YouTube: {postId}");
 ```
 
 #### Example - Video URL with Thumbnail URL
 
 ```csharp
 // Publish using URLs (no file upload needed)
-var taskId = await client.PublishShortVideoAsync(
+var postId = await client.PublishShortVideoAsync(
     workspaceId: "workspace-123",
     video: "https://cdn.example.com/videos/promo.mp4",
     thumbnail: "https://cdn.example.com/images/thumb.jpg",
@@ -175,7 +175,7 @@ var taskId = await client.PublishShortVideoAsync(
     }
 );
 
-Console.WriteLine($"Published to YouTube and TikTok: {taskId}");
+Console.WriteLine($"Published to YouTube and TikTok: {postId}");
 ```
 
 #### Example - Multi-Platform Publishing
@@ -183,11 +183,11 @@ Console.WriteLine($"Published to YouTube and TikTok: {taskId}");
 ```csharp
 using var videoStream = File.OpenRead("video.mp4");
 
-var taskId = await client.PublishShortVideoAsync(
+var postId = await client.PublishShortVideoAsync(
     workspaceId: "workspace-123",
     video: videoStream,
     platforms: new List<string> { "youtube", "tiktok", "facebook", "instagram" },
-    
+
     // YouTube configuration
     youtube: new YouTubeConfig
     {
@@ -195,21 +195,21 @@ var taskId = await client.PublishShortVideoAsync(
         Description = "Step-by-step tutorial",
         Tags = new List<string> { "tutorial" }
     },
-    
+
     // TikTok configuration
     tiktok: new TikTokConfig
     {
         Caption = "Easy tutorial! 🎯 #Tutorial",
         PrivacyLevel = "public"
     },
-    
+
     // Facebook configuration
     facebook: new FacebookPageConfig
     {
         Title = "Product Tutorial",
         Description = "Learn in 60s"
     },
-    
+
     // Instagram configuration
     instagram: new InstagramConfig
     {
@@ -218,14 +218,14 @@ var taskId = await client.PublishShortVideoAsync(
     }
 );
 
-Console.WriteLine($"Published to all platforms: {taskId}");
+Console.WriteLine($"Published to all platforms: {postId}");
 ```
 
 #### Example - Repost from TikTok/YouTube/Facebook
 
 ```csharp
 // Automatically detect and repost from TikTok
-var taskId = await client.PublishShortVideoAsync(
+var postId = await client.PublishShortVideoAsync(
     workspaceId: "workspace-123",
     video: "https://www.tiktok.com/@username/video/1234567890", // TikTok URL
     platforms: new List<string> { "youtube" }, // Repost to YouTube
@@ -237,7 +237,7 @@ var taskId = await client.PublishShortVideoAsync(
     }
 );
 
-Console.WriteLine($"Reposted: {taskId}");
+Console.WriteLine($"Reposted: {postId}");
 ```
 
 #### Example - Scheduled Publishing
@@ -248,7 +248,7 @@ var publishDate = new DateTime(2024, 12, 25, 12, 0, 0, DateTimeKind.Utc);
 
 using var videoStream = File.OpenRead("video.mp4");
 
-var taskId = await client.PublishShortVideoAsync(
+var postId = await client.PublishShortVideoAsync(
     workspaceId: "workspace-123",
     video: videoStream,
     platforms: new List<string> { "youtube" },
@@ -259,35 +259,35 @@ var taskId = await client.PublishShortVideoAsync(
     }
 );
 
-Console.WriteLine($"Scheduled for {publishDate}: {taskId}");
+Console.WriteLine($"Scheduled for {publishDate}: {postId}");
 ```
 
 ---
 
 ### ListAsync
 
-Search and retrieve publishing tasks with pagination and filtering options.
+Search and retrieve publishing posts with pagination and filtering options.
 
 **Parameters:**
 
-- `listParams` (ListTasksParams?, optional): Filter criteria
+- `listParams` (ListPostsParams?, optional): Filter criteria
   - `WorkspaceId`, `CurrentStatus`, `Tag`, `RefId`, `Caption`, `Numbering`
 - `pagination` (PaginationParams?, optional)
 
-**Returns:** `Task<PaginationResponse<TaskModel>>`
+**Returns:** `Task<PaginationResponse<PostModel>>`
 
 **Example:**
 
 ```csharp
-var tasks = await client.ListAsync(
-    new ListTasksParams { WorkspaceId = "workspace-123" },
+var posts = await client.ListAsync(
+    new ListPostsParams { WorkspaceId = "workspace-123" },
     new PaginationParams { PageNumber = 1, PageSize = 20 }
 );
 
-Console.WriteLine($"Total tasks: {tasks.Pagination.TotalCount}");
-foreach (var task in tasks.Data)
+Console.WriteLine($"Total posts: {posts.Pagination.TotalCount}");
+foreach (var post in posts.Data)
 {
-    Console.WriteLine($"{task.Numbering}: {task.Caption} - {task.CurrentStatus}");
+    Console.WriteLine($"{post.Numbering}: {post.Caption} - {post.CurrentStatus}");
 }
 ```
 
@@ -295,18 +295,18 @@ foreach (var task in tasks.Data)
 
 ### GetStatusAsync
 
-Retrieve detailed status information for a specific publishing task.
+Retrieve detailed status information for a specific publishing post.
 
 **Parameters:**
 
-- `id` (string): Task ID
+- `id` (string): Post ID
 
-**Returns:** `Task<TaskStatusResponse>`
+**Returns:** `Task<PostStatusResponse>`
 
 **Example:**
 
 ```csharp
-var status = await client.GetStatusAsync("task-id");
+var status = await client.GetStatusAsync("post-id");
 
 Console.WriteLine($"Overall Status: {status.CurrentStatus}");
 
@@ -322,24 +322,24 @@ if (status.YouTube != null)
 
 ### GetNextAndPreviousAsync
 
-Get the IDs of the next and previous tasks for navigation purposes.
+Get the IDs of the next and previous posts for navigation purposes.
 
 **Parameters:**
 
-- `id` (string): Current task ID
+- `id` (string): Current post ID
 
 **Returns:** `Task<NextPreviousResponse>`
 
 **Example:**
 
 ```csharp
-var nav = await client.GetNextAndPreviousAsync("current-task-id");
+var nav = await client.GetNextAndPreviousAsync("current-post-id");
 
 if (nav.NextId != null)
-    Console.WriteLine($"Next task: {nav.NextId}");
+    Console.WriteLine($"Next post: {nav.NextId}");
 
 if (nav.PreviousId != null)
-    Console.WriteLine($"Previous task: {nav.PreviousId}");
+    Console.WriteLine($"Previous post: {nav.PreviousId}");
 ```
 
 ---
@@ -354,7 +354,7 @@ Retrieve default configuration settings for social media publishing.
 
 ```csharp
 var settings = await client.GetDefaultSettingsAsync();
-Console.WriteLine($"Max Video Size: {SocialPublisherTaskClient.MaxVideoUploadSizeBytes}");
+Console.WriteLine($"Max Video Size: {SocialPublisherPostClient.MaxVideoUploadSizeBytes}");
 ```
 
 ---
@@ -370,7 +370,7 @@ try
 }
 catch (Posty5NotFoundException)
 {
-    Console.WriteLine("Task not found");
+    Console.WriteLine("Post not found");
 }
 catch (Posty5Exception ex)
 {
@@ -392,16 +392,16 @@ catch (Posty5Exception ex)
 
 This SDK ecosystem contains the following tool packages:
 
-| Package | Description | Version | NuGet |
-| --- | --- | --- | --- |
-| [Posty5.Core](../Posty5.Core) | Core HTTP client and models | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.Core) |
-| [Posty5.ShortLink](../Posty5.ShortLink) | URL shortener client | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.ShortLink) |
-| [Posty5.QRCode](../Posty5.QRCode) | QR code generator client | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.QRCode) |
-| [Posty5.HtmlHosting](../Posty5.HtmlHosting) | HTML hosting client | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHosting) |
-| [Posty5.HtmlHostingVariables](../Posty5.HtmlHostingVariables) | Variable management | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHostingVariables) |
-| [Posty5.HtmlHostingFormSubmission](../Posty5.HtmlHostingFormSubmission) | Form submission management | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHostingFormSubmission) |
-| [Posty5.SocialPublisherWorkspace](../Posty5.SocialPublisherWorkspace) | Social workspace management | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.SocialPublisherWorkspace) |
-| [Posty5.SocialPublisherTask](../Posty5.SocialPublisherTask) | Social publishing task client | 1.0.0 | [📦 NuGet](https://www.nuget.org/packages/Posty5.SocialPublisherTask) |
+| Package                                                                 | Description                   | Version | NuGet                                                                       |
+| ----------------------------------------------------------------------- | ----------------------------- | ------- | --------------------------------------------------------------------------- |
+| [Posty5.Core](../Posty5.Core)                                           | Core HTTP client and models   | 1.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.Core)                      |
+| [Posty5.ShortLink](../Posty5.ShortLink)                                 | URL shortener client          | 1.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.ShortLink)                 |
+| [Posty5.QRCode](../Posty5.QRCode)                                       | QR code generator client      | 1.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.QRCode)                    |
+| [Posty5.HtmlHosting](../Posty5.HtmlHosting)                             | HTML hosting client           | 1.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHosting)               |
+| [Posty5.HtmlHostingVariables](../Posty5.HtmlHostingVariables)           | Variable management           | 1.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHostingVariables)      |
+| [Posty5.HtmlHostingFormSubmission](../Posty5.HtmlHostingFormSubmission) | Form submission management    | 1.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHostingFormSubmission) |
+| [Posty5.SocialPublisherWorkspace](../Posty5.SocialPublisherWorkspace)   | Social workspace management   | 1.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.SocialPublisherWorkspace)  |
+| [Posty5.SocialPublisherPost](../Posty5.SocialPublisherPost)             | Social publishing post client | 1.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.SocialPublisherPost)       |
 
 ---
 

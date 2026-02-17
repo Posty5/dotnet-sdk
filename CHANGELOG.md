@@ -24,7 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - Manage multiple pages
 - Posty5.SocialPublisher package for social media management
   - Workspace management
-  - Task creation and scheduling
+  - Post creation and scheduling
   - Multi-platform publishing support
 - Comprehensive error handling with custom exceptions
 - Retry logic with Polly for resilient HTTP requests

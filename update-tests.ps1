@@ -64,8 +64,8 @@ foreach ($file in $testFiles) {
     # HtmlHostingFormSubmission - Additional
     $content = $content -replace '\bFormStatusType\b', 'HtmlHostingFormSubmissionFormStatusType'
     
-    # SocialPublisherTask - Additional
-    $content = $content -replace '\bSocialPublisherTaskStatus\b', 'SocialPublisherTaskStatusType'
+    # SocialPublisherPost - Additional
+    $content = $content -replace '\bSocialPublisherPostStatus\b', 'SocialPublisherPostStatusType'
     
     Set-Content $file.FullName $content -NoNewline
 }

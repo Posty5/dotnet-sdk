@@ -19,7 +19,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
     #region Create Tests
 
     [Fact]
-    public async Task Create_WithValidKey_ShouldSucceed()
+    public async Post Create_WithValidKey_ShouldSucceed()
     {
         // Arrange
         var request = new HtmlHostingVariablesCreateRequestModel
@@ -35,7 +35,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
     }
 
     [Fact]
-    public async Task Create_WithInvalidKey_ShouldThrowArgumentException()
+    public async Post Create_WithInvalidKey_ShouldThrowArgumentException()
     {
         // Arrange
         var request = new HtmlHostingVariablesCreateRequestModel
@@ -55,7 +55,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
     }
 
     [Fact]
-    public async Task Create_WithTagAndRefId_ShouldSucceed()
+    public async Post Create_WithTagAndRefId_ShouldSucceed()
     {
         // Arrange
         var request = new HtmlHostingVariablesCreateRequestModel
@@ -72,7 +72,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
     }
 
     [Fact]
-    public async Task Create_EmptyKey_ShouldThrowArgumentException()
+    public async Post Create_EmptyKey_ShouldThrowArgumentException()
     {
         // Arrange
         var request = new HtmlHostingVariablesCreateRequestModel
@@ -91,7 +91,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
     }
 
     [Fact]
-    public async Task Create_KeyStartingWithPst5_ShouldSucceed()
+    public async Post Create_KeyStartingWithPst5_ShouldSucceed()
     {
         // Arrange
         var request = new HtmlHostingVariablesCreateRequestModel
@@ -110,7 +110,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
     #region Get Tests
 
     [Fact]
-    public async Task Get_WithValidId_ShouldReturnVariable()
+    public async Post Get_WithValidId_ShouldReturnVariable()
     {
         // Arrange - Create a variable first
         var createRequest = new HtmlHostingVariablesCreateRequestModel
@@ -150,7 +150,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
     #region Update Tests
 
     [Fact]
-    public async Task Update_WithValidKey_ShouldSucceed()
+    public async Post Update_WithValidKey_ShouldSucceed()
     {
         // Arrange - Create a variable first
         var createRequest = new HtmlHostingVariablesCreateRequestModel
@@ -191,7 +191,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
     }
 
     [Fact]
-    public async Task Update_WithInvalidKey_ShouldThrowArgumentException()
+    public async Post Update_WithInvalidKey_ShouldThrowArgumentException()
     {
         // Arrange - Create a variable first
         var createRequest = new HtmlHostingVariablesCreateRequestModel
@@ -228,7 +228,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
     }
 
     [Fact]
-    public async Task Update_ChangeTagAndRefId_ShouldSucceed()
+    public async Post Update_ChangeTagAndRefId_ShouldSucceed()
     {
         // Arrange - Create a variable
         var createRequest = new HtmlHostingVariablesCreateRequestModel
@@ -274,7 +274,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
     #region Delete Tests
 
     [Fact]
-    public async Task Delete_WithValidId_ShouldSucceed()
+    public async Post Delete_WithValidId_ShouldSucceed()
     {
         // Arrange - Create a variable
         var createRequest = new HtmlHostingVariablesCreateRequestModel
@@ -304,7 +304,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
     #region List Tests
 
     [Fact]
-    public async Task List_WithoutFilters_ShouldReturnPaginatedResults()
+    public async Post List_WithoutFilters_ShouldReturnPaginatedResults()
     {
         // Act
         var result = await _client.ListAsync(
@@ -318,7 +318,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
     }
 
     [Fact]
-    public async Task List_FilterByTag_ShouldReturnMatchingVariables()
+    public async Post List_FilterByTag_ShouldReturnMatchingVariables()
     {
         // Arrange
         var uniqueTag = $"tag_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
@@ -351,7 +351,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
     }
 
     [Fact]
-    public async Task List_FilterByKey_ShouldReturnMatchingVariables()
+    public async Post List_FilterByKey_ShouldReturnMatchingVariables()
     {
         // Arrange
         var keyPrefix = $"pst5_key_filter_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
@@ -375,7 +375,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
     }
 
     [Fact]
-    public async Task List_FilterByName_ShouldReturnMatchingVariables()
+    public async Post List_FilterByName_ShouldReturnMatchingVariables()
     {
         // Arrange
         var uniqueName = $"NameFilter_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
@@ -398,7 +398,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
     }
 
     [Fact]
-    public async Task List_FilterByRefId_ShouldReturnMatchingVariables()
+    public async Post List_FilterByRefId_ShouldReturnMatchingVariables()
     {
         // Arrange
         var uniqueRef = $"ref_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
@@ -423,7 +423,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
     }
 
     [Fact]
-    public async Task List_WithMultipleFilters_ShouldCombineFilters()
+    public async Post List_WithMultipleFilters_ShouldCombineFilters()
     {
         // Arrange
         var tag = $"multi_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
@@ -457,7 +457,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
     }
 
     [Fact]
-    public async Task List_WithPagination_ShouldRespectPageSize()
+    public async Post List_WithPagination_ShouldRespectPageSize()
     {
         // Act
         var result = await _client.ListAsync(
@@ -474,7 +474,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
     #region Workflow Tests
 
     [Fact]
-    public async Task CompleteWorkflow_CreateGetUpdateDelete_ShouldSucceed()
+    public async Post CompleteWorkflow_CreateGetUpdateDelete_ShouldSucceed()
     {
         // Create
         var createRequest = new HtmlHostingVariablesCreateRequestModel
@@ -525,7 +525,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
     #region Edge Cases
 
     [Fact]
-    public async Task Create_WithSpecialCharactersInValue_ShouldSucceed()
+    public async Post Create_WithSpecialCharactersInValue_ShouldSucceed()
     {
         // Arrange
         var request = new HtmlHostingVariablesCreateRequestModel
@@ -540,7 +540,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
     }
 
     [Fact]
-    public async Task Create_WithLongValue_ShouldSucceed()
+    public async Post Create_WithLongValue_ShouldSucceed()
     {
         // Arrange
         var longValue = new string('x', 1000);

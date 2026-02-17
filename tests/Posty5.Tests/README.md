@@ -10,7 +10,7 @@ The test suite includes the following test classes:
 - **ShortLinkClientTests.cs** - Tests for URL shortening with custom slugs and pagination
 - **HtmlHostingClientTests.cs** - Tests for HTML page hosting including file uploads
 - **SocialPublisherWorkspaceTests.cs** - Tests for social media workspace management
-- **SocialPublisherTaskTests.cs** - Tests for social media task scheduling and publishing
+- **SocialPublisherPostTests.cs** - Tests for social media post scheduling and publishing
 
 Each test class covers:
 
@@ -124,7 +124,7 @@ TestConfig.CreatedResources.QRCodes.Add(result.Id);
 TestConfig.CreatedResources.ShortLinks.Add(result.Id);
 TestConfig.CreatedResources.HtmlHostings.Add(result.Id);
 TestConfig.CreatedResources.Workspaces.Add(result.Id);
-TestConfig.CreatedResources.Tasks.Add(result.Id);
+TestConfig.CreatedResources.Posts.Add(result.Id);
 ```
 
 Some tests automatically delete resources as part of their test flow, but you may want to manually clean up test data periodically.
@@ -171,7 +171,7 @@ Coverage by client:
 - ShortLink: 8 tests
 - HtmlHosting: 8 tests
 - Social Publisher Workspace: 7 tests
-- Social Publisher Task: 10 tests
+- Social Publisher Post: 10 tests
 
 ## Troubleshooting
 

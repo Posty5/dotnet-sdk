@@ -2,7 +2,7 @@ using Posty5.Core.Converts;
 using System.Text.Json.Serialization;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
-namespace Posty5.SocialPublisherTask.Models;
+namespace Posty5.SocialPublisherPost.Models;
 
 // ============================================================================
 // HELPER MODELS
@@ -30,9 +30,9 @@ public class StatusHistoryGroupedDay
 public class StatusHistoryItem
 {
     /// <summary>
-    /// Task status
+    /// Post status
     /// </summary>
-    public SocialPublisherTaskStatusType Status { get; set; }
+    public SocialPublisherPostStatusType Status { get; set; }
     
     /// <summary>
     /// Error message (if any)
@@ -153,7 +153,7 @@ public class PostInfoModel
     /// <summary>
     /// Current status for this platform
     /// </summary>
-    public SocialPublisherTaskStatusType CurrentStatus { get; set; }
+    public SocialPublisherPostStatusType CurrentStatus { get; set; }
     
     /// <summary>
     /// Status history grouped by day
@@ -459,9 +459,9 @@ public class ScheduleConfig
 // ============================================================================
 
 /// <summary>
-/// Task settings for publishing
+/// Post settings for publishing
 /// </summary>
-public class TaskSettings
+public class PostSettings
 {
     /// <summary>
     /// Workspace ID (optional if AccountId is set)
@@ -535,9 +535,9 @@ public class TaskSettings
 }
 
 /// <summary>
-/// Create social publisher task request
+/// Create social publisher post request
 /// </summary>
-public class CreateSocialPublisherTaskRequest
+public class CreateSocialPublisherPostRequest
 {
     /// <summary>
     /// Workspace ID (required)
@@ -622,9 +622,9 @@ public class CreateSocialPublisherTaskRequest
 }
 
 /// <summary>
-/// Create social publisher task to account request
+/// Create social publisher post to account request
 /// </summary>
-public class CreateSocialPublisherAccountTaskRequest
+public class CreateSocialPublisherAccountPostRequest
 {
     /// <summary>
     /// Account ID (required)
@@ -724,9 +724,9 @@ public class GenerateUploadUrlsRequest
 }
 
 /// <summary>
-/// Parameters for listing/filtering tasks
+/// Parameters for listing/filtering posts
 /// </summary>
-public class ListTasksParams
+public class ListPostsParams
 {
     /// <summary>
     /// Filter by caption/title
@@ -734,14 +734,14 @@ public class ListTasksParams
     public string? Caption { get; set; }
     
     /// <summary>
-    /// Filter by task numbering
+    /// Filter by Post numbering
     /// </summary>
     public string? Numbering { get; set; }
     
     /// <summary>
     /// Filter by status (pending, processing, published, failed)
     /// </summary>
-    public SocialPublisherTaskStatusType? CurrentStatus { get; set; }
+    public SocialPublisherPostStatusType? CurrentStatus { get; set; }
     
     /// <summary>
     /// Filter by workspace ID
@@ -814,9 +814,9 @@ public class UploadUrlInfo
 public class GenerateUploadUrlsResponse
 {
     /// <summary>
-    /// Task ID
+    /// Post ID
     /// </summary>
-    public string TaskId { get; set; } = string.Empty;
+    public string PostId { get; set; } = string.Empty;
     
     /// <summary>
     /// Thumbnail upload information
@@ -834,9 +834,9 @@ public class GenerateUploadUrlsResponse
 // ============================================================================
 
 /// <summary>
-/// Simplified task model for list operations
+/// Simplified post model for list operations
 /// </summary>
-public class TaskModel
+public class PostModel
 {
     /// <summary>
     /// MongoDB document ID
@@ -845,12 +845,12 @@ public class TaskModel
     public string Id { get; set; } = string.Empty;
     
     /// <summary>
-    /// Task numbering/identifier
+    /// Post numbering/identifier
     /// </summary>
     public string Numbering { get; set; } = string.Empty;
     
     /// <summary>
-    /// Task caption/title
+    /// Post caption/title
     /// </summary>
     public string Caption { get; set; } = string.Empty;
     
@@ -860,9 +860,9 @@ public class TaskModel
     public DateTime CreatedAt { get; set; }
     
     /// <summary>
-    /// Current task status
+    /// Current post status
     /// </summary>
-    public SocialPublisherTaskStatusType CurrentStatus { get; set; } 
+    public SocialPublisherPostStatusType CurrentStatus { get; set; } 
      
     /// <summary>
     /// External reference ID
@@ -875,12 +875,12 @@ public class TaskModel
     public string? Tag { get; set; }
  
     
-    public TaskModelIsAllowAccount IisAllow { get; set; }
-    public TaskModeWorkspace Workspace { get; set; }
+    public PostModelIsAllowAccount IisAllow { get; set; }
+    public PostModeWorkspace Workspace { get; set; }
     public ScheduleConfig Schedule { get; set; }
 }
 
-public class TaskModelIsAllowAccount
+public class PostModelIsAllowAccount
 {
     public bool Youtube { get; set; }
     public bool Facebook { get; set; }
@@ -888,7 +888,7 @@ public class TaskModelIsAllowAccount
     public bool Tiktok { get; set; }
 }
 
-public class TaskModeWorkspace
+public class PostModeWorkspace
 {
     [JsonPropertyName("_id")]
     public string Id { get; set; }
@@ -897,9 +897,9 @@ public class TaskModeWorkspace
 
 
 /// <summary>
-/// Task status response with full details for status page
+/// Post status response with full details for status page
 /// </summary>
-public class TaskStatusFullDetailsResponse
+public class PostStatusFullDetailsResponse
 {
     /// <summary>
     /// MongoDB document ID
@@ -913,12 +913,12 @@ public class TaskStatusFullDetailsResponse
     public object? User { get; set; }
     
     /// <summary>
-    /// Task numbering
+    /// Post numbering
     /// </summary>
     public string Numbering { get; set; } = string.Empty;
     
     /// <summary>
-    /// Task type (shortVideo)
+    /// Post type (shortVideo)
     /// </summary>
     public string Type { get; set; } = string.Empty;
     
@@ -933,9 +933,9 @@ public class TaskStatusFullDetailsResponse
     public SourceURLsModel SourceURLs { get; set; } = new();
     
     /// <summary>
-    /// Current task status
+    /// Current post status
     /// </summary>
-    public SocialPublisherTaskStatusType CurrentStatus { get; set; }
+    public SocialPublisherPostStatusType CurrentStatus { get; set; }
     
     /// <summary>
     /// Current error message
@@ -996,7 +996,7 @@ public class TaskStatusFullDetailsResponse
 }
 
 /// <summary>
-/// Source URLs for task media
+/// Source URLs for post media
 /// </summary>
 public class SourceURLsModel
 {
@@ -1017,9 +1017,9 @@ public class SourceURLsModel
 }
 
 /// <summary>
-/// Task status response (simplified, for backward compatibility)
+/// Post status response (simplified, for backward compatibility)
 /// </summary>
-public class TaskStatusResponse
+public class PostStatusResponse
 {
     /// <summary>
     /// MongoDB document ID
@@ -1028,12 +1028,12 @@ public class TaskStatusResponse
     public string Id { get; set; } = string.Empty;
     
     /// <summary>
-    /// Task numbering
+    /// Post numbering
     /// </summary>
     public string Numbering { get; set; } = string.Empty;
     
     /// <summary>
-    /// Task type (shortVideo)
+    /// Post type (shortVideo)
     /// </summary>
     public string Type { get; set; } = string.Empty;
     
@@ -1043,9 +1043,9 @@ public class TaskStatusResponse
     public string Source { get; set; } = string.Empty;
     
     /// <summary>
-    /// Current task status
+    /// Current post status
     /// </summary>
-    public SocialPublisherTaskStatusType CurrentStatus { get; set; }
+    public SocialPublisherPostStatusType CurrentStatus { get; set; }
     
     /// <summary>
     /// Current error message
@@ -1069,17 +1069,17 @@ public class TaskStatusResponse
 }
 
 /// <summary>
-/// Next and previous task IDs for navigation
+/// Next and previous post IDs for navigation
 /// </summary>
 public class NextPreviousResponse
 {
     /// <summary>
-    /// Next task ID
+    /// Next post ID
     /// </summary>
     public string? NextId { get; set; }
     
     /// <summary>
-    /// Previous task ID
+    /// Previous post ID
     /// </summary>
     public string? PreviousId { get; set; }
 }
@@ -1094,63 +1094,63 @@ public class DefaultSettingsResponse
     public Dictionary<string, object>? ExtensionData { get; set; }
 }
 
-[JsonConverter(typeof(StringValueObjectConverter<SocialPublisherTaskStatusType>))]
-public readonly record struct SocialPublisherTaskStatusType (string Value)
+[JsonConverter(typeof(StringValueObjectConverter<SocialPublisherPostStatusType>))]
+public readonly record struct SocialPublisherPostStatusType (string Value)
 {
     /// <summary>
     /// The video is waiting in the queue and hasn't been processed yet.
     /// </summary>
-    public static readonly SocialPublisherTaskStatusType Pending = new("pending");
+    public static readonly SocialPublisherPostStatusType Pending = new("pending");
 
     /// <summary>
     /// The video is currently being uploaded by the job system.
     /// </summary>
-    public static readonly SocialPublisherTaskStatusType Processing = new("processing");
+    public static readonly SocialPublisherPostStatusType Processing = new("processing");
 
     /// <summary>
     /// In Instagram and TikTok, the file is sent in one step and published in another step.
     /// </summary>
-    public static readonly SocialPublisherTaskStatusType ProcessingInPlatform = new("processingInPlatform");
+    public static readonly SocialPublisherPostStatusType ProcessingInPlatform = new("processingInPlatform");
 
     /// <summary>
     /// The video was sent to the platform but an error occurred during platform processing.
     /// </summary>
-    public static readonly SocialPublisherTaskStatusType FailedByPlatform = new("failedByPlatform");
+    public static readonly SocialPublisherPostStatusType FailedByPlatform = new("failedByPlatform");
 
     /// <summary>
     /// The video was successfully uploaded.
     /// </summary>
-    public static readonly SocialPublisherTaskStatusType Done = new("done");
+    public static readonly SocialPublisherPostStatusType Done = new("done");
 
     /// <summary>
     /// The upload failed due to an error (network, API failure, etc.).
     /// </summary>
-    public static readonly SocialPublisherTaskStatusType Error = new("error");
+    public static readonly SocialPublisherPostStatusType Error = new("error");
 
     /// <summary>
     /// The user or system canceled the upload before it started.
     /// </summary>
-    public static readonly SocialPublisherTaskStatusType Canceled = new("canceled");
+    public static readonly SocialPublisherPostStatusType Canceled = new("canceled");
 
     /// <summary>
-    /// The task requires maintenance because some platform has issues.
+    /// The post requires maintenance because some platform has issues.
     /// </summary>
-    public static readonly SocialPublisherTaskStatusType NeedsMaintenance = new("needsMaintenance");
+    public static readonly SocialPublisherPostStatusType NeedsMaintenance = new("needsMaintenance");
 
     /// <summary>
     /// The provided video URL is invalid or inaccessible.
     /// </summary>
-    public static readonly SocialPublisherTaskStatusType InvalidVideoURL = new("invalidVideoURL");
+    public static readonly SocialPublisherPostStatusType InvalidVideoURL = new("invalidVideoURL");
 
     /// <summary>
     /// The platform video URL (Facebook, TikTok, YouTube) is invalid or inaccessible.
     /// </summary>
-    public static readonly SocialPublisherTaskStatusType InvalidPostVideoURL = new("invalidPostVideoURL");
+    public static readonly SocialPublisherPostStatusType InvalidPostVideoURL = new("invalidPostVideoURL");
 
     /// <summary>
-    /// The task is being retried after an error.
+    /// The post is being retried after an error.
     /// </summary>
-    public static readonly SocialPublisherTaskStatusType Retrying = new("retrying");
+    public static readonly SocialPublisherPostStatusType Retrying = new("retrying");
 
     //private static readonly HashSet<string> Allowed = new()
     //{
@@ -1167,12 +1167,12 @@ public readonly record struct SocialPublisherTaskStatusType (string Value)
     //    "retrying"
     //};
 
-    //public static SocialPublisherTaskStatusType From (string value)
+    //public static SocialPublisherPostStatusType From (string value)
     //{
     //    if (!Allowed.Contains(value))
-    //        throw new ArgumentException($"Invalid SocialPublisherTaskStatusType: {value}");
+    //        throw new ArgumentException($"Invalid SocialPublisherPostStatusType: {value}");
 
-    //    return new SocialPublisherTaskStatusType(value);
+    //    return new SocialPublisherPostStatusType(value);
     //}
 
     public override string ToString ( ) => Value;

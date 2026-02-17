@@ -20,7 +20,7 @@ public class QRCodeClientTests : IDisposable
     #region Free Text QR Code Tests
 
     [Fact]
-    public async Task CreateFreeText_ShouldReturnValidQRCode()
+    public async Post CreateFreeText_ShouldReturnValidQRCode()
     {
         // Arrange
         var request = new QRCodeCreateFreeTextRequestModel
@@ -45,7 +45,7 @@ public class QRCodeClientTests : IDisposable
     }
 
     [Fact]
-    public async Task UpdateFreeText_ShouldUpdateSuccessfully()
+    public async Post UpdateFreeText_ShouldUpdateSuccessfully()
     {
         // Arrange - Create first
         var createRequest = new QRCodeCreateFreeTextRequestModel
@@ -77,7 +77,7 @@ public class QRCodeClientTests : IDisposable
     #region Email QR Code Tests
 
     [Fact]
-    public async Task CreateEmail_ShouldReturnValidQRCode()
+    public async Post CreateEmail_ShouldReturnValidQRCode()
     {
         // Arrange
         var request = new QRCodeCreateEmailRequestModel
@@ -105,7 +105,7 @@ public class QRCodeClientTests : IDisposable
     }
 
     [Fact]
-    public async Task UpdateEmail_ShouldUpdateSuccessfully()
+    public async Post UpdateEmail_ShouldUpdateSuccessfully()
     {
         // Arrange - Create first
         var createRequest = new QRCodeCreateEmailRequestModel
@@ -146,7 +146,7 @@ public class QRCodeClientTests : IDisposable
     #region WiFi QR Code Tests
 
     [Fact]
-    public async Task CreateWifi_ShouldReturnValidQRCode()
+    public async Post CreateWifi_ShouldReturnValidQRCode()
     {
         // Arrange
         var request = new QRCodeCreateWifiRequestModel
@@ -174,7 +174,7 @@ public class QRCodeClientTests : IDisposable
     }
 
     [Fact]
-    public async Task UpdateWifi_ShouldUpdateSuccessfully()
+    public async Post UpdateWifi_ShouldUpdateSuccessfully()
     {
         // Arrange - Create first
         var createRequest = new QRCodeCreateWifiRequestModel
@@ -215,7 +215,7 @@ public class QRCodeClientTests : IDisposable
     #region Phone Call QR Code Tests
 
     [Fact]
-    public async Task CreateCall_ShouldReturnValidQRCode()
+    public async Post CreateCall_ShouldReturnValidQRCode()
     {
         // Arrange
         var request = new QRCodeCreateCallRequestModel
@@ -241,7 +241,7 @@ public class QRCodeClientTests : IDisposable
     }
 
     [Fact]
-    public async Task UpdateCall_ShouldUpdateSuccessfully()
+    public async Post UpdateCall_ShouldUpdateSuccessfully()
     {
         // Arrange - Create first
         var createRequest = new QRCodeCreateCallRequestModel
@@ -278,7 +278,7 @@ public class QRCodeClientTests : IDisposable
     #region SMS QR Code Tests
 
     [Fact]
-    public async Task CreateSMS_ShouldReturnValidQRCode()
+    public async Post CreateSMS_ShouldReturnValidQRCode()
     {
         // Arrange
         var request = new QRCodeCreateSMSRequestModel
@@ -305,7 +305,7 @@ public class QRCodeClientTests : IDisposable
     }
 
     [Fact]
-    public async Task UpdateSMS_ShouldUpdateSuccessfully()
+    public async Post UpdateSMS_ShouldUpdateSuccessfully()
     {
         // Arrange - Create first
         var createRequest = new QRCodeCreateSMSRequestModel
@@ -344,7 +344,7 @@ public class QRCodeClientTests : IDisposable
     #region URL QR Code Tests
 
     [Fact]
-    public async Task CreateURL_ShouldReturnValidQRCode()
+    public async Post CreateURL_ShouldReturnValidQRCode()
     {
         // Arrange
         var request = new QRCodeCreateURLRequestModel
@@ -374,7 +374,7 @@ public class QRCodeClientTests : IDisposable
     }
 
     [Fact]
-    public async Task CreateURL_WithCustomLandingId_ShouldContainSlug()
+    public async Post CreateURL_WithCustomLandingId_ShouldContainSlug()
     {
         // Arrange
         var customSlug = $"test-qr-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
@@ -401,7 +401,7 @@ public class QRCodeClientTests : IDisposable
     }
 
     [Fact]
-    public async Task UpdateURL_ShouldUpdateSuccessfully()
+    public async Post UpdateURL_ShouldUpdateSuccessfully()
     {
         // Arrange - Create first
         var createRequest = new QRCodeCreateURLRequestModel
@@ -438,7 +438,7 @@ public class QRCodeClientTests : IDisposable
     #region Geolocation QR Code Tests
 
     [Fact]
-    public async Task CreateGeolocation_ShouldReturnValidQRCode()
+    public async Post CreateGeolocation_ShouldReturnValidQRCode()
     {
         // Arrange
         var request = new QRCodeCreateGeolocationRequestModel
@@ -465,7 +465,7 @@ public class QRCodeClientTests : IDisposable
     }
 
     [Fact]
-    public async Task UpdateGeolocation_ShouldUpdateSuccessfully()
+    public async Post UpdateGeolocation_ShouldUpdateSuccessfully()
     {
         // Arrange - Create first
         var createRequest = new QRCodeCreateGeolocationRequestModel
@@ -504,7 +504,7 @@ public class QRCodeClientTests : IDisposable
     #region CRUD Tests
 
     [Fact]
-    public async Task GetQRCodeById_WithValidId_ShouldReturnQRCode()
+    public async Post GetQRCodeById_WithValidId_ShouldReturnQRCode()
     {
         // Arrange - Create a QR code first
         var createRequest = new QRCodeCreateURLRequestModel
@@ -527,7 +527,7 @@ public class QRCodeClientTests : IDisposable
     }
 
     [Fact]
-    public async Task ListQRCodes_ShouldReturnPaginatedResults()
+    public async Post ListQRCodes_ShouldReturnPaginatedResults()
     {
         // Act
         var result = await _client.ListAsync(
@@ -540,7 +540,7 @@ public class QRCodeClientTests : IDisposable
     }
 
     [Fact]
-    public async Task ListQRCodes_WithFilters_ShouldFilterResults()
+    public async Post ListQRCodes_WithFilters_ShouldFilterResults()
     {
         // Arrange
         var tag = $"test-tag-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
@@ -573,7 +573,7 @@ public class QRCodeClientTests : IDisposable
     }
 
     [Fact]
-    public async Task ListQRCodes_WithRefIdFilter_ShouldFilterResults()
+    public async Post ListQRCodes_WithRefIdFilter_ShouldFilterResults()
     {
         // Arrange
         var refId = $"REF-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
@@ -606,7 +606,7 @@ public class QRCodeClientTests : IDisposable
     }
 
     [Fact]
-    public async Task DeleteQRCode_ShouldDeleteSuccessfully()
+    public async Post DeleteQRCode_ShouldDeleteSuccessfully()
     {
         // Arrange - Create a QR code first
         var createRequest = new QRCodeCreateURLRequestModel
@@ -630,7 +630,7 @@ public class QRCodeClientTests : IDisposable
     #region Advanced Features Tests
 
     [Fact]
-    public async Task CreateQRCode_WithMonetization_ShouldIncludePageInfo()
+    public async Post CreateQRCode_WithMonetization_ShouldIncludePageInfo()
     {
         // Arrange
         var request = new QRCodeCreateURLRequestModel
