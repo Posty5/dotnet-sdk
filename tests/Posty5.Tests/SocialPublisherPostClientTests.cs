@@ -44,7 +44,7 @@ public class SocialPublisherPostClientTests : IDisposable
     #region CREATE - Video File Upload Tests
 
     [Fact]
-    public async Post PublishShortVideo_VideoFileWithThumbnailURL_ShouldSucceed()
+    public async Task PublishShortVideo_VideoFileWithThumbnailURL_ShouldSucceed()
     {
         // Arrange
         using var videoStream = File.OpenRead(_testVideoPath);
@@ -72,7 +72,7 @@ public class SocialPublisherPostClientTests : IDisposable
     }
 
     [Fact]
-    public async Post PublishShortVideo_VideoFileWithThumbnailFile_ShouldSucceed()
+    public async Task PublishShortVideo_VideoFileWithThumbnailFile_ShouldSucceed()
     {
         // Arrange
         using var videoStream = File.OpenRead(_testVideoPath);
@@ -106,7 +106,7 @@ public class SocialPublisherPostClientTests : IDisposable
     #region CREATE - Video URL Tests
 
     [Fact]
-    public async Post PublishShortVideo_VideoURLWithThumbnailFile_ShouldSucceed()
+    public async Task PublishShortVideo_VideoURLWithThumbnailFile_ShouldSucceed()
     {
         // Arrange
         using var thumbStream = File.OpenRead(_testThumbnailPath);
@@ -132,7 +132,7 @@ public class SocialPublisherPostClientTests : IDisposable
     }
 
     [Fact]
-    public async Post PublishShortVideo_VideoURLWithThumbnailURL_MultiPlatform_ShouldSucceed()
+    public async Task PublishShortVideo_VideoURLWithThumbnailURL_MultiPlatform_ShouldSucceed()
     {
         // Act - Multi-platform publishing
         var postId = await _client.PublishShortVideoToWorkspaceAsync(
@@ -166,7 +166,7 @@ public class SocialPublisherPostClientTests : IDisposable
     #region CREATE - Repost Tests (Auto-Detection)
 
     [Fact]
-    public async Post PublishShortVideo_FacebookReelURL_ShouldAutoDetectAndRepost()
+    public async Task PublishShortVideo_FacebookReelURL_ShouldAutoDetectAndRepost()
     {
         // Act - Auto-detects Facebook repost
         var postId = await _client.PublishShortVideoToWorkspaceAsync(
@@ -187,7 +187,7 @@ public class SocialPublisherPostClientTests : IDisposable
     }
 
     [Fact]
-    public async Post PublishShortVideo_YouTubeShortsURL_ShouldAutoDetectAndRepost()
+    public async Task PublishShortVideo_YouTubeShortsURL_ShouldAutoDetectAndRepost()
     {
         // Act - Auto-detects YouTube Shorts repost
         var postId = await _client.PublishShortVideoToWorkspaceAsync(
@@ -210,7 +210,7 @@ public class SocialPublisherPostClientTests : IDisposable
     }
 
     [Fact]
-    public async Post PublishShortVideo_TikTokVideoURL_ShouldAutoDetectAndRepost()
+    public async Task PublishShortVideo_TikTokVideoURL_ShouldAutoDetectAndRepost()
     {
         // Act - Auto-detects TikTok repost
         var postId = await _client.PublishShortVideoToWorkspaceAsync(
@@ -235,7 +235,7 @@ public class SocialPublisherPostClientTests : IDisposable
     #region CREATE - Account Tests
 
     [Fact]
-    public async Post PublishShortVideoToAccount_VideoFile_ShouldSucceed()
+    public async Task PublishShortVideoToAccount_VideoFile_ShouldSucceed()
     {
         // Arrange
         using var videoStream = File.OpenRead(_testVideoPath);
@@ -262,7 +262,7 @@ public class SocialPublisherPostClientTests : IDisposable
     }
 
     [Fact]
-    public async Post PublishShortVideoToAccount_VideoURL_ShouldSucceed()
+    public async Task PublishShortVideoToAccount_VideoURL_ShouldSucceed()
     {
         // Arrange
         using var thumbStream = File.OpenRead(_testThumbnailPath);
@@ -288,7 +288,7 @@ public class SocialPublisherPostClientTests : IDisposable
     }
 
     [Fact]
-    public async Post PublishShortVideoToAccount_Repost_ShouldSucceed()
+    public async Task PublishShortVideoToAccount_Repost_ShouldSucceed()
     {
         // Act
         var postId = await _client.PublishShortVideoToAccountAsync(
@@ -312,7 +312,7 @@ public class SocialPublisherPostClientTests : IDisposable
     #region Utility Method Tests
 
     [Fact]
-    public async Post GetDefaultSettings_ShouldReturnSettings()
+    public async Task GetDefaultSettings_ShouldReturnSettings()
     {
         // Act
         var result = await _client.GetDefaultSettingsAsync();
@@ -322,7 +322,7 @@ public class SocialPublisherPostClientTests : IDisposable
     }
 
     [Fact]
-    public async Post GetStatus_WithValidId_ShouldReturnStatus()
+    public async Task GetStatus_WithValidId_ShouldReturnStatus()
     {
         // Arrange
         if (_createdPostId == null)
@@ -340,7 +340,7 @@ public class SocialPublisherPostClientTests : IDisposable
     }
 
     [Fact]
-    public async Post GetNextAndPrevious_WithValidId_ShouldReturnNavigation()
+    public async Task GetNextAndPrevious_WithValidId_ShouldReturnNavigation()
     {
         // Arrange
         if (_createdPostId == null)
@@ -361,7 +361,7 @@ public class SocialPublisherPostClientTests : IDisposable
     #region List and Filter Tests
 
     [Fact]
-    public async Post List_WithPagination_ShouldReturnResults()
+    public async Task List_WithPagination_ShouldReturnResults()
     {
         // Act
         var result = await _client.ListAsync(
@@ -376,7 +376,7 @@ public class SocialPublisherPostClientTests : IDisposable
     }
 
     [Fact]
-    public async Post List_FilterByWorkspace_ShouldReturnFilteredResults()
+    public async Task List_FilterByWorkspace_ShouldReturnFilteredResults()
     {
         // Arrange
         var filterParams = new ListPostsParams
@@ -396,7 +396,7 @@ public class SocialPublisherPostClientTests : IDisposable
     }
 
     [Fact]
-    public async Post List_FilterByStatus_ShouldReturnFilteredResults()
+    public async Task List_FilterByStatus_ShouldReturnFilteredResults()
     {
         // Arrange
         var filterParams = new ListPostsParams
@@ -420,7 +420,7 @@ public class SocialPublisherPostClientTests : IDisposable
     #region Advanced Tests
 
     [Fact]
-    public async Post PublishShortVideo_WithScheduling_ShouldSucceed()
+    public async Task PublishShortVideo_WithScheduling_ShouldSucceed()
     {
         // Arrange
         var scheduleDate = DateTime.UtcNow.AddHours(2);
@@ -445,7 +445,7 @@ public class SocialPublisherPostClientTests : IDisposable
     }
 
     [Fact]
-    public async Post PublishShortVideo_WithTagAndRefId_ShouldSucceed()
+    public async Task PublishShortVideo_WithTagAndRefId_ShouldSucceed()
     {
         // Act
         var postId = await _client.PublishShortVideoToWorkspaceAsync(

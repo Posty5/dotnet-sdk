@@ -193,7 +193,7 @@ public class SocialPublisherWorkspaceClient
     /// await client.UpdateAsync("workspace-id", request, newLogo);
     /// </code>
     /// </example>
-    public async Post UpdateAsync(
+    public async Task UpdateAsync(
         string id,
         SocialPublisherWorkspaceUpdateRequestModel data,
         Stream? logoStream = null,
@@ -241,7 +241,7 @@ public class SocialPublisherWorkspaceClient
     /// <param name="imageStream">Image stream to upload</param>
     /// <param name="contentType">Content type of the image</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    private async Post UploadImageAsync(
+    private async Task UploadImageAsync(
         string uploadUrl,
         Stream imageStream,
         string contentType,

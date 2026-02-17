@@ -22,7 +22,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
     #region Create Tests
 
     [Fact]
-    public async Post Create_WithoutImage_ShouldReturnWorkspaceId()
+    public async Task Create_WithoutImage_ShouldReturnWorkspaceId()
     {
         // Arrange
         var request = new SocialPublisherWorkspaceCreateRequestModel
@@ -43,7 +43,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
     }
 
     [Fact]
-    public async Post Create_WithImage_ShouldUploadAndReturnWorkspaceId()
+    public async Task Create_WithImage_ShouldUploadAndReturnWorkspaceId()
     {
         // Arrange
         var request = new SocialPublisherWorkspaceCreateRequestModel
@@ -66,7 +66,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
     }
 
     [Fact]
-    public async Post Create_WithMemoryStreamImage_ShouldSucceed()
+    public async Task Create_WithMemoryStreamImage_ShouldSucceed()
     {
         // Arrange
         var request = new SocialPublisherWorkspaceCreateRequestModel
@@ -89,7 +89,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
     }
 
     [Fact]
-    public async Post Create_WithTagAndRefId_ShouldSucceed()
+    public async Task Create_WithTagAndRefId_ShouldSucceed()
     {
         // Arrange
         var request = new SocialPublisherWorkspaceCreateRequestModel
@@ -114,7 +114,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
     #region Get Tests
 
     [Fact]
-    public async Post Get_WithValidId_ShouldReturnWorkspace()
+    public async Task Get_WithValidId_ShouldReturnWorkspace()
     {
         // Arrange - Create a workspace first
         var createRequest = new SocialPublisherWorkspaceCreateRequestModel
@@ -128,7 +128,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
         TestConfig.CreatedResources.Workspaces.Add(workspaceId);
 
         // Wait a moment for the workspace to be fully created
-        await Post.Delay(1000);
+        await Task.Delay(1000);
 
         // Act
         var result = await _client.GetAsync(workspaceId);
@@ -144,7 +144,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
     #region GetForNewPost Tests
 
     [Fact]
-    public async Post GetForNewPost_WithValidId_ShouldReturnWorkspaceWithAccounts()
+    public async Task GetForNewPost_WithValidId_ShouldReturnWorkspaceWithAccounts()
     {
         // Arrange - Create a workspace first
         var createRequest = new SocialPublisherWorkspaceCreateRequestModel
@@ -158,7 +158,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
         TestConfig.CreatedResources.Workspaces.Add(workspaceId);
 
         // Wait a moment for the workspace to be fully created
-        await Post.Delay(1000);
+        await Task.Delay(1000);
 
         // Act
         var result = await _client.GetForNewPostAsync(workspaceId);
@@ -172,7 +172,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
     }
 
     [Fact]
-    public async Post GetForNewPost_ShouldReturnPopulatedAccountDetails()
+    public async Task GetForNewPost_ShouldReturnPopulatedAccountDetails()
     {
         // Arrange - Create a workspace
         var createRequest = new SocialPublisherWorkspaceCreateRequestModel
@@ -184,7 +184,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
         var workspaceId = await _client.CreateAsync(createRequest);
         TestConfig.CreatedResources.Workspaces.Add(workspaceId);
 
-        await Post.Delay(1000);
+        await Task.Delay(1000);
 
         // Act
         var result = await _client.GetForNewPostAsync(workspaceId);
@@ -197,7 +197,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
     }
 
     //[Fact]
-    //public async Post GetForNewPost_WithInvalidId_ShouldThrowException()
+    //public async Task GetForNewPost_WithInvalidId_ShouldThrowException()
     //{
     //    // Act & Assert
     //    await Assert.ThrowsAsync<Exception>(async () =>
@@ -207,7 +207,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
     //}
 
     [Fact]
-    public async Post GetForNewPost_ShouldIncludeImageUrl()
+    public async Task GetForNewPost_ShouldIncludeImageUrl()
     {
         // Arrange - Create workspace with image
         var createRequest = new SocialPublisherWorkspaceCreateRequestModel
@@ -220,7 +220,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
         var workspaceId = await _client.CreateAsync(createRequest, imageStream, "image/png");
         TestConfig.CreatedResources.Workspaces.Add(workspaceId);
 
-        await Post.Delay(1000);
+        await Task.Delay(1000);
 
         // Act
         var result = await _client.GetForNewPostAsync(workspaceId);
@@ -236,7 +236,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
     #region List Tests
 
     [Fact]
-    public async Post List_WithoutFilters_ShouldReturnPaginatedResults()
+    public async Task List_WithoutFilters_ShouldReturnPaginatedResults()
     {
         // Act
         var result = await _client.ListAsync(
@@ -250,7 +250,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
     }
 
     [Fact]
-    public async Post List_FilterByTag_ShouldReturnMatchingWorkspaces()
+    public async Task List_FilterByTag_ShouldReturnMatchingWorkspaces()
     {
         // Arrange
         var uniqueTag = $"tag_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
@@ -288,7 +288,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
     }
 
     [Fact]
-    public async Post List_FilterByName_ShouldReturnMatchingWorkspaces()
+    public async Task List_FilterByName_ShouldReturnMatchingWorkspaces()
     {
         // Arrange
         var uniqueName = $"NameFilter_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
@@ -312,7 +312,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
     }
 
     [Fact]
-    public async Post List_WithPagination_ShouldRespectPageSize()
+    public async Task List_WithPagination_ShouldRespectPageSize()
     {
         // Act
         var result = await _client.ListAsync(
@@ -329,7 +329,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
     #region Update Tests
 
     [Fact]
-    public async Post Update_WithoutImage_ShouldUpdateWorkspace()
+    public async Task Update_WithoutImage_ShouldUpdateWorkspace()
     {
         // Arrange - Create a workspace
         var workspaceId = await _client.CreateAsync(new SocialPublisherWorkspaceCreateRequestModel
@@ -352,7 +352,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
     }
 
     [Fact]
-    public async Post Update_WithNewImage_ShouldUploadImage()
+    public async Task Update_WithNewImage_ShouldUploadImage()
     {
         // Arrange - Create a workspace
         var workspaceId = await _client.CreateAsync(new SocialPublisherWorkspaceCreateRequestModel
@@ -381,7 +381,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
     }
 
     [Fact]
-    public async Post Update_ChangeTagAndRefId_ShouldSucceed()
+    public async Task Update_ChangeTagAndRefId_ShouldSucceed()
     {
         // Arrange
         var workspaceId = await _client.CreateAsync(new SocialPublisherWorkspaceCreateRequestModel
@@ -412,7 +412,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
     #region Delete Tests
 
     [Fact]
-    public async Post Delete_WithValidId_ShouldDeleteWorkspace()
+    public async Task Delete_WithValidId_ShouldDeleteWorkspace()
     {
         // Arrange
         var workspaceId = await _client.CreateAsync(new SocialPublisherWorkspaceCreateRequestModel
@@ -433,7 +433,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
     #region Workflow Tests
 
     [Fact]
-    public async Post CompleteWorkflow_CreateGetUpdateDelete_ShouldSucceed()
+    public async Task CompleteWorkflow_CreateGetUpdateDelete_ShouldSucceed()
     {
         // Create
         var workspaceId = await _client.CreateAsync(new SocialPublisherWorkspaceCreateRequestModel
@@ -466,7 +466,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
     }
 
     [Fact]
-    public async Post CompleteWorkflow_WithImage_ShouldSucceed()
+    public async Task CompleteWorkflow_WithImage_ShouldSucceed()
     {
         // Create with image
         using (var createStream = File.OpenRead(_testImagePath))
@@ -506,7 +506,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
     #region Edge Cases
 
     [Fact]
-    public async Post Create_WithLongDescription_ShouldSucceed()
+    public async Task Create_WithLongDescription_ShouldSucceed()
     {
         // Arrange
         var longDescription = new string('x', 500);
@@ -526,7 +526,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
     }
 
     [Fact]
-    public async Post List_FilterByRefId_ShouldReturnMatchingWorkspaces()
+    public async Task List_FilterByRefId_ShouldReturnMatchingWorkspaces()
     {
         // Arrange
         var uniqueRef = $"ref_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";

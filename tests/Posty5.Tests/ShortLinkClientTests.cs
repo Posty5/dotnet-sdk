@@ -18,7 +18,7 @@ public class ShortLinkClientTests : IDisposable
     }
 
     [Fact]
-    public async Post CreateShortLink_ShouldReturnValidShortLink()
+    public async Task CreateShortLink_ShouldReturnValidShortLink()
     {
         // Arrange
         var request = new ShortLinkCreateRequestModel
@@ -42,7 +42,7 @@ public class ShortLinkClientTests : IDisposable
     }
 
     [Fact]
-    public async Post CreateShortLink_WithCustomLandingId_ShouldContainSlug()
+    public async Task CreateShortLink_WithCustomLandingId_ShouldContainSlug()
     {
         // Arrange
         var customSlug = $"test-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
@@ -66,7 +66,7 @@ public class ShortLinkClientTests : IDisposable
     }
 
     [Fact]
-    public async Post GetShortLinkById_WithValidId_ShouldReturnShortLink()
+    public async Task GetShortLinkById_WithValidId_ShouldReturnShortLink()
     {
         // Arrange - Create a short link first
         var createRequest = new ShortLinkCreateRequestModel
@@ -92,7 +92,7 @@ public class ShortLinkClientTests : IDisposable
 
 
     [Fact]
-    public async Post ListShortLinks_ShouldReturnPaginatedResults()
+    public async Task ListShortLinks_ShouldReturnPaginatedResults()
     {
         // Act
         var result = await _client.ListAsync(
@@ -105,7 +105,7 @@ public class ShortLinkClientTests : IDisposable
     }
 
     [Fact]
-    public async Post ListShortLinks_WithSearch_ShouldFilterResults()
+    public async Task ListShortLinks_WithSearch_ShouldFilterResults()
     {
         // Arrange
         var searchParams = new ShortLinkListParamsModel
@@ -125,7 +125,7 @@ public class ShortLinkClientTests : IDisposable
     }
 
     [Fact]
-    public async Post UpdateShortLink_ShouldUpdateSuccessfully()
+    public async Task UpdateShortLink_ShouldUpdateSuccessfully()
     {
         // Arrange - Create a short link first
         var createRequest = new ShortLinkCreateRequestModel
@@ -153,7 +153,7 @@ public class ShortLinkClientTests : IDisposable
     }
 
     [Fact]
-    public async Post UpdateShortLink_BaseUrl_ShouldUpdateSuccessfully()
+    public async Task UpdateShortLink_BaseUrl_ShouldUpdateSuccessfully()
     {
         // Arrange - Create a short link first
         var createRequest = new ShortLinkCreateRequestModel
@@ -179,7 +179,7 @@ public class ShortLinkClientTests : IDisposable
     }
 
     [Fact]
-    public async Post DeleteShortLink_ShouldDeleteSuccessfully()
+    public async Task DeleteShortLink_ShouldDeleteSuccessfully()
     {
         // Arrange - Create a short link first
         var createRequest = new ShortLinkCreateRequestModel

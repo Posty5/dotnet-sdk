@@ -663,7 +663,7 @@ public class SocialPublisherPostClient
         throw new ArgumentException("Invalid video type. Must be Stream or string URL");
     }
 
-    private async Post UploadToR2Async(string uploadUrl, Stream fileStream, string contentType, CancellationToken cancellationToken)
+    private async Task UploadToR2Async(string uploadUrl, Stream fileStream, string contentType, CancellationToken cancellationToken)
     {
         using var client = new HttpClient();
         using var content = new StreamContent(fileStream);
