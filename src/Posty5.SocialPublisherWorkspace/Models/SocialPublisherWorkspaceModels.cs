@@ -58,6 +58,11 @@ public class SocialPublisherWorkspaceAccountModel
     /// TikTok account details
     /// </summary>
     public SocialPublisherWorkspaceAccountDetailsModel? Tiktok { get; set; }
+
+    /// <summary>
+    /// LinkedIn account details
+    /// </summary>
+    public SocialPublisherWorkspaceAccountDetailsModel? LinkedIn { get; set; }
 }
 
 /// <summary>

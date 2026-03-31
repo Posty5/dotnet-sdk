@@ -143,6 +143,11 @@ public class WorkspaceAccountsModel
     /// X (Twitter) account
     /// </summary>
     public SocialPublisherAccountModel? X { get; set; }
+
+    /// <summary>
+    /// LinkedIn account
+    /// </summary>
+    public SocialPublisherAccountModel? LinkedIn { get; set; }
 }
 
 /// <summary>
@@ -348,6 +353,27 @@ public class XFullDetailsConfig
 }
 
 /// <summary>
+/// LinkedIn-specific configuration for status page
+/// </summary>
+public class LinkedInFullDetailsConfig
+{
+    /// <summary>
+    /// Post text (max 3000 characters)
+    /// </summary>
+    public string? Text { get; set; }
+
+    /// <summary>
+    /// Visibility (PUBLIC | CONNECTIONS | LOGGED_IN)
+    /// </summary>
+    public string? Visibility { get; set; }
+
+    /// <summary>
+    /// Post information
+    /// </summary>
+    public PostInfoModel PostInfo { get; set; } = new();
+}
+
+/// <summary>
 /// YouTube-specific configuration
 /// </summary>
 public class YouTubeConfig
@@ -483,6 +509,22 @@ public class XConfig
 }
 
 /// <summary>
+/// LinkedIn-specific configuration
+/// </summary>
+public class LinkedInConfig
+{
+    /// <summary>
+    /// Post text (max 3000 characters)
+    /// </summary>
+    public string? Text { get; set; }
+
+    /// <summary>
+    /// Visibility (PUBLIC | CONNECTIONS | LOGGED_IN)
+    /// </summary>
+    public string? Visibility { get; set; }
+}
+
+/// <summary>
 /// Schedule configuration
 /// </summary>
 public class ScheduleConfig
@@ -541,6 +583,11 @@ public class PostSettings
     /// Enable X (Twitter) publishing
     /// </summary>
     public bool IsAllowX { get; set; }
+
+    /// <summary>
+    /// Enable LinkedIn publishing
+    /// </summary>
+    public bool IsAllowLinkedIn { get; set; }
     
     /// <summary>
     /// YouTube configuration (required if IsAllowYouTube is true)
@@ -566,6 +613,11 @@ public class PostSettings
     /// X (Twitter) configuration (required if IsAllowX is true)
     /// </summary>
     public XConfig? X { get; set; }
+
+    /// <summary>
+    /// LinkedIn configuration (required if IsAllowLinkedIn is true)
+    /// </summary>
+    public LinkedInConfig? LinkedIn { get; set; }
     
     /// <summary>
     /// Schedule configuration
@@ -629,6 +681,11 @@ public class CreateSocialPublisherPostRequest
     public bool IsAllowX { get; set; }
 
     /// <summary>
+    /// Enable LinkedIn publishing
+    /// </summary>
+    public bool IsAllowLinkedIn { get; set; }
+
+    /// <summary>
     /// YouTube configuration
     /// </summary>
     
@@ -653,6 +710,11 @@ public class CreateSocialPublisherPostRequest
     /// X (Twitter) configuration (required if IsAllowX is true)
     /// </summary>
     public XConfig? X { get; set; }
+
+    /// <summary>
+    /// LinkedIn configuration (required if IsAllowLinkedIn is true)
+    /// </summary>
+    public LinkedInConfig? LinkedIn { get; set; }
     
     /// <summary>
     /// Video URL (for url/repost sources)
@@ -726,6 +788,11 @@ public class CreateSocialPublisherAccountPostRequest
     public bool IsAllowX { get; set; }
 
     /// <summary>
+    /// Enable LinkedIn publishing
+    /// </summary>
+    public bool IsAllowLinkedIn { get; set; }
+
+    /// <summary>
     /// YouTube configuration
     /// </summary>
     public YouTubeConfig? Youtube { get; set; }
@@ -749,6 +816,11 @@ public class CreateSocialPublisherAccountPostRequest
     /// X (Twitter) configuration (required if IsAllowX is true)
     /// </summary>
     public XConfig? X { get; set; }
+
+    /// <summary>
+    /// LinkedIn configuration (required if IsAllowLinkedIn is true)
+    /// </summary>
+    public LinkedInConfig? LinkedIn { get; set; }
     
     /// <summary>
     /// Video URL (for url/repost sources)
@@ -961,6 +1033,7 @@ public class PostModelIsAllowAccount
     public bool Instagram { get; set; }
     public bool Tiktok { get; set; }
     public bool X { get; set; }
+    public bool LinkedIn { get; set; }
 }
 
 public class PostModeWorkspace
@@ -1051,6 +1124,11 @@ public class PostStatusFullDetailsResponse
     /// X (Twitter) details
     /// </summary>
     public XFullDetailsConfig? X { get; set; }
+
+    /// <summary>
+    /// LinkedIn details
+    /// </summary>
+    public LinkedInFullDetailsConfig? LinkedIn { get; set; }
     
     /// <summary>
     /// Workspace details with connected accounts
