@@ -1,4 +1,4 @@
-using Posty5.Core.Converts;
+﻿using Posty5.Core.Converts;
 using System.Text.Json.Serialization;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -138,6 +138,11 @@ public class WorkspaceAccountsModel
     /// Instagram account
     /// </summary>
     public SocialPublisherAccountModel? Instagram { get; set; }
+
+    /// <summary>
+    /// X (Twitter) account
+    /// </summary>
+    public SocialPublisherAccountModel? X { get; set; }
 }
 
 /// <summary>
@@ -321,6 +326,28 @@ public class InstagramFullDetailsConfig
 }
 
 /// <summary>
+/// X (Twitter)-specific configuration for status page
+/// </summary>
+public class XFullDetailsConfig
+{
+    /// <summary>
+    /// Tweet text
+    /// </summary>
+    public string Caption { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Reply settings
+    /// </summary>
+    [JsonPropertyName("reply_settings")]
+    public string? ReplySettings { get; set; }
+
+    /// <summary>
+    /// Post information
+    /// </summary>
+    public PostInfoModel PostInfo { get; set; } = new();
+}
+
+/// <summary>
 /// YouTube-specific configuration
 /// </summary>
 public class YouTubeConfig
@@ -439,6 +466,23 @@ public class InstagramConfig
 }
 
 /// <summary>
+/// X (Twitter)-specific configuration
+/// </summary>
+public class XConfig
+{
+    /// <summary>
+    /// Tweet text (required, max 280 characters)
+    /// </summary>
+    public string Caption { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Reply settings (everyone | mentionedUsers | following)
+    /// </summary>
+    [JsonPropertyName("reply_settings")]
+    public string? ReplySettings { get; set; }
+}
+
+/// <summary>
 /// Schedule configuration
 /// </summary>
 public class ScheduleConfig
@@ -494,6 +538,11 @@ public class PostSettings
     public bool IsAllowInstagram { get; set; }
     
     /// <summary>
+    /// Enable X (Twitter) publishing
+    /// </summary>
+    public bool IsAllowX { get; set; }
+    
+    /// <summary>
     /// YouTube configuration (required if IsAllowYouTube is true)
     /// </summary>
     public YouTubeConfig? Youtube { get; set; }
@@ -512,6 +561,11 @@ public class PostSettings
     /// Instagram configuration (required if IsAllowInstagram is true)
     /// </summary>
     public InstagramConfig? Instagram { get; set; }
+    
+    /// <summary>
+    /// X (Twitter) configuration (required if IsAllowX is true)
+    /// </summary>
+    public XConfig? X { get; set; }
     
     /// <summary>
     /// Schedule configuration
@@ -570,6 +624,11 @@ public class CreateSocialPublisherPostRequest
     public bool IsAllowInstagram { get; set; }
 
     /// <summary>
+    /// Enable X (Twitter) publishing
+    /// </summary>
+    public bool IsAllowX { get; set; }
+
+    /// <summary>
     /// YouTube configuration
     /// </summary>
     
@@ -589,6 +648,11 @@ public class CreateSocialPublisherPostRequest
     /// Instagram configuration
     /// </summary>
     public InstagramConfig? Instagram { get; set; }
+    
+    /// <summary>
+    /// X (Twitter) configuration (required if IsAllowX is true)
+    /// </summary>
+    public XConfig? X { get; set; }
     
     /// <summary>
     /// Video URL (for url/repost sources)
@@ -657,6 +721,11 @@ public class CreateSocialPublisherAccountPostRequest
     public bool IsAllowInstagram { get; set; }
     
     /// <summary>
+    /// Enable X (Twitter) publishing
+    /// </summary>
+    public bool IsAllowX { get; set; }
+
+    /// <summary>
     /// YouTube configuration
     /// </summary>
     public YouTubeConfig? Youtube { get; set; }
@@ -675,6 +744,11 @@ public class CreateSocialPublisherAccountPostRequest
     /// Instagram configuration
     /// </summary>
     public InstagramConfig? Instagram { get; set; }
+    
+    /// <summary>
+    /// X (Twitter) configuration (required if IsAllowX is true)
+    /// </summary>
+    public XConfig? X { get; set; }
     
     /// <summary>
     /// Video URL (for url/repost sources)
@@ -886,6 +960,7 @@ public class PostModelIsAllowAccount
     public bool Facebook { get; set; }
     public bool Instagram { get; set; }
     public bool Tiktok { get; set; }
+    public bool X { get; set; }
 }
 
 public class PostModeWorkspace
@@ -971,6 +1046,11 @@ public class PostStatusFullDetailsResponse
     /// YouTube platform configuration (if enabled)
     /// </summary>
     public YouTubeFullDetailsConfig? Youtube { get; set; }
+    
+    /// <summary>
+    /// X (Twitter) details
+    /// </summary>
+    public XFullDetailsConfig? X { get; set; }
     
     /// <summary>
     /// Workspace details with connected accounts

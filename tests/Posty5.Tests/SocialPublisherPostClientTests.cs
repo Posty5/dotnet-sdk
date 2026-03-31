@@ -27,6 +27,7 @@ public class SocialPublisherPostClientTests : IDisposable
     private const string FacebookReelURL = "https://www.facebook.com/reel/1794235308045414";
     private const string YouTubeShortsURL = "https://www.youtube.com/shorts/jkiHUTnDJnk";
     private const string TikTokVideoURL = "https://www.tiktok.com/@tamra.ai/video/7592228093834841362";
+    private const string XVideoURL = "https://x.com/i/status/1234567890123456789";
 
     public SocialPublisherPostClientTests()
     {
@@ -222,6 +223,53 @@ public class SocialPublisherPostClientTests : IDisposable
                 Title = $"Reposted from TikTok - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
                 Description = "Testing TikTok repost with auto-detection",
                 Tags = new List<string> { "repost", "tiktok" }
+            }
+        );
+
+        // Assert
+        Assert.NotNull(postId);
+        TestConfig.CreatedResources.Posts.Add(postId);
+    }
+
+    [Fact]
+    public async Task PublishShortVideo_XVideoURL_ShouldAutoDetectAndRepost()
+    {
+        // Act - Auto-detects X (Twitter) repost
+        var postId = await _client.PublishShortVideoToWorkspaceAsync(
+            workspaceId: _workspaceId,
+            video: XVideoURL,
+            platforms: new List<string> { "x" },
+            x: new XConfig
+            {
+                Caption = $"Reposted from X - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
+                ReplySettings = "everyone"
+            }
+        );
+
+        // Assert
+        Assert.NotNull(postId);
+        TestConfig.CreatedResources.Posts.Add(postId);
+    }
+
+    [Fact]
+    public async Task PublishShortVideo_VideoURL_MultiPlatform_WithX_ShouldSucceed()
+    {
+        // Act - Multi-platform publishing including X
+        var postId = await _client.PublishShortVideoToWorkspaceAsync(
+            workspaceId: _workspaceId,
+            video: VideoURL,
+            thumbnail: ThumbnailURL,
+            platforms: new List<string> { "youtube", "x" },
+            youtube: new YouTubeConfig
+            {
+                Title = $"Multi-platform with X - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
+                Description = "Testing multi-platform with X",
+                Tags = new List<string> { "test", "x" }
+            },
+            x: new XConfig
+            {
+                Caption = "Multi-platform test with X",
+                ReplySettings = "everyone"
             }
         );
 
