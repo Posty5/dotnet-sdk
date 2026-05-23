@@ -641,4 +641,85 @@ public class SocialPublisherPostClient
         }
         return thumbnailUrl;
     }
+
+    // ========================================================================
+    // IMAGE POST (task 6, 4.1.0+)
+    // ========================================================================
+
+    /// <summary>
+    /// Create an image post targeting a workspace. The image is published
+    /// to every connected account (Facebook / Instagram / TikTok photo).
+    /// YouTube community posts are always reported as <c>notSupported</c>.
+    /// Cost: 5 credits, plus +1 if <see cref="CreateImagePostToWorkspaceRequest.Comment"/> is supplied.
+    /// </summary>
+    public async Task<string> CreateImagePostToWorkspaceAsync(
+        CreateImagePostToWorkspaceRequest request,
+        string? id = null,
+        CancellationToken cancellationToken = default)
+    {
+        var path = string.IsNullOrEmpty(id)
+            ? $"{BasePath}/image/workspace"
+            : $"{BasePath}/image/workspace/{id}";
+
+        var payload = new
+        {
+            request.WorkspaceId,
+            request.Image,
+            request.Caption,
+            request.AiEnhanced,
+            request.Youtube,
+            request.Tiktok,
+            request.Facebook,
+            request.Instagram,
+            request.Schedule,
+            request.Comment,
+            request.Tag,
+            request.RefId,
+            createdFrom = "dotnetPackage",
+        };
+
+        var response = await _http.PostAsync<Dictionary<string, object>>(path, payload, cancellationToken);
+        if (response.Result != null && response.Result.TryGetValue("_id", out var postIdObj))
+            return postIdObj?.ToString() ?? throw new InvalidOperationException("Post ID not returned");
+
+        throw new InvalidOperationException("Failed to create image post");
+    }
+
+    /// <summary>
+    /// Create an image post targeting a single account. The server derives
+    /// the target platform from <c>account.platform</c>; config blocks for
+    /// other platforms are ignored.
+    /// </summary>
+    public async Task<string> CreateImagePostToAccountAsync(
+        CreateImagePostToAccountRequest request,
+        string? id = null,
+        CancellationToken cancellationToken = default)
+    {
+        var path = string.IsNullOrEmpty(id)
+            ? $"{BasePath}/image/account"
+            : $"{BasePath}/image/account/{id}";
+
+        var payload = new
+        {
+            request.AccountId,
+            request.Image,
+            request.Caption,
+            request.AiEnhanced,
+            request.Youtube,
+            request.Tiktok,
+            request.Facebook,
+            request.Instagram,
+            request.Schedule,
+            request.Comment,
+            request.Tag,
+            request.RefId,
+            createdFrom = "dotnetPackage",
+        };
+
+        var response = await _http.PostAsync<Dictionary<string, object>>(path, payload, cancellationToken);
+        if (response.Result != null && response.Result.TryGetValue("_id", out var postIdObj))
+            return postIdObj?.ToString() ?? throw new InvalidOperationException("Post ID not returned");
+
+        throw new InvalidOperationException("Failed to create image post");
+    }
 }

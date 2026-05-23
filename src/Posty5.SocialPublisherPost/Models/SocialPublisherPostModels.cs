@@ -795,6 +795,121 @@ public class CreateSocialPublisherAccountPostRequest
     public string? RefId { get; set; }
 }
 
+// ============================================================================
+// IMAGE POST MODELS (task 6, Posty5.SocialPublisherPost 4.1.0+)
+// ============================================================================
+
+/// <summary>
+/// Source of an image-post media payload.
+/// String-serialized — "image-file" for bucket-uploaded files, "image-url" for direct URLs.
+/// </summary>
+[JsonConverter(typeof(StringValueObjectConverter<ImageSource>))]
+public readonly record struct ImageSource(string Value)
+{
+    public static readonly ImageSource ImageFile = new("image-file");
+    public static readonly ImageSource ImageUrl = new("image-url");
+
+    public override string ToString() => Value;
+}
+
+/// <summary>
+/// Image-post media block. One of <see cref="BucketKey"/> or
+/// <see cref="ExternalUrl"/> must be set, matching <see cref="Source"/>.
+/// </summary>
+public class ImageRequest
+{
+    /// <summary>Where the image came from.</summary>
+    public ImageSource Source { get; set; } = ImageSource.ImageUrl;
+
+    /// <summary>Bucket file URL returned by <c>generate-upload-urls</c> (when source = image-file).</summary>
+    public string? BucketKey { get; set; }
+
+    /// <summary>Direct public image URL (when source = image-url).</summary>
+    public string? ExternalUrl { get; set; }
+
+    public int? Width { get; set; }
+    public int? Height { get; set; }
+
+    /// <summary>e.g. "image/jpeg", "image/png", "image/webp".</summary>
+    public string? MimeType { get; set; }
+}
+
+/// <summary>
+/// Per-platform image-post metadata returned on the status response.
+/// </summary>
+public class ImageInfo
+{
+    public ImageSource? Source { get; set; }
+    public string? BucketKey { get; set; }
+    public string? ExternalUrl { get; set; }
+    public int? Width { get; set; }
+    public int? Height { get; set; }
+    public string? MimeType { get; set; }
+
+    /// <summary>True when the caption was AI-enhanced before publish.</summary>
+    public bool? AiEnhanced { get; set; }
+
+    /// <summary>Set after the bucket cleanup job runs (uploaded files only).</summary>
+    public DateTime? DeletedFromBucketAt { get; set; }
+}
+
+/// <summary>
+/// Create-image-post request targeting a workspace.
+/// Image posts cost 5 credits; auto-comment adds +1.
+/// YouTube community posts are always reported as <c>notSupported</c>.
+/// </summary>
+public class CreateImagePostToWorkspaceRequest
+{
+    public string WorkspaceId { get; set; } = string.Empty;
+
+    /// <summary>Required — the image media block.</summary>
+    public ImageRequest Image { get; set; } = new();
+
+    /// <summary>
+    /// Shared caption (1..8000 chars). Used as the default per-platform
+    /// description when no platform-specific block is supplied.
+    /// </summary>
+    public string Caption { get; set; } = string.Empty;
+
+    /// <summary>Marks the caption as AI-enhanced; surfaces on the status page.</summary>
+    public bool? AiEnhanced { get; set; }
+
+    public YouTubeConfig? Youtube { get; set; }
+    public TikTokConfig? Tiktok { get; set; }
+    public FacebookPageConfig? Facebook { get; set; }
+    public InstagramConfig? Instagram { get; set; }
+
+    public ScheduleConfig? Schedule { get; set; }
+    public CommentRequest? Comment { get; set; }
+
+    public string? Tag { get; set; }
+    public string? RefId { get; set; }
+}
+
+/// <summary>
+/// Create-image-post request targeting a single account.
+/// The server derives the publish target from the account's platform.
+/// </summary>
+public class CreateImagePostToAccountRequest
+{
+    public string AccountId { get; set; } = string.Empty;
+
+    public ImageRequest Image { get; set; } = new();
+    public string Caption { get; set; } = string.Empty;
+    public bool? AiEnhanced { get; set; }
+
+    public YouTubeConfig? Youtube { get; set; }
+    public TikTokConfig? Tiktok { get; set; }
+    public FacebookPageConfig? Facebook { get; set; }
+    public InstagramConfig? Instagram { get; set; }
+
+    public ScheduleConfig? Schedule { get; set; }
+    public CommentRequest? Comment { get; set; }
+
+    public string? Tag { get; set; }
+    public string? RefId { get; set; }
+}
+
 /// <summary>
 /// Generate upload URLs request
 /// </summary>
@@ -1079,8 +1194,11 @@ public class PostStatusFullDetailsResponse
     /// Schedule configuration
     /// </summary>
     public ScheduleConfig Schedule { get; set; } = new();
-    
- 
+
+    /// <summary>
+    /// Image-post metadata — only populated when <c>Type == "image"</c>.
+    /// </summary>
+    public ImageInfo? Image { get; set; }
 }
 
 /// <summary>
@@ -1097,7 +1215,12 @@ public class SourceURLsModel
     /// Video URL
     /// </summary>
     public string? VideoURL { get; set; }
-    
+
+    /// <summary>
+    /// Image URL — populated for posts of type "image".
+    /// </summary>
+    public string? ImageURL { get; set; }
+
     /// <summary>
     /// Post URL (for platform sources like facebook, tiktok, youtube)
     /// </summary>
