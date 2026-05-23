@@ -172,6 +172,114 @@ public class PostInfoModel
 }
 
 // ============================================================================
+// COMMENT MODELS (post-publish auto-comment, Pro plan, +1 credit)
+// ============================================================================
+
+/// <summary>
+/// Status of the optional post-publish comment, reported per-platform.
+/// String-serialized via <see cref="StringValueObjectConverter{T}"/>.
+/// - Pending: queued, waiting for the parent post to be published
+/// - Processing: comment request is in flight
+/// - Done: comment posted successfully
+/// - Error: comment failed (see CurrentError)
+/// - Skipped: caller opted out for this platform (e.g. postToFacebook=false)
+/// - NotSupported: platform does not allow programmatic comments (TikTok)
+/// </summary>
+[JsonConverter(typeof(StringValueObjectConverter<CommentStatus>))]
+public readonly record struct CommentStatus(string Value)
+{
+    public static readonly CommentStatus Pending = new("pending");
+    public static readonly CommentStatus Processing = new("processing");
+    public static readonly CommentStatus Done = new("done");
+    public static readonly CommentStatus Error = new("error");
+    public static readonly CommentStatus Skipped = new("skipped");
+    public static readonly CommentStatus NotSupported = new("notSupported");
+
+    public override string ToString() => Value;
+}
+
+/// <summary>
+/// Optional post-publish comment.
+/// When supplied on a create-post request, a comment is posted under each
+/// enabled platform once the video is published.
+///
+/// Pricing: +1 credit on top of the video charge (Pro plan only).
+/// TikTok comments are not supported — TikTok will always report
+/// <see cref="CommentStatus.NotSupported"/> in the status response.
+/// </summary>
+public class CommentRequest
+{
+    /// <summary>
+    /// Comment text. Length must be between 1 and 2200 characters.
+    /// </summary>
+    public string Text { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Post the comment on Facebook. Defaults to true.
+    /// </summary>
+    public bool? PostToFacebook { get; set; }
+
+    /// <summary>
+    /// Post the comment on Instagram. Defaults to true.
+    /// </summary>
+    public bool? PostToInstagram { get; set; }
+
+    /// <summary>
+    /// Post the comment on YouTube. Defaults to true.
+    /// </summary>
+    public bool? PostToYoutube { get; set; }
+
+    /// <summary>
+    /// Post the comment on TikTok. Defaults to false — TikTok does not
+    /// support programmatic comments.
+    /// </summary>
+    public bool? PostToTiktok { get; set; }
+}
+
+/// <summary>
+/// Per-platform comment status block returned on the post status response.
+/// Present only when the post was created with a <see cref="CommentRequest"/>.
+/// TikTok always returns CurrentStatus = NotSupported.
+/// </summary>
+public class CommentInfo
+{
+    /// <summary>
+    /// Whether the caller opted in for this platform (mirrors the request flag).
+    /// </summary>
+    public bool? IsAllow { get; set; }
+
+    /// <summary>
+    /// Current per-platform comment status.
+    /// </summary>
+    public CommentStatus? CurrentStatus { get; set; }
+
+    /// <summary>
+    /// Last error message (when CurrentStatus == Error).
+    /// </summary>
+    public string? CurrentError { get; set; }
+
+    /// <summary>
+    /// ID of the comment on the platform (when posted).
+    /// </summary>
+    public string? ExternalCommentId { get; set; }
+
+    /// <summary>
+    /// Public URL of the comment on the platform (when posted).
+    /// </summary>
+    public string? CommentURL { get; set; }
+
+    /// <summary>
+    /// Timestamp the comment was successfully posted.
+    /// </summary>
+    public DateTime? PostedAt { get; set; }
+
+    /// <summary>
+    /// Grouped history of status transitions for this platform comment.
+    /// </summary>
+    public List<StatusHistoryGroupedDay>? StatusHistoryGrouped { get; set; }
+}
+
+// ============================================================================
 // PLATFORM CONFIGURATION MODELS
 // ============================================================================
 
@@ -224,11 +332,16 @@ public class YouTubeFullDetailsConfig
     /// Localizations map
     /// </summary>
     public Dictionary<string, object>? Localizations { get; set; }
-    
+
     /// <summary>
     /// Post information
     /// </summary>
     public PostInfoModel PostInfo { get; set; } = new();
+
+    /// <summary>
+    /// Per-platform comment status (only present when a comment was requested).
+    /// </summary>
+    public CommentInfo? CommentInfo { get; set; }
 }
 
 /// <summary>
@@ -264,11 +377,16 @@ public class TikTokFullDetailsConfig
     /// </summary>
     [JsonPropertyName("privacy_level")]
     public string PrivacyLevel { get; set; } = "PUBLIC";
-    
+
     /// <summary>
     /// Post information
     /// </summary>
     public PostInfoModel PostInfo { get; set; } = new();
+
+    /// <summary>
+    /// Per-platform comment status. TikTok always reports NotSupported.
+    /// </summary>
+    public CommentInfo? CommentInfo { get; set; }
 }
 
 /// <summary>
@@ -280,16 +398,21 @@ public class FacebookFullDetailsConfig
     /// Post description
     /// </summary>
     public string Description { get; set; } = string.Empty;
-    
+
     /// <summary>
     /// Post title
     /// </summary>
     public string? Title { get; set; }
-    
+
     /// <summary>
     /// Post information
     /// </summary>
     public PostInfoModel PostInfo { get; set; } = new();
+
+    /// <summary>
+    /// Per-platform comment status (only present when a comment was requested).
+    /// </summary>
+    public CommentInfo? CommentInfo { get; set; }
 }
 
 /// <summary>
@@ -301,23 +424,28 @@ public class InstagramFullDetailsConfig
     /// Post description
     /// </summary>
     public string Description { get; set; } = string.Empty;
-    
+
     /// <summary>
     /// Share to feed
     /// </summary>
     [JsonPropertyName("share_to_feed")]
     public bool? ShareToFeed { get; set; }
-    
+
     /// <summary>
     /// Publish to both feed and story
     /// </summary>
     [JsonPropertyName("is_published_to_both_feed_and_story")]
     public bool? IsPublishedToBothFeedAndStory { get; set; }
-    
+
     /// <summary>
     /// Post information
     /// </summary>
     public PostInfoModel PostInfo { get; set; } = new();
+
+    /// <summary>
+    /// Per-platform comment status (only present when a comment was requested).
+    /// </summary>
+    public CommentInfo? CommentInfo { get; set; }
 }
 
 /// <summary>
@@ -517,17 +645,22 @@ public class PostSettings
     /// Schedule configuration
     /// </summary>
     public ScheduleConfig? Schedule { get; set; }
-    
+
     /// <summary>
     /// Source type (file, url, facebook, tiktok, youtube)
     /// </summary>
     public string Source { get; set; } = string.Empty;
-    
+
+    /// <summary>
+    /// Optional post-publish comment (Pro plan, +1 credit). TikTok is not supported.
+    /// </summary>
+    public CommentRequest? Comment { get; set; }
+
     /// <summary>
     /// Custom tag for filtering
     /// </summary>
     public string? Tag { get; set; }
-    
+
     /// <summary>
     /// External reference ID
     /// </summary>
@@ -609,12 +742,17 @@ public class CreateSocialPublisherPostRequest
     /// Schedule configuration
     /// </summary>
     public ScheduleConfig? Schedule { get; set; }
-    
+
+    /// <summary>
+    /// Optional post-publish comment (Pro plan, +1 credit). TikTok is not supported.
+    /// </summary>
+    public CommentRequest? Comment { get; set; }
+
     /// <summary>
     /// Custom tag
     /// </summary>
     public string? Tag { get; set; }
-    
+
     /// <summary>
     /// External reference ID
     /// </summary>
@@ -695,12 +833,17 @@ public class CreateSocialPublisherAccountPostRequest
     /// Schedule configuration
     /// </summary>
     public ScheduleConfig? Schedule { get; set; }
-    
+
+    /// <summary>
+    /// Optional post-publish comment (Pro plan, +1 credit). TikTok is not supported.
+    /// </summary>
+    public CommentRequest? Comment { get; set; }
+
     /// <summary>
     /// Custom tag
     /// </summary>
     public string? Tag { get; set; }
-    
+
     /// <summary>
     /// External reference ID
     /// </summary>

@@ -152,6 +152,7 @@ public class SocialPublisherPostClient
         string? refId = null,
         string? videoContentType = null,
         string? thumbnailContentType = null,
+        CommentRequest? comment = null,
         CancellationToken cancellationToken = default)
     {
         // Build post settings
@@ -166,6 +167,7 @@ public class SocialPublisherPostClient
             Tiktok = tiktok,
             Facebook = facebook,
             Instagram = instagram,
+            Comment = comment,
             Tag = tag,
             RefId = refId
         };
@@ -221,6 +223,7 @@ public class SocialPublisherPostClient
         string? refId = null,
         string? videoContentType = null,
         string? thumbnailContentType = null,
+        CommentRequest? comment = null,
         CancellationToken cancellationToken = default)
     {
         // Build post settings
@@ -235,6 +238,7 @@ public class SocialPublisherPostClient
             Tiktok = tiktok,
             Facebook = facebook,
             Instagram = instagram,
+            Comment = comment,
             Tag = tag,
             RefId = refId
         };
@@ -289,7 +293,7 @@ public class SocialPublisherPostClient
         string? thumbnailContentType = null,
         CancellationToken cancellationToken = default)
     {
-        return PublishShortVideoToWorkspaceAsync(workspaceId, video, thumbnail, platforms, youtube, tiktok, facebook, instagram, schedule, tag, refId, videoContentType, thumbnailContentType, cancellationToken);
+        return PublishShortVideoToWorkspaceAsync(workspaceId, video, thumbnail, platforms, youtube, tiktok, facebook, instagram, schedule, tag, refId, videoContentType, thumbnailContentType, null, cancellationToken);
     }
 
     // ============================================================================
@@ -330,6 +334,7 @@ public class SocialPublisherPostClient
             Facebook = settings.Facebook,
             Instagram = settings.Instagram,
             Schedule = settings.Schedule,
+            Comment = settings.Comment,
             Tag = settings.Tag,
             RefId = settings.RefId
         }, uploadConfig.PostId, cancellationToken);
@@ -374,6 +379,7 @@ public class SocialPublisherPostClient
             Facebook = settings.Facebook,
             Instagram = settings.Instagram,
             Schedule = settings.Schedule,
+            Comment = settings.Comment,
             Tag = settings.Tag,
             RefId = settings.RefId
         }, postId, cancellationToken);
@@ -418,6 +424,7 @@ public class SocialPublisherPostClient
             Facebook = settings.Facebook,
             Instagram = settings.Instagram,
             Schedule = settings.Schedule,
+            Comment = settings.Comment,
             Tag = settings.Tag,
             RefId = settings.RefId
         }, postId, cancellationToken);
@@ -457,6 +464,7 @@ public class SocialPublisherPostClient
             Facebook = settings.Facebook,
             Instagram = settings.Instagram,
             Schedule = settings.Schedule,
+            Comment = settings.Comment,
             Tag = settings.Tag,
             RefId = settings.RefId
         }, uploadConfig.PostId, cancellationToken);
@@ -501,6 +509,7 @@ public class SocialPublisherPostClient
             Facebook = settings.Facebook,
             Instagram = settings.Instagram,
             Schedule = settings.Schedule,
+            Comment = settings.Comment,
             Tag = settings.Tag,
             RefId = settings.RefId
         }, postId, cancellationToken);
@@ -545,6 +554,7 @@ public class SocialPublisherPostClient
             Facebook = settings.Facebook,
             Instagram = settings.Instagram,
             Schedule = settings.Schedule,
+            Comment = settings.Comment,
             Tag = settings.Tag,
             RefId = settings.RefId
         }, postId, cancellationToken);

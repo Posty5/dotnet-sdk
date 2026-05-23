@@ -178,6 +178,36 @@ var postId = await client.PublishShortVideoAsync(
 Console.WriteLine($"Published to YouTube and TikTok: {postId}");
 ```
 
+#### Example - Auto-Comment After Publish (Pro plan, +1 credit)
+
+```csharp
+// Queue a comment that posts under each platform once the video is live.
+// TikTok comments are not supported — TikTok will always report
+// CommentInfo.CurrentStatus == CommentStatus.NotSupported.
+var postId = await client.PublishShortVideoToWorkspaceAsync(
+    workspaceId: "workspace-123",
+    video: "https://cdn.example.com/videos/launch.mp4",
+    platforms: new List<string> { "youtube", "facebook", "instagram" },
+    youtube: new YouTubeConfig { Title = "Launch day", Description = "We shipped!", Tags = new List<string> { "launch" } },
+    facebook: new FacebookPageConfig { Description = "We shipped!" },
+    instagram: new InstagramConfig { Description = "We shipped! 🚀" },
+    comment: new CommentRequest
+    {
+        Text = "Drop your favourite feature below 👇",
+        PostToFacebook = true,
+        PostToInstagram = true,
+        PostToYoutube = true,
+        // PostToTiktok defaults to false — TikTok is not supported
+    }
+);
+
+// Later, poll status to see how each comment landed:
+var status = await client.GetStatusFullDetailsAsync(postId);
+Console.WriteLine($"YouTube comment:  {status.Youtube?.CommentInfo?.CurrentStatus}");
+Console.WriteLine($"Facebook URL:     {status.Facebook?.CommentInfo?.CommentURL}");
+Console.WriteLine($"TikTok comment:   {status.Tiktok?.CommentInfo?.CurrentStatus}"); // "notSupported"
+```
+
 #### Example - Multi-Platform Publishing
 
 ```csharp
