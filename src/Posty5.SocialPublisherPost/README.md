@@ -79,10 +79,9 @@ var client = new SocialPublisherPostClient(httpClient);
 using var videoStream = File.OpenRead("video.mp4");
 
 // Publish video to YouTube Shorts
-var postId = await client.PublishShortVideoAsync(
+var postId = await client.PublishShortVideoToWorkspaceAsync(
     workspaceId: "workspace-123", // Your workspace ID
     video: videoStream,
-    platforms: new List<string> { "youtube" },
     youtube: new YouTubeConfig
     {
         Title = "My First YouTube Short",
@@ -103,7 +102,7 @@ Console.WriteLine($"YouTube: {status.YouTube?.PostInfo?.CurrentStatus}");
 
 ## 📚 API Reference & Examples
 
-### PublishShortVideoAsync
+### PublishShortVideoToWorkspaceAsync
 
 Publish a short video to one or more social media platforms. This is the main method for creating publishing posts. It automatically detects video source type (Stream for file upload, string for URL or platform-specific repost URL) and handles all upload logic.
 
@@ -112,7 +111,6 @@ Publish a short video to one or more social media platforms. This is the main me
 - `workspaceId` (string, **required**): Workspace ID containing connected social accounts
 - `video` (object, **required**): Video source - `Stream` (file upload) or `string` (URL or repost URL)
 - `thumbnail` (object?, optional): Thumbnail image - `Stream` or `string` URL
-- `platforms` (List<string>?, optional): Target platforms ("youtube", "tiktok", "facebook", "instagram")
 - `youtube` (YouTubeConfig?, optional): YouTube configuration
 - `tiktok` (TikTokConfig?, optional): TikTok configuration
 - `facebook` (FacebookPageConfig?, optional): Facebook configuration
@@ -131,11 +129,10 @@ Publish a short video to one or more social media platforms. This is the main me
 using var videoStream = File.OpenRead("video.mp4");
 using var thumbStream = File.OpenRead("thumb.jpg");
 
-var postId = await client.PublishShortVideoAsync(
+var postId = await client.PublishShortVideoToWorkspaceAsync(
     workspaceId: "workspace-123",
     video: videoStream,
     thumbnail: thumbStream,
-    platforms: new List<string> { "youtube" },
     youtube: new YouTubeConfig
     {
         Title = "Product Launch Video",
@@ -154,11 +151,10 @@ Console.WriteLine($"Published to YouTube: {postId}");
 
 ```csharp
 // Publish using URLs (no file upload needed)
-var postId = await client.PublishShortVideoAsync(
+var postId = await client.PublishShortVideoToWorkspaceAsync(
     workspaceId: "workspace-123",
     video: "https://cdn.example.com/videos/promo.mp4",
     thumbnail: "https://cdn.example.com/images/thumb.jpg",
-    platforms: new List<string> { "youtube", "tiktok" },
     youtube: new YouTubeConfig
     {
         Title = "Summer Sale Announcement",
@@ -187,7 +183,6 @@ Console.WriteLine($"Published to YouTube and TikTok: {postId}");
 var postId = await client.PublishShortVideoToWorkspaceAsync(
     workspaceId: "workspace-123",
     video: "https://cdn.example.com/videos/launch.mp4",
-    platforms: new List<string> { "youtube", "facebook", "instagram" },
     youtube: new YouTubeConfig { Title = "Launch day", Description = "We shipped!", Tags = new List<string> { "launch" } },
     facebook: new FacebookPageConfig { Description = "We shipped!" },
     instagram: new InstagramConfig { Description = "We shipped! 🚀" },
@@ -213,10 +208,9 @@ Console.WriteLine($"TikTok comment:   {status.Tiktok?.CommentInfo?.CurrentStatus
 ```csharp
 using var videoStream = File.OpenRead("video.mp4");
 
-var postId = await client.PublishShortVideoAsync(
+var postId = await client.PublishShortVideoToWorkspaceAsync(
     workspaceId: "workspace-123",
     video: videoStream,
-    platforms: new List<string> { "youtube", "tiktok", "facebook", "instagram" },
 
     // YouTube configuration
     youtube: new YouTubeConfig
@@ -255,10 +249,9 @@ Console.WriteLine($"Published to all platforms: {postId}");
 
 ```csharp
 // Automatically detect and repost from TikTok
-var postId = await client.PublishShortVideoAsync(
+var postId = await client.PublishShortVideoToWorkspaceAsync(
     workspaceId: "workspace-123",
     video: "https://www.tiktok.com/@username/video/1234567890", // TikTok URL
-    platforms: new List<string> { "youtube" }, // Repost to YouTube
     youtube: new YouTubeConfig
     {
         Title = "Viral TikTok Repost",
@@ -278,10 +271,9 @@ var publishDate = new DateTime(2024, 12, 25, 12, 0, 0, DateTimeKind.Utc);
 
 using var videoStream = File.OpenRead("video.mp4");
 
-var postId = await client.PublishShortVideoAsync(
+var postId = await client.PublishShortVideoToWorkspaceAsync(
     workspaceId: "workspace-123",
     video: videoStream,
-    platforms: new List<string> { "youtube" },
     schedule: publishDate, // Schedule for specific date/time
     youtube: new YouTubeConfig
     {

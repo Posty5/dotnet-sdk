@@ -602,42 +602,27 @@ public class PostSettings
     public string? AccountId { get; set; }
     
     /// <summary>
-    /// Enable YouTube publishing
-    /// </summary>
-    public bool IsAllowYouTube { get; set; }
-    
-    /// <summary>
-    /// Enable TikTok publishing
-    /// </summary>
-    public bool IsAllowTiktok { get; set; }
-    
-    /// <summary>
-    /// Enable Facebook publishing
-    /// </summary>
-    public bool IsAllowFacebookPage { get; set; }
-    
-    /// <summary>
-    /// Enable Instagram publishing
-    /// </summary>
-    public bool IsAllowInstagram { get; set; }
-    
-    /// <summary>
-    /// YouTube configuration (required if IsAllowYouTube is true)
+    /// YouTube configuration — required if the workspace has a YouTube
+    /// account connected (the server matches connected accounts against
+    /// the configs you supply).
     /// </summary>
     public YouTubeConfig? Youtube { get; set; }
-    
+
     /// <summary>
-    /// TikTok configuration (required if IsAllowTiktok is true)
+    /// TikTok configuration — required if the workspace has a TikTok
+    /// account connected.
     /// </summary>
     public TikTokConfig? Tiktok { get; set; }
-    
+
     /// <summary>
-    /// Facebook configuration (required if IsAllowFacebookPage is true)
+    /// Facebook configuration — required if the workspace has a Facebook
+    /// Page connected.
     /// </summary>
     public FacebookPageConfig? Facebook { get; set; }
-    
+
     /// <summary>
-    /// Instagram configuration (required if IsAllowInstagram is true)
+    /// Instagram configuration — required if the workspace has an
+    /// Instagram account connected.
     /// </summary>
     public InstagramConfig? Instagram { get; set; }
     
@@ -682,26 +667,6 @@ public class CreateSocialPublisherPostRequest
     /// </summary>
     public string Source { get; set; } = string.Empty;
     
-    /// <summary>
-    /// Enable YouTube publishing
-    /// </summary>
-    public bool IsAllowYouTube { get; set; }
-    
-    /// <summary>
-    /// Enable TikTok publishing
-    /// </summary>
-    public bool IsAllowTiktok { get; set; }
-    
-    /// <summary>
-    /// Enable Facebook publishing
-    /// </summary>
-    public bool IsAllowFacebookPage { get; set; }
-    
-    /// <summary>
-    /// Enable Instagram publishing
-    /// </summary>
-    public bool IsAllowInstagram { get; set; }
-
     /// <summary>
     /// YouTube configuration
     /// </summary>
@@ -773,26 +738,6 @@ public class CreateSocialPublisherAccountPostRequest
     /// Source type (video-file, video-url, facebook-video, youtube-video, tiktok-video )
     /// </summary>
     public string Source { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// Enable YouTube publishing
-    /// </summary>
-    public bool IsAllowYouTube { get; set; }
-    
-    /// <summary>
-    /// Enable TikTok publishing
-    /// </summary>
-    public bool IsAllowTiktok { get; set; }
-    
-    /// <summary>
-    /// Enable Facebook publishing
-    /// </summary>
-    public bool IsAllowFacebookPage { get; set; }
-    
-    /// <summary>
-    /// Enable Instagram publishing
-    /// </summary>
-    public bool IsAllowInstagram { get; set; }
     
     /// <summary>
     /// YouTube configuration

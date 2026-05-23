@@ -142,7 +142,6 @@ public class SocialPublisherPostClient
         string workspaceId,
         object video,
         object? thumbnail = null,
-        List<string>? platforms = null,
         YouTubeConfig? youtube = null,
         TikTokConfig? tiktok = null,
         FacebookPageConfig? facebook = null,
@@ -155,14 +154,14 @@ public class SocialPublisherPostClient
         CommentRequest? comment = null,
         CancellationToken cancellationToken = default)
     {
-        // Build post settings
+        // Build post settings.
+        // The server derives which platforms to publish to from the
+        // workspace's connected accounts; the client just supplies the
+        // platform configs that match (and any platform not connected
+        // is silently ignored).
         var settings = new PostSettings
         {
             WorkspaceId = workspaceId,
-            IsAllowYouTube = platforms?.Contains("youtube") ?? false,
-            IsAllowTiktok = platforms?.Contains("tiktok") ?? false,
-            IsAllowFacebookPage = platforms?.Contains("facebook") ?? false,
-            IsAllowInstagram = platforms?.Contains("instagram") ?? false,
             Youtube = youtube,
             Tiktok = tiktok,
             Facebook = facebook,
@@ -213,7 +212,6 @@ public class SocialPublisherPostClient
         string accountId,
         object video,
         object? thumbnail = null,
-        List<string>? platforms = null,
         YouTubeConfig? youtube = null,
         TikTokConfig? tiktok = null,
         FacebookPageConfig? facebook = null,
@@ -226,14 +224,12 @@ public class SocialPublisherPostClient
         CommentRequest? comment = null,
         CancellationToken cancellationToken = default)
     {
-        // Build post settings
+        // Build post settings.
+        // The server derives the publish target from the account's platform field;
+        // the client supplies whichever platform config matches that account.
         var settings = new PostSettings
         {
             AccountId = accountId,
-            IsAllowYouTube = platforms?.Contains("youtube") ?? false,
-            IsAllowTiktok = platforms?.Contains("tiktok") ?? false,
-            IsAllowFacebookPage = platforms?.Contains("facebook") ?? false,
-            IsAllowInstagram = platforms?.Contains("instagram") ?? false,
             Youtube = youtube,
             Tiktok = tiktok,
             Facebook = facebook,
@@ -276,25 +272,6 @@ public class SocialPublisherPostClient
         };
     }
 
-    [Obsolete("Use PublishShortVideoToWorkspaceAsync instead")]
-    public Task<string> PublishShortVideoAsync(
-        string workspaceId,
-        object video,
-        object? thumbnail = null,
-        List<string>? platforms = null,
-        YouTubeConfig? youtube = null,
-        TikTokConfig? tiktok = null,
-        FacebookPageConfig? facebook = null,
-        InstagramConfig? instagram = null,
-        object? schedule = null,
-        string? tag = null,
-        string? refId = null,
-        string? videoContentType = null,
-        string? thumbnailContentType = null,
-        CancellationToken cancellationToken = default)
-    {
-        return PublishShortVideoToWorkspaceAsync(workspaceId, video, thumbnail, platforms, youtube, tiktok, facebook, instagram, schedule, tag, refId, videoContentType, thumbnailContentType, null, cancellationToken);
-    }
 
     // ============================================================================
     // PRIVATE PUBLISHING METHODS
@@ -325,10 +302,6 @@ public class SocialPublisherPostClient
             Source = "file",
             VideoURL = uploadConfig.Video.FileURL,
             ThumbURL = thumbUrl,
-            IsAllowYouTube = settings.IsAllowYouTube,
-            IsAllowTiktok = settings.IsAllowTiktok,
-            IsAllowFacebookPage = settings.IsAllowFacebookPage,
-            IsAllowInstagram = settings.IsAllowInstagram,
             Youtube = settings.Youtube,
             Tiktok = settings.Tiktok,
             Facebook = settings.Facebook,
@@ -370,10 +343,6 @@ public class SocialPublisherPostClient
             Source = "url",
             VideoURL = videoUrl,
             ThumbURL = thumbUrl,
-            IsAllowYouTube = settings.IsAllowYouTube,
-            IsAllowTiktok = settings.IsAllowTiktok,
-            IsAllowFacebookPage = settings.IsAllowFacebookPage,
-            IsAllowInstagram = settings.IsAllowInstagram,
             Youtube = settings.Youtube,
             Tiktok = settings.Tiktok,
             Facebook = settings.Facebook,
@@ -415,10 +384,6 @@ public class SocialPublisherPostClient
             Source = "repost",
             PostURL = videoUrl,
             ThumbURL = thumbUrl,
-            IsAllowYouTube = settings.IsAllowYouTube,
-            IsAllowTiktok = settings.IsAllowTiktok,
-            IsAllowFacebookPage = settings.IsAllowFacebookPage,
-            IsAllowInstagram = settings.IsAllowInstagram,
             Youtube = settings.Youtube,
             Tiktok = settings.Tiktok,
             Facebook = settings.Facebook,
@@ -455,10 +420,6 @@ public class SocialPublisherPostClient
             Source = "file",
             VideoURL = uploadConfig.Video.FileURL,
             ThumbURL = thumbUrl,
-            IsAllowYouTube = settings.IsAllowYouTube,
-            IsAllowTiktok = settings.IsAllowTiktok,
-            IsAllowFacebookPage = settings.IsAllowFacebookPage,
-            IsAllowInstagram = settings.IsAllowInstagram,
             Youtube = settings.Youtube,
             Tiktok = settings.Tiktok,
             Facebook = settings.Facebook,
@@ -500,10 +461,6 @@ public class SocialPublisherPostClient
             Source = "url",
             VideoURL = videoUrl,
             ThumbURL = thumbUrl,
-            IsAllowYouTube = settings.IsAllowYouTube,
-            IsAllowTiktok = settings.IsAllowTiktok,
-            IsAllowFacebookPage = settings.IsAllowFacebookPage,
-            IsAllowInstagram = settings.IsAllowInstagram,
             Youtube = settings.Youtube,
             Tiktok = settings.Tiktok,
             Facebook = settings.Facebook,
@@ -545,10 +502,6 @@ public class SocialPublisherPostClient
             Source = "repost",
             PostURL = videoUrl,
             ThumbURL = thumbUrl,
-            IsAllowYouTube = settings.IsAllowYouTube,
-            IsAllowTiktok = settings.IsAllowTiktok,
-            IsAllowFacebookPage = settings.IsAllowFacebookPage,
-            IsAllowInstagram = settings.IsAllowInstagram,
             Youtube = settings.Youtube,
             Tiktok = settings.Tiktok,
             Facebook = settings.Facebook,
@@ -570,10 +523,9 @@ public class SocialPublisherPostClient
         var path = string.IsNullOrEmpty(id) ? $"{BasePath}/short-video/workspace/by-file" : $"{BasePath}/short-video/workspace/by-file/{id}";
         var payload = new
         {
-            request.WorkspaceId, request.Source, request.IsAllowYouTube, request.IsAllowTiktok,
-            request.IsAllowFacebookPage, request.IsAllowInstagram, request.Youtube, request.Tiktok,
+            request.WorkspaceId, request.Source, request.Youtube, request.Tiktok,
             request.Facebook, request.Instagram, request.VideoURL, request.ThumbURL, request.PostURL,
-            request.Schedule, request.Tag, request.RefId, createdFrom = "dotnetPackage"
+            request.Schedule, request.Comment, request.Tag, request.RefId, createdFrom = "dotnetPackage"
         };
 
         var response = await _http.PostAsync<Dictionary<string, object>>(path, payload, cancellationToken);
@@ -589,10 +541,9 @@ public class SocialPublisherPostClient
         var path = string.IsNullOrEmpty(id) ? $"{BasePath}/short-video/workspace/by-url" : $"{BasePath}/short-video/workspace/by-url/{id}";
         var payload = new
         {
-            request.WorkspaceId, request.Source, request.IsAllowYouTube, request.IsAllowTiktok,
-            request.IsAllowFacebookPage, request.IsAllowInstagram, request.Youtube, request.Tiktok,
+            request.WorkspaceId, request.Source, request.Youtube, request.Tiktok,
             request.Facebook, request.Instagram, request.VideoURL, request.ThumbURL, request.PostURL,
-            request.Schedule, request.Tag, request.RefId, createdFrom = "dotnetPackage"
+            request.Schedule, request.Comment, request.Tag, request.RefId, createdFrom = "dotnetPackage"
         };
 
         var response = await _http.PostAsync<Dictionary<string, object>>(path, payload, cancellationToken);
@@ -608,10 +559,9 @@ public class SocialPublisherPostClient
         var path = string.IsNullOrEmpty(id) ? $"{BasePath}/short-video/account/by-file" : $"{BasePath}/short-video/account/by-file/{id}";
         var payload = new
         {
-            request.AccountId, request.Source, request.IsAllowYouTube, request.IsAllowTiktok,
-            request.IsAllowFacebookPage, request.IsAllowInstagram, request.Youtube, request.Tiktok,
+            request.AccountId, request.Source, request.Youtube, request.Tiktok,
             request.Facebook, request.Instagram, request.VideoURL, request.ThumbURL, request.PostURL,
-            request.Schedule, request.Tag, request.RefId, createdFrom = "dotnetPackage"
+            request.Schedule, request.Comment, request.Tag, request.RefId, createdFrom = "dotnetPackage"
         };
 
         var response = await _http.PostAsync<Dictionary<string, object>>(path, payload, cancellationToken);
@@ -627,10 +577,9 @@ public class SocialPublisherPostClient
         var path = string.IsNullOrEmpty(id) ? $"{BasePath}/short-video/account/by-url" : $"{BasePath}/short-video/account/by-url/{id}";
         var payload = new
         {
-            request.AccountId, request.Source, request.IsAllowYouTube, request.IsAllowTiktok,
-            request.IsAllowFacebookPage, request.IsAllowInstagram, request.Youtube, request.Tiktok,
+            request.AccountId, request.Source, request.Youtube, request.Tiktok,
             request.Facebook, request.Instagram, request.VideoURL, request.ThumbURL, request.PostURL,
-            request.Schedule, request.Tag, request.RefId, createdFrom = "dotnetPackage"
+            request.Schedule, request.Comment, request.Tag, request.RefId, createdFrom = "dotnetPackage"
         };
 
         var response = await _http.PostAsync<Dictionary<string, object>>(path, payload, cancellationToken);
