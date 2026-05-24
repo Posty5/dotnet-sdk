@@ -54,7 +54,6 @@ public class SocialPublisherPostClientTests : IDisposable
             workspaceId: _workspaceId,
             video: videoStream,
             thumbnail: ThumbnailURL,
-            platforms: new List<string> { "youtube" },
             youtube: new YouTubeConfig
             {
                 Title = $"Video File + Thumb URL - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
@@ -83,7 +82,6 @@ public class SocialPublisherPostClientTests : IDisposable
             workspaceId: _workspaceId,
             video: videoStream,
             thumbnail: thumbStream,
-            platforms: new List<string> { "tiktok" },
             tiktok: new TikTokConfig
             {
                 Caption = $"Video File + Thumb File - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
@@ -116,7 +114,6 @@ public class SocialPublisherPostClientTests : IDisposable
             workspaceId: _workspaceId,
             video: VideoURL,
             thumbnail: thumbStream,
-            platforms: new List<string> { "youtube" },
             youtube: new YouTubeConfig
             {
                 Title = $"Video URL + Thumb File - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
@@ -139,7 +136,6 @@ public class SocialPublisherPostClientTests : IDisposable
             workspaceId: _workspaceId,
             video: VideoURL,
             thumbnail: ThumbnailURL,
-            platforms: new List<string> { "youtube", "tiktok" },
             youtube: new YouTubeConfig
             {
                 Title = $"Video URL + Thumb URL - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
@@ -172,7 +168,6 @@ public class SocialPublisherPostClientTests : IDisposable
         var postId = await _client.PublishShortVideoToWorkspaceAsync(
             workspaceId: _workspaceId,
             video: FacebookReelURL,
-            platforms: new List<string> { "youtube" },
             youtube: new YouTubeConfig
             {
                 Title = $"Reposted from Facebook - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
@@ -193,7 +188,6 @@ public class SocialPublisherPostClientTests : IDisposable
         var postId = await _client.PublishShortVideoToWorkspaceAsync(
             workspaceId: _workspaceId,
             video: YouTubeShortsURL,
-            platforms: new List<string> { "tiktok" },
             tiktok: new TikTokConfig
             {
                 Caption = "Reposted from YouTube Shorts",
@@ -216,7 +210,6 @@ public class SocialPublisherPostClientTests : IDisposable
         var postId = await _client.PublishShortVideoToWorkspaceAsync(
             workspaceId: _workspaceId,
             video: TikTokVideoURL,
-            platforms: new List<string> { "youtube" },
             youtube: new YouTubeConfig
             {
                 Title = $"Reposted from TikTok - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
@@ -246,7 +239,6 @@ public class SocialPublisherPostClientTests : IDisposable
             accountId: _tiktokAccountId,
             video: videoStream,
             thumbnail: thumbStream,
-            platforms: new List<string> { "tiktok" },
             tiktok: new TikTokConfig
             {
                 Caption = $"Account Video File - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
@@ -272,7 +264,6 @@ public class SocialPublisherPostClientTests : IDisposable
             accountId: _youtubeAccountId,
             video: VideoURL,
             thumbnail: thumbStream,
-            platforms: new List<string> { "youtube" },
             youtube: new YouTubeConfig
             {
                 Title = $"Account Video URL - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
@@ -294,7 +285,6 @@ public class SocialPublisherPostClientTests : IDisposable
         var postId = await _client.PublishShortVideoToAccountAsync(
             accountId: _tiktokAccountId,
             video: YouTubeShortsURL,
-            platforms: new List<string> { "tiktok" },
             tiktok: new TikTokConfig
             {
                 Caption = "Account Repost Test",
@@ -429,7 +419,6 @@ public class SocialPublisherPostClientTests : IDisposable
         var postId = await _client.PublishShortVideoToWorkspaceAsync(
             workspaceId: _workspaceId,
             video: VideoURL,
-            platforms: new List<string> { "youtube" },
             youtube: new YouTubeConfig
             {
                 Title = "Scheduled Video Test",
@@ -451,7 +440,6 @@ public class SocialPublisherPostClientTests : IDisposable
         var postId = await _client.PublishShortVideoToWorkspaceAsync(
             workspaceId: _workspaceId,
             video: VideoURL,
-            platforms: new List<string> { "youtube" },
             youtube: new YouTubeConfig
             {
                 Title = "Tagged Video Test",
