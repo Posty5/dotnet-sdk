@@ -663,7 +663,7 @@ public class CreateSocialPublisherPostRequest
     public string WorkspaceId { get; set; } = string.Empty;
 
     /// <summary>
-    /// Source type (video-file, video-url, facebook-video, youtube-video, tiktok-video )
+    /// Source type (video-file, video-url)
     /// </summary>
     public string Source { get; set; } = string.Empty;
     
@@ -689,7 +689,7 @@ public class CreateSocialPublisherPostRequest
     public InstagramConfig? Instagram { get; set; }
     
     /// <summary>
-    /// Video URL (for url/repost sources)
+    /// Video URL for direct video file URL sources.
     /// </summary>
     public string? VideoURL { get; set; }
     
@@ -697,11 +697,6 @@ public class CreateSocialPublisherPostRequest
     /// Thumbnail URL
     /// </summary>
     public string? ThumbURL { get; set; }
-    
-    /// <summary>
-    /// Post URL (for repost sources)
-    /// </summary>
-    public string? PostURL { get; set; }
     
     /// <summary>
     /// Schedule configuration
@@ -735,7 +730,7 @@ public class CreateSocialPublisherAccountPostRequest
     public string AccountId { get; set; } = string.Empty;
 
     /// <summary>
-    /// Source type (video-file, video-url, facebook-video, youtube-video, tiktok-video )
+    /// Source type (video-file, video-url)
     /// </summary>
     public string Source { get; set; } = string.Empty;
     
@@ -760,7 +755,7 @@ public class CreateSocialPublisherAccountPostRequest
     public InstagramConfig? Instagram { get; set; }
     
     /// <summary>
-    /// Video URL (for url/repost sources)
+    /// Video URL for direct video file URL sources.
     /// </summary>
     public string? VideoURL { get; set; }
     
@@ -768,11 +763,6 @@ public class CreateSocialPublisherAccountPostRequest
     /// Thumbnail URL
     /// </summary>
     public string? ThumbURL { get; set; }
-    
-    /// <summary>
-    /// Post URL (for repost sources)
-    /// </summary>
-    public string? PostURL { get; set; }
     
     /// <summary>
     /// Schedule configuration
@@ -1221,10 +1211,6 @@ public class SourceURLsModel
     /// </summary>
     public string? ImageURL { get; set; }
 
-    /// <summary>
-    /// Post URL (for platform sources like facebook, tiktok, youtube)
-    /// </summary>
-    public string? PostURL { get; set; }
 }
 
 /// <summary>

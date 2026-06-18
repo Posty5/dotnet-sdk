@@ -134,9 +134,9 @@ public class SocialPublisherPostClient
     // ============================================================================
 
     /// <summary>
-    /// Publish a short video to multiple social media platforms with auto-detection.
-    /// This is the main recommended method - now explicitly for workspaces.
-    /// Automatically detects video source type (file upload, URL, or repost) and handles accordingly.
+    /// Publish a short video to connected social media accounts.
+    /// Use original or authorized content only. TikTok Direct Post requires
+    /// the creator-controlled Posty5 review and confirmation flow.
     /// </summary>
     public async Task<string> PublishShortVideoToWorkspaceAsync(
         string workspaceId,
@@ -198,15 +198,13 @@ public class SocialPublisherPostClient
                 thumbnail as Stream, thumbnailContentType, thumbnail as string, cancellationToken),
             "url" => await PublishShortVideoToWorkspaceByUrlAsync(settings, (string)video, thumbnail as Stream,
                 thumbnailContentType, thumbnail as string, cancellationToken),
-            "repost" => await PublishRepostVideoToWorkspaceAsync(settings, (string)video, thumbnail as Stream,
-                thumbnailContentType, thumbnail as string, cancellationToken),
             _ => throw new InvalidOperationException($"Unknown video source type: {sourceType}")
         };
     }
 
     /// <summary>
-    /// Publish a short video to multiple social media platforms with auto-detection via Account.
-    /// Automatically detects video source type (file upload, URL, or repost) and handles accordingly.
+    /// Publish a short video to a connected social media account.
+    /// Use original or authorized content only.
     /// </summary>
     public async Task<string> PublishShortVideoToAccountAsync(
         string accountId,
@@ -266,8 +264,6 @@ public class SocialPublisherPostClient
                 thumbnail as Stream, thumbnailContentType, thumbnail as string, cancellationToken),
             "url" => await PublishShortVideoToAccountByUrlAsync(settings, (string)video, thumbnail as Stream,
                 thumbnailContentType, thumbnail as string, cancellationToken),
-            "repost" => await PublishRepostVideoToAccountAsync(settings, (string)video, thumbnail as Stream,
-                thumbnailContentType, thumbnail as string, cancellationToken),
             _ => throw new InvalidOperationException($"Unknown video source type: {sourceType}")
         };
     }
@@ -299,7 +295,7 @@ public class SocialPublisherPostClient
         return await CreateToWorkspaceByFileAsync(new CreateSocialPublisherPostRequest
         {
             WorkspaceId = settings.WorkspaceId,
-            Source = "file",
+            Source = "video-file",
             VideoURL = uploadConfig.Video.FileURL,
             ThumbURL = thumbUrl,
             Youtube = settings.Youtube,
@@ -340,49 +336,8 @@ public class SocialPublisherPostClient
         return await CreateToWorkspaceByUrlAsync(new CreateSocialPublisherPostRequest
         {
             WorkspaceId = settings.WorkspaceId,
-            Source = "url",
+            Source = "video-url",
             VideoURL = videoUrl,
-            ThumbURL = thumbUrl,
-            Youtube = settings.Youtube,
-            Tiktok = settings.Tiktok,
-            Facebook = settings.Facebook,
-            Instagram = settings.Instagram,
-            Schedule = settings.Schedule,
-            Comment = settings.Comment,
-            Tag = settings.Tag,
-            RefId = settings.RefId
-        }, postId, cancellationToken);
-    }
-
-    private async Task<string> PublishRepostVideoToWorkspaceAsync(
-        PostSettings settings, string videoUrl,
-        Stream? thumbnailStream, string? thumbnailContentType, string? thumbnailUrl,
-        CancellationToken cancellationToken)
-    {
-        string? thumbUrl = null;
-        string? postId = null;
-
-        if (thumbnailStream != null)
-        {
-            var uploadConfig = await GenerateUploadUrlsAsync(new GenerateUploadUrlsRequest
-            {
-                ThumbFileType = thumbnailContentType
-            }, cancellationToken);
-
-            thumbUrl = await HandleThumbnailUploadAsync(thumbnailStream, thumbnailContentType, thumbnailUrl,
-                uploadConfig.Thumb, cancellationToken);
-            postId = uploadConfig.PostId;
-        }
-        else
-        {
-            thumbUrl = thumbnailUrl;
-        }
-
-        return await CreateToWorkspaceByUrlAsync(new CreateSocialPublisherPostRequest
-        {
-            WorkspaceId = settings.WorkspaceId,
-            Source = "repost",
-            PostURL = videoUrl,
             ThumbURL = thumbUrl,
             Youtube = settings.Youtube,
             Tiktok = settings.Tiktok,
@@ -417,7 +372,7 @@ public class SocialPublisherPostClient
         return await CreateToAccountByFileAsync(new CreateSocialPublisherAccountPostRequest
         {
             AccountId = settings.AccountId!,
-            Source = "file",
+            Source = "video-file",
             VideoURL = uploadConfig.Video.FileURL,
             ThumbURL = thumbUrl,
             Youtube = settings.Youtube,
@@ -458,49 +413,8 @@ public class SocialPublisherPostClient
         return await CreateToAccountByUrlAsync(new CreateSocialPublisherAccountPostRequest
         {
             AccountId = settings.AccountId!,
-            Source = "url",
+            Source = "video-url",
             VideoURL = videoUrl,
-            ThumbURL = thumbUrl,
-            Youtube = settings.Youtube,
-            Tiktok = settings.Tiktok,
-            Facebook = settings.Facebook,
-            Instagram = settings.Instagram,
-            Schedule = settings.Schedule,
-            Comment = settings.Comment,
-            Tag = settings.Tag,
-            RefId = settings.RefId
-        }, postId, cancellationToken);
-    }
-
-    private async Task<string> PublishRepostVideoToAccountAsync(
-        PostSettings settings, string videoUrl,
-        Stream? thumbnailStream, string? thumbnailContentType, string? thumbnailUrl,
-        CancellationToken cancellationToken)
-    {
-        string? thumbUrl = null;
-        string? postId = null;
-
-        if (thumbnailStream != null)
-        {
-            var uploadConfig = await GenerateUploadUrlsAsync(new GenerateUploadUrlsRequest
-            {
-                ThumbFileType = thumbnailContentType
-            }, cancellationToken);
-
-            thumbUrl = await HandleThumbnailUploadAsync(thumbnailStream, thumbnailContentType, thumbnailUrl,
-                uploadConfig.Thumb, cancellationToken);
-            postId = uploadConfig.PostId;
-        }
-        else
-        {
-            thumbUrl = thumbnailUrl;
-        }
-
-        return await CreateToAccountByUrlAsync(new CreateSocialPublisherAccountPostRequest
-        {
-            AccountId = settings.AccountId!,
-            Source = "repost",
-            PostURL = videoUrl,
             ThumbURL = thumbUrl,
             Youtube = settings.Youtube,
             Tiktok = settings.Tiktok,
@@ -524,7 +438,7 @@ public class SocialPublisherPostClient
         var payload = new
         {
             request.WorkspaceId, request.Source, request.Youtube, request.Tiktok,
-            request.Facebook, request.Instagram, request.VideoURL, request.ThumbURL, request.PostURL,
+            request.Facebook, request.Instagram, request.VideoURL, request.ThumbURL,
             request.Schedule, request.Comment, request.Tag, request.RefId, createdFrom = "dotnetPackage"
         };
 
@@ -542,7 +456,7 @@ public class SocialPublisherPostClient
         var payload = new
         {
             request.WorkspaceId, request.Source, request.Youtube, request.Tiktok,
-            request.Facebook, request.Instagram, request.VideoURL, request.ThumbURL, request.PostURL,
+            request.Facebook, request.Instagram, request.VideoURL, request.ThumbURL,
             request.Schedule, request.Comment, request.Tag, request.RefId, createdFrom = "dotnetPackage"
         };
 
@@ -560,7 +474,7 @@ public class SocialPublisherPostClient
         var payload = new
         {
             request.AccountId, request.Source, request.Youtube, request.Tiktok,
-            request.Facebook, request.Instagram, request.VideoURL, request.ThumbURL, request.PostURL,
+            request.Facebook, request.Instagram, request.VideoURL, request.ThumbURL,
             request.Schedule, request.Comment, request.Tag, request.RefId, createdFrom = "dotnetPackage"
         };
 
@@ -578,7 +492,7 @@ public class SocialPublisherPostClient
         var payload = new
         {
             request.AccountId, request.Source, request.Youtube, request.Tiktok,
-            request.Facebook, request.Instagram, request.VideoURL, request.ThumbURL, request.PostURL,
+            request.Facebook, request.Instagram, request.VideoURL, request.ThumbURL,
             request.Schedule, request.Comment, request.Tag, request.RefId, createdFrom = "dotnetPackage"
         };
 
@@ -599,23 +513,6 @@ public class SocialPublisherPostClient
         
         if (video is string url)
         {
-            if (System.Text.RegularExpressions.Regex.IsMatch(url,
-                @"^https?://(www\.)?(facebook\.com|fb\.watch)/(reel|watch|.*\/videos)/.*",
-                System.Text.RegularExpressions.RegexOptions.IgnoreCase))
-                return "repost";
-
-       if (System.Text.RegularExpressions.Regex.IsMatch(
-    url,
-    @"^https?:\/\/(www\.)?(tiktok\.com\/@[^\/]+\/video\/\d+|vm\.tiktok\.com\/\w+|vt\.tiktok\.com\/\w+)",
-    System.Text.RegularExpressions.RegexOptions.IgnoreCase
-))
-    return "repost";
-
-            if (System.Text.RegularExpressions.Regex.IsMatch(url,
-                @"^https?://(www\.)?(youtube\.com/shorts/|youtu\.be/)[A-Za-z0-9_-]+",
-                System.Text.RegularExpressions.RegexOptions.IgnoreCase))
-                return "repost";
-
             return "url";
         }
 

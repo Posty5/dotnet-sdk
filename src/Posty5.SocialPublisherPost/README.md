@@ -1,6 +1,6 @@
 # Posty5.SocialPublisherPost
 
-Official Posty5 SDK for managing social media publishing posts. Publish videos to YouTube Shorts, TikTok, Facebook Reels, and Instagram Reels with a unified, developer-friendly C# API.
+Official Posty5 SDK for managing social media publishing posts. Prepare creator-owned videos for YouTube Shorts, TikTok, Facebook Reels, and Instagram Reels with a unified, developer-friendly C# API.
 
 ---
 
@@ -22,16 +22,16 @@ Posty5 empowers businesses, marketers, and developers to streamline their online
 
 ## 📦 About This Package
 
-`Posty5.SocialPublisherPost` is the **post management client** for the Posty5 Social Media Publisher. This package enables you to programmatically publish short-form videos to multiple social media platforms simultaneously from a single API call.
+`Posty5.SocialPublisherPost` is the **post management client** for the Posty5 Social Media Publisher. Use it with videos you created or have the rights to publish. TikTok Direct Post requires the creator-controlled Posty5 review flow before submission.
 
 ### Key Capabilities
 
-- **Multi-Platform Publishing** - Publish to YouTube, TikTok, Facebook, and Instagram in one API call
-- **Flexible Video Sources** - Upload files, provide URLs, or repost from other platforms (auto-detected)
+- **Multi-Platform Preparation** - Prepare posts for connected YouTube, TikTok, Facebook, and Instagram accounts
+- **Authorized Video Sources** - Upload files or provide direct video file URLs for content you created or have rights to publish
 - **Smart Thumbnail Handling** - Upload files or provide URLs for thumbnail images
 - **Platform-Specific Configuration** - Customize titles, descriptions, captions, tags, and privacy settings per platform
 - **Schedule Publishing** - Publish immediately or schedule for optimal engagement times
-- **Repost Detection** - Automatically detect and repost from Facebook, TikTok, and YouTube Shorts URLs
+- **TikTok Direct Post Review** - TikTok publishing requires manual privacy selection, disclosure options when needed, and explicit creator confirmation in Posty5
 - **Post Status Tracking** - Monitor publishing progress and platform-specific status
 - **Tag & Reference System** - Organize posts using custom tags and reference IDs
 - **🔐 API Key Filtering** - Scope resources by API key for multi-tenant applications
@@ -104,12 +104,12 @@ Console.WriteLine($"YouTube: {status.YouTube?.PostInfo?.CurrentStatus}");
 
 ### PublishShortVideoToWorkspaceAsync
 
-Publish a short video to one or more social media platforms. This is the main method for creating publishing posts. It automatically detects video source type (Stream for file upload, string for URL or platform-specific repost URL) and handles all upload logic.
+Publish a short video to one or more connected social media accounts. Use file uploads or direct video file URLs for content you created or have the rights to publish. TikTok Direct Post must go through the Posty5 creator review and confirmation flow.
 
 **Parameters:**
 
 - `workspaceId` (string, **required**): Workspace ID containing connected social accounts
-- `video` (object, **required**): Video source - `Stream` (file upload) or `string` (URL or repost URL)
+- `video` (object, **required**): Video source - `Stream` file upload or `string` direct video file URL only.
 - `thumbnail` (object?, optional): Thumbnail image - `Stream` or `string` URL
 - `youtube` (YouTubeConfig?, optional): YouTube configuration
 - `tiktok` (TikTokConfig?, optional): TikTok configuration
@@ -245,23 +245,7 @@ var postId = await client.PublishShortVideoToWorkspaceAsync(
 Console.WriteLine($"Published to all platforms: {postId}");
 ```
 
-#### Example - Repost from TikTok/YouTube/Facebook
-
-```csharp
-// Automatically detect and repost from TikTok
-var postId = await client.PublishShortVideoToWorkspaceAsync(
-    workspaceId: "workspace-123",
-    video: "https://www.tiktok.com/@username/video/1234567890", // TikTok URL
-    youtube: new YouTubeConfig
-    {
-        Title = "Viral TikTok Repost",
-        Description = "Sharing this viral moment from TikTok",
-        Tags = new List<string> { "tiktok", "repost" }
-    }
-);
-
-Console.WriteLine($"Reposted: {postId}");
-```
+> **TikTok Direct Post note:** This SDK supports file uploads and direct video file URLs only. TikTok publishing in Posty5 is creator-controlled: the connected account owner reviews the video, confirms the TikTok nickname, edits caption text, manually selects privacy and interaction settings, completes disclosure options when required, and explicitly confirms publishing before submission.
 
 #### Example - Scheduled Publishing
 

@@ -24,9 +24,6 @@ public class SocialPublisherPostClientTests : IDisposable
     // Test URLs from TypeScript tests
     private const string ThumbnailURL = "https://images.unsplash.com/3/GoWildImages_MtEverest_NEP0555.jpg";
     private const string VideoURL = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4";
-    private const string FacebookReelURL = "https://www.facebook.com/reel/1794235308045414";
-    private const string YouTubeShortsURL = "https://www.youtube.com/shorts/jkiHUTnDJnk";
-    private const string TikTokVideoURL = "https://www.tiktok.com/@tamra.ai/video/7592228093834841362";
 
     public SocialPublisherPostClientTests()
     {
@@ -159,72 +156,6 @@ public class SocialPublisherPostClientTests : IDisposable
 
     #endregion
 
-    #region CREATE - Repost Tests (Auto-Detection)
-
-    [Fact]
-    public async Task PublishShortVideo_FacebookReelURL_ShouldAutoDetectAndRepost()
-    {
-        // Act - Auto-detects Facebook repost
-        var postId = await _client.PublishShortVideoToWorkspaceAsync(
-            workspaceId: _workspaceId,
-            video: FacebookReelURL,
-            youtube: new YouTubeConfig
-            {
-                Title = $"Reposted from Facebook - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
-                Description = "Testing Facebook repost with auto-detection",
-                Tags = new List<string> { "repost", "facebook" }
-            }
-        );
-
-        // Assert
-        Assert.NotNull(postId);
-        TestConfig.CreatedResources.Posts.Add(postId);
-    }
-
-    [Fact]
-    public async Task PublishShortVideo_YouTubeShortsURL_ShouldAutoDetectAndRepost()
-    {
-        // Act - Auto-detects YouTube Shorts repost
-        var postId = await _client.PublishShortVideoToWorkspaceAsync(
-            workspaceId: _workspaceId,
-            video: YouTubeShortsURL,
-            tiktok: new TikTokConfig
-            {
-                Caption = "Reposted from YouTube Shorts",
-                PrivacyLevel = "SELF_ONLY",
-                DisableDuet = false,
-                DisableStitch = false,
-                DisableComment = false
-            }
-        );
-
-        // Assert
-        Assert.NotNull(postId);
-        TestConfig.CreatedResources.Posts.Add(postId);
-    }
-
-    [Fact]
-    public async Task PublishShortVideo_TikTokVideoURL_ShouldAutoDetectAndRepost()
-    {
-        // Act - Auto-detects TikTok repost
-        var postId = await _client.PublishShortVideoToWorkspaceAsync(
-            workspaceId: _workspaceId,
-            video: TikTokVideoURL,
-            youtube: new YouTubeConfig
-            {
-                Title = $"Reposted from TikTok - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
-                Description = "Testing TikTok repost with auto-detection",
-                Tags = new List<string> { "repost", "tiktok" }
-            }
-        );
-
-        // Assert
-        Assert.NotNull(postId);
-        TestConfig.CreatedResources.Posts.Add(postId);
-    }
-
-    #endregion
-
     #region CREATE - Account Tests
 
     [Fact]
@@ -271,25 +202,6 @@ public class SocialPublisherPostClientTests : IDisposable
                 Tags = new List<string> { "test", "account" }
             },
             thumbnailContentType: "image/jpeg"
-        );
-
-        // Assert
-        Assert.NotNull(postId);
-        TestConfig.CreatedResources.Posts.Add(postId);
-    }
-
-    [Fact]
-    public async Task PublishShortVideoToAccount_Repost_ShouldSucceed()
-    {
-        // Act
-        var postId = await _client.PublishShortVideoToAccountAsync(
-            accountId: _tiktokAccountId,
-            video: YouTubeShortsURL,
-            tiktok: new TikTokConfig
-            {
-                Caption = "Account Repost Test",
-                PrivacyLevel = "SELF_ONLY"
-            }
         );
 
         // Assert
