@@ -1,0 +1,31 @@
+{
+  "generated_at": "2026-07-19",
+  "project": "dotnet-sdk",
+  "patterns": [
+    {
+      "name": "Shared transport injection",
+      "rule": "Feature clients accept Posty5HttpClient.",
+      "example": "src/Posty5.ShortLink/ShortLinkClient.cs"
+    },
+    {
+      "name": "Async plus cancellation",
+      "rule": "Public network methods use Async suffix and CancellationToken.",
+      "example": "src/Posty5.HtmlHosting/HtmlHostingClient.cs"
+    },
+    {
+      "name": "Domain model file",
+      "rule": "Each package groups request/response models under Models.",
+      "example": "src/Posty5.QRCode/Models/QRCodeModels.cs"
+    },
+    {
+      "name": "Package project reference",
+      "rule": "Feature csproj references Posty5.Core.",
+      "example": "src/Posty5.ShortLink/Posty5.ShortLink.csproj"
+    },
+    {
+      "name": "Shared integration tests",
+      "rule": "One xUnit project covers every package.",
+      "example": "tests/Posty5.Tests/Posty5.Tests.csproj"
+    }
+  ]
+}

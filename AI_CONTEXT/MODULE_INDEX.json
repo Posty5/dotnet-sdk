@@ -1,0 +1,46 @@
+{
+  "generated_at": "2026-07-19",
+  "project": "dotnet-sdk",
+  "modules": [
+    {
+      "name": "core",
+      "purpose": "Posty5Options, Posty5HttpClient, errors, response/pagination types, converters.",
+      "primary_path": "src/Posty5.Core"
+    },
+    {
+      "name": "short-link",
+      "purpose": "Short-link list/get/create/update/delete.",
+      "primary_path": "src/Posty5.ShortLink"
+    },
+    {
+      "name": "qr-code",
+      "purpose": "Create/update seven QR types plus get/list/delete.",
+      "primary_path": "src/Posty5.QRCode"
+    },
+    {
+      "name": "html-hosting",
+      "purpose": "File/GitHub create/update and hosting management.",
+      "primary_path": "src/Posty5.HtmlHosting"
+    },
+    {
+      "name": "html-hosting-variables",
+      "purpose": "Hosting variable CRUD/list.",
+      "primary_path": "src/Posty5.HtmlHostingVariables"
+    },
+    {
+      "name": "html-hosting-form-submission",
+      "purpose": "Submission get/navigation/list/status/delete.",
+      "primary_path": "src/Posty5.HtmlHostingFormSubmission"
+    },
+    {
+      "name": "social-publisher-workspace",
+      "purpose": "Workspace CRUD/list and logo upload.",
+      "primary_path": "src/Posty5.SocialPublisherWorkspace"
+    },
+    {
+      "name": "social-publisher-post",
+      "purpose": "Video/image publishing and post status/list.",
+      "primary_path": "src/Posty5.SocialPublisherPost"
+    }
+  ]
+}

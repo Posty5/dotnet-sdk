@@ -1,0 +1,46 @@
+{
+  "generated_at": "2026-07-19",
+  "project": "dotnet-sdk",
+  "features": [
+    {
+      "name": "Authenticated HTTP client",
+      "owner": "core",
+      "source": "src/Posty5.Core/Http/HttpClient.cs"
+    },
+    {
+      "name": "Short links",
+      "owner": "short-link",
+      "source": "src/Posty5.ShortLink/ShortLinkClient.cs"
+    },
+    {
+      "name": "QR codes",
+      "owner": "qr-code",
+      "source": "src/Posty5.QRCode/QRCodeClient.cs"
+    },
+    {
+      "name": "HTML hosting",
+      "owner": "html-hosting",
+      "source": "src/Posty5.HtmlHosting/HtmlHostingClient.cs"
+    },
+    {
+      "name": "Hosting variables",
+      "owner": "html-hosting-variables",
+      "source": "src/Posty5.HtmlHostingVariables/HtmlHostingVariablesClient.cs"
+    },
+    {
+      "name": "Form submissions",
+      "owner": "html-hosting-form-submission",
+      "source": "src/Posty5.HtmlHostingFormSubmission/HtmlHostingFormSubmissionClient.cs"
+    },
+    {
+      "name": "Social workspaces",
+      "owner": "social-publisher-workspace",
+      "source": "src/Posty5.SocialPublisherWorkspace/SocialPublisherWorkspaceClient.cs"
+    },
+    {
+      "name": "Social posts",
+      "owner": "social-publisher-post",
+      "source": "src/Posty5.SocialPublisherPost/SocialPublisherPostClient.cs"
+    }
+  ]
+}

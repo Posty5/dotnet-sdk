@@ -1,0 +1,31 @@
+{
+  "generated_at": "2026-07-19",
+  "project": "dotnet-sdk",
+  "integrations": [
+    {
+      "name": "Posty5 API",
+      "purpose": "All client operations",
+      "source": "src/Posty5.Core/Http/HttpClient.cs"
+    },
+    {
+      "name": "NuGet",
+      "purpose": "Eight package projects",
+      "source": "src"
+    },
+    {
+      "name": "System.Net.Http",
+      "purpose": "Transport/retries/uploads",
+      "source": "src/Posty5.Core/Http/HttpClient.cs"
+    },
+    {
+      "name": "Signed object storage",
+      "purpose": "Direct file/logo/media uploads",
+      "source": "src/Posty5.SocialPublisherPost/SocialPublisherPostClient.cs"
+    },
+    {
+      "name": "xUnit",
+      "purpose": "Client/integration tests",
+      "source": "tests/Posty5.Tests/Posty5.Tests.csproj"
+    }
+  ]
+}

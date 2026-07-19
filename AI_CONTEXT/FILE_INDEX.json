@@ -1,0 +1,83 @@
+{
+  "generated_at": "2026-07-19",
+  "project": "dotnet-sdk",
+  "excluded_generated_or_local": [
+    "node_modules",
+    "dist",
+    "coverage",
+    "bin",
+    "obj",
+    ".angular",
+    ".astro",
+    ".vs",
+    ".git",
+    "archives",
+    "logs"
+  ],
+  "entries": [
+    {
+      "path": "Posty5.sln",
+      "role": "Solution"
+    },
+    {
+      "path": "src/Posty5.Core/Configuration/Posty5Options.cs",
+      "role": "Core options"
+    },
+    {
+      "path": "src/Posty5.Core/Http/HttpClient.cs",
+      "role": "Core HTTP client"
+    },
+    {
+      "path": "src",
+      "role": "Source projects"
+    },
+    {
+      "path": "tests/Posty5.Tests",
+      "role": "Tests"
+    },
+    {
+      "path": "examples/Examples.cs",
+      "role": "Examples"
+    },
+    {
+      "path": "src/Posty5.Core",
+      "role": "Options, HTTP, exceptions, common response/pagination models, converters."
+    },
+    {
+      "path": "src/Posty5.ShortLink",
+      "role": "Short-link client/models."
+    },
+    {
+      "path": "src/Posty5.QRCode",
+      "role": "QR client/models."
+    },
+    {
+      "path": "src/Posty5.HtmlHosting",
+      "role": "HTML hosting client/models."
+    },
+    {
+      "path": "src/Posty5.HtmlHostingVariables",
+      "role": "Hosting variables client/models."
+    },
+    {
+      "path": "src/Posty5.HtmlHostingFormSubmission",
+      "role": "Submission client/models."
+    },
+    {
+      "path": "src/Posty5.SocialPublisherWorkspace",
+      "role": "Social workspace client/models."
+    },
+    {
+      "path": "src/Posty5.SocialPublisherPost",
+      "role": "Social post client/models/uploads."
+    },
+    {
+      "path": "tests/Posty5.Tests",
+      "role": "xUnit integration/client tests and assets."
+    },
+    {
+      "path": "examples",
+      "role": "Consumer usage examples."
+    }
+  ]
+}

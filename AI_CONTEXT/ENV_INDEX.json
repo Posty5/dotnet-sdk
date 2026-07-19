@@ -1,0 +1,42 @@
+{
+  "generated_at": "2026-07-19",
+  "project": "dotnet-sdk",
+  "note": "Names and purposes only; never values.",
+  "config": [
+    {
+      "name": "POSTY5_API_KEY",
+      "purpose": "Test/example API key; secret.",
+      "source": "tests/Posty5.Tests/TestConfig.cs",
+      "category": "environment",
+      "sensitive": true
+    },
+    {
+      "name": "POSTY5_BASE_URL",
+      "purpose": "Test API origin override.",
+      "source": "tests/Posty5.Tests/TestConfig.cs",
+      "category": "environment",
+      "sensitive": false
+    },
+    {
+      "name": "Posty5Options.BaseUrl",
+      "purpose": "Per-client API base URL.",
+      "source": "src/Posty5.Core/Configuration/Posty5Options.cs",
+      "category": "runtime",
+      "sensitive": false
+    },
+    {
+      "name": "Posty5Options.ApiKey",
+      "purpose": "Per-client X-API-Key credential; secret.",
+      "source": "src/Posty5.Core/Configuration/Posty5Options.cs",
+      "category": "runtime",
+      "sensitive": true
+    },
+    {
+      "name": "Posty5Options.Debug",
+      "purpose": "Debug behavior; avoid sensitive data.",
+      "source": "src/Posty5.Core/Configuration/Posty5Options.cs",
+      "category": "runtime",
+      "sensitive": false
+    }
+  ]
+}
