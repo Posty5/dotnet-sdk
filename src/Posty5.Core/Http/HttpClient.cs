@@ -158,6 +158,85 @@ public class Posty5HttpClient : IDisposable
     }
 
     /// <summary>
+    /// Perform a PATCH request
+    /// </summary>
+    /// <typeparam name="T">Response type</typeparam>
+    /// <param name="path">API endpoint path</param>
+    /// <param name="data">Request body data</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>API response</returns>
+    public async Task<ApiResponse<T>> PatchAsync<T>(
+        string path,
+        object data,
+        CancellationToken cancellationToken = default)
+    {
+        if (_options.Debug)
+        {
+            Console.WriteLine($"[Posty5 SDK] PATCH {path}");
+        }
+
+        try
+        {
+            var json = JsonSerializer.Serialize(data, _jsonOptions);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PatchAsync(path, content, cancellationToken);
+            return await ProcessResponseAsync<T>(response);
+        }
+        catch (Exception ex) when (ex is not Posty5Exception)
+        {
+            throw new Posty5Exception($"PATCH request to {path} failed", ex);
+        }
+    }
+
+    /// <summary>
+    /// Perform a GET request for a file download.
+    /// </summary>
+    /// <remarks>
+    /// Separate from <see cref="GetAsync{T}"/> rather than a flag on it: a
+    /// download answers with the file itself, not with the
+    /// <c>{ message, result }</c> envelope every other endpoint uses, so it
+    /// cannot share the return type.
+    /// </remarks>
+    /// <param name="path">API endpoint path</param>
+    /// <param name="queryParams">Query parameters</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The file's bytes, content type and suggested filename</returns>
+    public async Task<FileResponse> GetBytesAsync(
+        string path,
+        Dictionary<string, object?>? queryParams = null,
+        CancellationToken cancellationToken = default)
+    {
+        var url = BuildUrl(path, queryParams);
+
+        if (_options.Debug)
+        {
+            Console.WriteLine($"[Posty5 SDK] GET (binary) {url}");
+        }
+
+        try
+        {
+            var response = await _httpClient.GetAsync(url, cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                HandleErrorResponse(response.StatusCode, await response.Content.ReadAsStringAsync());
+            }
+
+            return new FileResponse
+            {
+                Data = await response.Content.ReadAsByteArrayAsync(),
+                ContentType = response.Content.Headers.ContentType?.MediaType ?? "application/octet-stream",
+                FileName = ParseFileName(response.Content.Headers.ContentDisposition?.FileName)
+            };
+        }
+        catch (Exception ex) when (ex is not Posty5Exception)
+        {
+            throw new Posty5Exception($"GET request to {path} failed", ex);
+        }
+    }
+
+    /// <summary>
     /// Perform a DELETE request
     /// </summary>
     /// <typeparam name="T">Response type</typeparam>
@@ -221,6 +300,26 @@ public class Posty5HttpClient : IDisposable
             HttpStatusCode.TooManyRequests => new Posty5RateLimitException("Rate limit exceeded. Please try again later."),
             _ => new Posty5Exception(message, (int)statusCode, content)
         };
+    }
+
+    /// <summary>
+    /// The server sends the filename percent-encoded and wrapped in quotes.
+    /// Decode it, and keep the raw value if the encoding is malformed rather
+    /// than failing a download that otherwise arrived intact.
+    /// </summary>
+    private static string? ParseFileName(string? headerValue)
+    {
+        if (string.IsNullOrWhiteSpace(headerValue)) return null;
+
+        var trimmed = headerValue.Trim('"');
+        try
+        {
+            return Uri.UnescapeDataString(trimmed);
+        }
+        catch (UriFormatException)
+        {
+            return trimmed;
+        }
     }
 
     private string BuildUrl(string path, Dictionary<string, object?>? queryParams)

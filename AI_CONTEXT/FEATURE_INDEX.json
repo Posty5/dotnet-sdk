@@ -41,6 +41,36 @@
       "name": "Social posts",
       "owner": "social-publisher-post",
       "source": "src/Posty5.SocialPublisherPost/SocialPublisherPostClient.cs"
+    },
+    {
+      "name": "Store catalogue management",
+      "owner": "store",
+      "source": "src/Posty5.Store/Clients/StoreProductsClient.cs"
+    },
+    {
+      "name": "Store order management",
+      "owner": "store",
+      "source": "src/Posty5.Store/Clients/StoreOrdersClient.cs"
+    },
+    {
+      "name": "Store tags and product assignments",
+      "owner": "store",
+      "source": "src/Posty5.Store/Clients/StoreTagsClient.cs"
+    },
+    {
+      "name": "Store customers (read-only)",
+      "owner": "store",
+      "source": "src/Posty5.Store/Clients/StoreCustomersClient.cs"
+    },
+    {
+      "name": "Store shipping countries, cities and fees",
+      "owner": "store",
+      "source": "src/Posty5.Store/Clients/StoreShippingClient.cs"
+    },
+    {
+      "name": "File downloads (.xlsx exports and templates)",
+      "owner": "core",
+      "source": "src/Posty5.Core/Http/HttpClient.cs"
     }
   ]
 }

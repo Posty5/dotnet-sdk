@@ -11,8 +11,8 @@
     <Version>3.0.0</Version>
     <Authors>Posty5</Authors>
     <Company>Posty5</Company>
-    <Description>Online Store (products and orders) management client for the Posty5 .NET SDK</Description>
-    <PackageTags>posty5;store;ecommerce;online-store;products;orders;api;sdk</PackageTags>
+    <Description>Online Store management client for the Posty5 .NET SDK — products, orders, tags, customers and shipping</Description>
+    <PackageTags>posty5;store;ecommerce;online-store;products;orders;tags;customers;shipping;api;sdk</PackageTags>
     <PackageProjectUrl>https://posty5.com</PackageProjectUrl>
     <RepositoryUrl>https://github.com/posty5/dotnet-sdk</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
