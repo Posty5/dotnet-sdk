@@ -78,6 +78,95 @@ Run your application:
 dotnet run
 ```
 
+## Publishing a long video (up to 60 minutes)
+
+Long video is priced by **duration** — 50 credits for every started 5 minutes —
+so quote it before you commit:
+
+```csharp
+var quote = await client.GetLongVideoQuoteAsync(videoUrl);
+
+if (!quote.WithinLimit)
+    throw new InvalidOperationException(quote.Reason);
+
+Console.WriteLine($"{quote.DurationSeconds}s costs {quote.Credits} credits");
+
+// Which targets can actually take a video this long?
+foreach (var p in quote.Platforms.Where(p => !p.Accepted))
+    Console.WriteLine($"{p.Platform}: {p.Reason}");
+```
+
+Then publish. Pass a `Stream` to upload, or a URL string for a video you already
+host:
+
+```csharp
+using var video = File.OpenRead("recording.mp4");
+
+var progress = new Progress<UploadProgress>(p =>
+    Console.WriteLine($"Uploaded {p.BytesTransferred} of {p.TotalBytes} bytes"));
+
+var result = await client.PublishLongVideoToWorkspaceAsync(
+    workspaceId: "workspace_123",
+    video: video,
+    youtube: new YouTubeConfig
+    {
+        Title = "Full workshop recording",
+        Description = "The complete two-part session.",
+        Tags = new List<string> { "workshop" }
+    },
+    videoContentType: "video/mp4",
+    progress: progress,
+    cancellationToken: cancellationToken);
+
+Console.WriteLine($"Charged {result.Credits} credits for {result.DurationSeconds}s");
+
+// Platforms disagree about "long" — Instagram Reels stop at 15 minutes.
+foreach (var target in result.RefusedTargets)
+    Console.WriteLine($"{target.Platform} skipped: {target.Reason}");
+```
+
+### What to know
+
+- **The duration is measured server-side.** There is no duration parameter, and
+  one would be ignored — a client-supplied duration would be a client-supplied
+  price.
+- **The 100-second `HttpClient` timeout does not apply.** Long uploads run with
+  it disabled; use the `CancellationToken` to bound them instead.
+- **Progress needs a seekable stream** to know the total. A non-seekable stream
+  still uploads, but `UploadProgress.Percentage` will be null.
+- **Cancelling mid-upload** aborts the transfer, and the post is never created,
+  so nothing is charged.
+- Requires the `socialMediaPublisher.longVideoPost` plan feature.
+
+### Interrupted uploads resume
+
+The upload goes up in 8MiB chunks, so a dropped connection costs one chunk
+rather than the hour of footage before it. Persist the upload URL to continue
+the same transfer later, even after the process restarts:
+
+```csharp
+var result = await client.PublishLongVideoToWorkspaceAsync(
+    workspaceId: "workspace_123",
+    video: video,
+    youtube: youtubeConfig,
+    videoContentType: "video/mp4",
+    onUploadUrl: url => File.WriteAllText("upload-url.txt", url),
+    resumeFrom: File.Exists("upload-url.txt") ? File.ReadAllText("upload-url.txt") : null,
+    cancellationToken: cancellationToken);
+```
+
+Resuming needs a **seekable** stream — retrying and resuming both seek to a byte
+offset. A non-seekable stream still uploads, through the single-PUT path.
+
+### Rescheduling
+
+```csharp
+await client.ReschedulePostAsync("post_123", DateTime.UtcNow.AddDays(1));
+await client.ReschedulePostAsync("post_123", "now");
+```
+
+Free, and only valid while the post is still pending with a future publish time.
+
 ## Environment Variables
 
 Instead of hardcoding your API key, use environment variables:

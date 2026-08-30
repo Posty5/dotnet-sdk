@@ -1,4 +1,4 @@
-using Posty5.Core.Converts;
+﻿using Posty5.Core.Converts;
 using System.Text.Json.Serialization;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -914,6 +914,14 @@ public class GenerateUploadUrlsRequest
     /// Video file content type (e.g., video/mp4)
     /// </summary>
     public string? VideoFileType { get; set; }
+
+    /// <summary>
+    /// Post type these uploads are for. Sending "longVideo" makes the server
+    /// check plan gating and affordability now, before an hour of video is
+    /// transferred for a post that cannot be published. The duration-accurate
+    /// charge still happens when the post is created.
+    /// </summary>
+    public string? PostType { get; set; }
 }
 
 /// <summary>
@@ -999,6 +1007,30 @@ public class UploadUrlInfo
     /// Bucket file path
     /// </summary>
     public string? BucketFilePath { get; set; }
+
+    /// <summary>
+    /// Absolute tus endpoint for this same destination, when resumable uploads
+    /// are configured. Preferable to <see cref="UploadFileURL"/> for a long
+    /// video: a resumable transfer survives a dropped connection, which a
+    /// single PUT does not. Null when the server has no resumable service.
+    /// </summary>
+    public string? TusEndpoint { get; set; }
+
+    /// <summary>
+    /// Signed capability naming this exact destination, sent as the tus
+    /// <c>Upload-Metadata</c> key <c>ticket</c>. Short-lived; never log or
+    /// persist it.
+    /// </summary>
+    public string? Ticket { get; set; }
+
+    /// <summary>
+    /// When the ticket stops being accepted for CREATING an upload. An upload
+    /// already created resumes by its own URL and is unaffected.
+    /// </summary>
+    public DateTime? TicketExpiresAt { get; set; }
+
+    /// <summary>Maximum accepted size in bytes, so a client can fail fast.</summary>
+    public long? MaxSize { get; set; }
 }
 
 /// <summary>

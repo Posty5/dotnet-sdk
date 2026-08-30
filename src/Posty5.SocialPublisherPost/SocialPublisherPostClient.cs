@@ -1,4 +1,4 @@
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using Posty5.Core.Http;
 using Posty5.Core.Models;
 using Posty5.SocialPublisherPost.Models;
@@ -506,6 +506,373 @@ public class SocialPublisherPostClient
     // ============================================================================
     // PRIVATE HELPER METHODS
     // ============================================================================
+
+// ============================================================================
+    // LONG VIDEO (up to 60 minutes)
+    // ============================================================================
+
+    /// <summary>
+    /// Price a long video before publishing it. Creates nothing and charges
+    /// nothing.
+    /// </summary>
+    /// <remarks>
+    /// The server reads the video, measures its duration, and returns the exact
+    /// cost plus what each platform would do with a video that long. The units
+    /// come from the same calculation the publish call charges with, so the
+    /// quote and the bill cannot disagree.
+    /// <para>
+    /// <c>videoUrl</c> is the URL of an uploaded or externally hosted video.
+    /// </para>
+    /// </remarks>
+    public async Task<LongVideoQuoteResponse> GetLongVideoQuoteAsync(
+        string videoUrl,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(videoUrl))
+            throw new ArgumentException("videoUrl is required", nameof(videoUrl));
+
+        var response = await _http.PostAsync<LongVideoQuoteResponse>(
+            $"{BasePath}/long-video/quote",
+            new LongVideoQuoteRequest { VideoURL = videoUrl },
+            cancellationToken: cancellationToken);
+
+        return response.Result ?? new LongVideoQuoteResponse();
+    }
+
+    /// <summary>
+    /// Publish a video of up to 60 minutes to every account connected to a
+    /// workspace.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Cost is duration-based — 50 credits per started 5 minutes — so a
+    /// 12-minute video costs 150. Call <see cref="GetLongVideoQuoteAsync"/>
+    /// first if you need to show the price. There is no duration parameter and
+    /// one would be ignored: the server measures the video itself, because a
+    /// client-supplied duration would be a client-supplied price.
+    /// </para>
+    /// <para>
+    /// Platforms disagree about "long": a 40-minute video publishes to YouTube
+    /// and Facebook but is refused by Instagram, whose Reels cap at 15 minutes.
+    /// Those targets come back in
+    /// <see cref="PublishLongVideoResult.RefusedTargets"/> — the post still
+    /// publishes to the rest.
+    /// </para>
+    /// <para>
+    /// Cancelling mid-upload aborts the transfer. The reserved post is never
+    /// created, so nothing is charged.
+    /// </para>
+    /// <para>
+    /// <c>video</c> is a <see cref="Stream"/> to upload or a URL string;
+    /// <c>progress</c> reports upload progress and needs a seekable stream to
+    /// know the total.
+    /// </para>
+    /// <para>
+    /// A seekable stream is uploaded resumably, so a dropped connection costs
+    /// one chunk rather than the whole transfer. <c>onUploadUrl</c> receives the
+    /// upload's URL once it exists — persist it and pass it back as
+    /// <c>resumeFrom</c> to continue an interrupted transfer, including after a
+    /// process restart. The ticket expires in minutes, but an upload that
+    /// already exists resumes by its own URL and is unaffected.
+    /// </para>
+    /// </remarks>
+    public async Task<PublishLongVideoResult> PublishLongVideoToWorkspaceAsync(
+        string workspaceId,
+        object video,
+        object? thumbnail = null,
+        YouTubeConfig? youtube = null,
+        TikTokConfig? tiktok = null,
+        FacebookPageConfig? facebook = null,
+        InstagramConfig? instagram = null,
+        object? schedule = null,
+        string? tag = null,
+        string? refId = null,
+        string? videoContentType = null,
+        string? thumbnailContentType = null,
+        CommentRequest? comment = null,
+        IProgress<UploadProgress>? progress = null,
+        Action<string>? onUploadUrl = null,
+        string? resumeFrom = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(workspaceId))
+            throw new ArgumentException("workspaceId is required", nameof(workspaceId));
+        if (video == null)
+            throw new ArgumentNullException(nameof(video));
+        if (youtube == null && tiktok == null && facebook == null && instagram == null)
+            throw new ArgumentException("Provide at least one platform configuration (youtube / tiktok / facebook / instagram)");
+
+        var settings = new PostSettings
+        {
+            WorkspaceId = workspaceId,
+            Youtube = youtube,
+            Tiktok = tiktok,
+            Facebook = facebook,
+            Instagram = instagram,
+            Comment = comment,
+            Tag = tag,
+            RefId = refId,
+            Schedule = BuildSchedule(schedule)
+        };
+
+        var isFile = DetectVideoSource(video) == "file";
+        string videoUrl;
+        string? postId = null;
+        string? thumbUrl;
+
+        if (isFile)
+        {
+            var upload = await UploadLongVideoAsync(
+                (Stream)video, videoContentType ?? "video/mp4",
+                thumbnail as Stream, thumbnailContentType, progress, cancellationToken,
+                onUploadUrl, resumeFrom);
+
+            videoUrl = upload.VideoUrl;
+            postId = upload.PostId;
+            thumbUrl = await HandleThumbnailUploadAsync(
+                thumbnail as Stream, thumbnailContentType, thumbnail as string, upload.Config.Thumb, cancellationToken);
+        }
+        else
+        {
+            videoUrl = (string)video;
+            thumbUrl = thumbnail as string;
+        }
+
+        var body = new CreateSocialPublisherPostRequest
+        {
+            WorkspaceId = workspaceId,
+            Source = isFile ? "video-file" : "video-url",
+            VideoURL = videoUrl,
+            ThumbURL = thumbUrl,
+            Youtube = settings.Youtube,
+            Tiktok = settings.Tiktok,
+            Facebook = settings.Facebook,
+            Instagram = settings.Instagram,
+            Schedule = settings.Schedule,
+            Comment = settings.Comment,
+            Tag = settings.Tag,
+            RefId = settings.RefId
+        };
+
+        var segment = isFile ? "by-file" : "by-url";
+        var path = string.IsNullOrEmpty(postId)
+            ? $"{BasePath}/long-video/workspace/{segment}"
+            : $"{BasePath}/long-video/workspace/{segment}/{postId}";
+
+        var response = await _http.PostAsync<PublishLongVideoResult>(path, body, cancellationToken: cancellationToken);
+        return response.Result ?? new PublishLongVideoResult();
+    }
+
+    /// <summary>
+    /// Publish a video of up to 60 minutes to a single connected account.
+    /// </summary>
+    /// <remarks>
+    /// With one target there is no partial success: if that platform will not
+    /// take a video this long, the whole call is refused and nothing is charged.
+    /// See <see cref="PublishLongVideoToWorkspaceAsync"/> for the cost model.
+    /// </remarks>
+    public async Task<PublishLongVideoResult> PublishLongVideoToAccountAsync(
+        string accountId,
+        object video,
+        object? thumbnail = null,
+        YouTubeConfig? youtube = null,
+        TikTokConfig? tiktok = null,
+        FacebookPageConfig? facebook = null,
+        InstagramConfig? instagram = null,
+        object? schedule = null,
+        string? tag = null,
+        string? refId = null,
+        string? videoContentType = null,
+        string? thumbnailContentType = null,
+        CommentRequest? comment = null,
+        IProgress<UploadProgress>? progress = null,
+        Action<string>? onUploadUrl = null,
+        string? resumeFrom = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(accountId))
+            throw new ArgumentException("accountId is required", nameof(accountId));
+        if (video == null)
+            throw new ArgumentNullException(nameof(video));
+        if (youtube == null && tiktok == null && facebook == null && instagram == null)
+            throw new ArgumentException("Provide the platform configuration matching the account (youtube / tiktok / facebook / instagram)");
+
+        var isFile = DetectVideoSource(video) == "file";
+        string videoUrl;
+        string? postId = null;
+        string? thumbUrl;
+
+        if (isFile)
+        {
+            var upload = await UploadLongVideoAsync(
+                (Stream)video, videoContentType ?? "video/mp4",
+                thumbnail as Stream, thumbnailContentType, progress, cancellationToken,
+                onUploadUrl, resumeFrom);
+
+            videoUrl = upload.VideoUrl;
+            postId = upload.PostId;
+            thumbUrl = await HandleThumbnailUploadAsync(
+                thumbnail as Stream, thumbnailContentType, thumbnail as string, upload.Config.Thumb, cancellationToken);
+        }
+        else
+        {
+            videoUrl = (string)video;
+            thumbUrl = thumbnail as string;
+        }
+
+        var body = new CreateSocialPublisherAccountPostRequest
+        {
+            AccountId = accountId,
+            Source = isFile ? "video-file" : "video-url",
+            VideoURL = videoUrl,
+            ThumbURL = thumbUrl,
+            Youtube = youtube,
+            Tiktok = tiktok,
+            Facebook = facebook,
+            Instagram = instagram,
+            Schedule = BuildSchedule(schedule),
+            Comment = comment,
+            Tag = tag,
+            RefId = refId
+        };
+
+        var segment = isFile ? "by-file" : "by-url";
+        var path = string.IsNullOrEmpty(postId)
+            ? $"{BasePath}/long-video/account/{segment}"
+            : $"{BasePath}/long-video/account/{segment}/{postId}";
+
+        var response = await _http.PostAsync<PublishLongVideoResult>(path, body, cancellationToken: cancellationToken);
+        return response.Result ?? new PublishLongVideoResult();
+    }
+
+    /// <summary>
+    /// Re-schedule a post that has not published yet, or send it out now.
+    /// Costs no credits.
+    /// </summary>
+    /// <remarks>
+    /// Only posts still pending with a future publish time are eligible;
+    /// anything that has started publishing is refused by the server with a
+    /// reason.
+    /// <para>
+    /// <c>schedule</c> is a <see cref="DateTime"/> for the new time or the
+    /// string "now"; <c>caption</c> optionally replaces the caption too.
+    /// </para>
+    /// </remarks>
+    public async Task ReschedulePostAsync(
+        string id,
+        object schedule,
+        string? caption = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+            throw new ArgumentException("id is required", nameof(id));
+
+        var built = BuildSchedule(schedule)
+            ?? throw new ArgumentException("schedule must be a DateTime or the string \"now\"", nameof(schedule));
+
+        await _http.PutAsync<object>(
+            $"{BasePath}/{id}",
+            new ReschedulePostRequest { Schedule = built, Caption = caption },
+            cancellationToken: cancellationToken);
+    }
+
+    /// <summary>
+    /// Upload a long video and return the URL to publish from.
+    /// </summary>
+    /// <remarks>
+    /// Declares <c>PostType = "longVideo"</c> so the server refuses now — on
+    /// plan gating or an empty balance — rather than after an hour of transfer.
+    /// The thumbnail slot is requested in the SAME call so both files land in
+    /// this post's folder; a separate request would allocate a second post id.
+    /// </remarks>
+    private async Task<(string VideoUrl, string PostId, GenerateUploadUrlsResponse Config)> UploadLongVideoAsync(
+        Stream videoStream,
+        string videoContentType,
+        Stream? thumbnailStream,
+        string? thumbnailContentType,
+        IProgress<UploadProgress>? progress,
+        CancellationToken cancellationToken,
+        Action<string>? onUploadUrl = null,
+        string? resumeFrom = null,
+        string fileName = "upload")
+    {
+        var config = await GenerateUploadUrlsAsync(new GenerateUploadUrlsRequest
+        {
+            VideoFileType = videoContentType,
+            ThumbFileType = thumbnailContentType,
+            PostType = "longVideo"
+        }, cancellationToken);
+
+        // Prefer the resumable transfer for a long video — this is the case a
+        // single PUT handles worst, since a dropped connection at 90% of an hour
+        // of footage otherwise starts again from zero. Servers without the
+        // resumable service omit the tus fields, and the signed PUT still works.
+        // A non-seekable stream cannot resume, so it also takes the PUT path.
+        if (ResumableUpload.IsSupported(config.Video) && videoStream.CanSeek)
+        {
+            await ResumableUpload.UploadAsync(
+                config.Video,
+                videoStream,
+                videoContentType,
+                fileName,
+                progress,
+                onUploadUrl,
+                resumeFrom,
+                cancellationToken: cancellationToken);
+        }
+        else
+        {
+            if (string.IsNullOrEmpty(config.Video.UploadFileURL))
+                throw new InvalidOperationException("Video upload URL not provided");
+
+            await UploadLargeFileAsync(config.Video.UploadFileURL, videoStream, videoContentType, progress, cancellationToken);
+        }
+
+        return (config.Video.FileURL ?? string.Empty, config.PostId, config);
+    }
+
+    /// <summary>
+    /// Upload a large file with no request timeout.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="HttpClient"/> defaults to a 100-second timeout, which an hour
+    /// of video will blow through long before the transfer finishes. The
+    /// timeout is disabled on THIS client only — a per-call decision, not a
+    /// global one — and cancellation is what bounds the operation instead.
+    /// </remarks>
+    private static async Task UploadLargeFileAsync(
+        string uploadUrl,
+        Stream fileStream,
+        string contentType,
+        IProgress<UploadProgress>? progress,
+        CancellationToken cancellationToken)
+    {
+        using var client = new HttpClient { Timeout = Timeout.InfiniteTimeSpan };
+
+        long? total = fileStream.CanSeek ? fileStream.Length : null;
+        progress?.Report(new UploadProgress { BytesTransferred = 0, TotalBytes = total });
+
+        using var content = new StreamContent(fileStream);
+        content.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+
+        var response = await client.PutAsync(uploadUrl, content, cancellationToken);
+        response.EnsureSuccessStatusCode();
+
+        progress?.Report(new UploadProgress { BytesTransferred = total ?? 0, TotalBytes = total });
+    }
+
+    /// <summary>
+    /// Translate the loosely typed schedule argument ("now" or a DateTime) into
+    /// the wire shape. Returns null when nothing was supplied, letting the
+    /// server apply its own default.
+    /// </summary>
+    private static ScheduleConfig? BuildSchedule(object? schedule) => schedule switch
+    {
+        null => null,
+        string s when s == "now" => new ScheduleConfig { Type = "now" },
+        DateTime when schedule is DateTime dt => new ScheduleConfig { Type = "schedule", ScheduledAt = dt },
+        _ => null
+    };
 
     private string DetectVideoSource(object video)
     {
