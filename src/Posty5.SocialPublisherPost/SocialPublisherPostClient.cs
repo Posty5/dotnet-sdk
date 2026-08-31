@@ -758,6 +758,23 @@ public class SocialPublisherPostClient
     /// string "now"; <c>caption</c> optionally replaces the caption too.
     /// </para>
     /// </remarks>
+    /// <summary>
+    /// Delete a post that has not published yet, releasing its uploaded media in
+    /// the same request.
+    /// </summary>
+    /// <remarks>
+    /// Free, and nothing is refunded — nothing was charged for a post that never
+    /// went out. A post that HAS published is refused; use the remove flow to
+    /// take down media that is already live.
+    /// </remarks>
+    public async Task DeletePostAsync(string id, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+            throw new ArgumentException("id is required", nameof(id));
+
+        await _http.DeleteAsync<object>($"{BasePath}/{id}", cancellationToken: cancellationToken);
+    }
+
     public async Task ReschedulePostAsync(
         string id,
         object schedule,
