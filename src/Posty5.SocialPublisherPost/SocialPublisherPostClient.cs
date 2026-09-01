@@ -593,7 +593,11 @@ public class SocialPublisherPostClient
         IProgress<UploadProgress>? progress = null,
         Action<string>? onUploadUrl = null,
         string? resumeFrom = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        // After the token rather than beside `resumeFrom`, even though that reads
+        // oddly: inserting an optional parameter ahead of an existing one is
+        // source-breaking for anyone passing the token positionally.
+        bool terminateOnCancel = false)
     {
         if (string.IsNullOrWhiteSpace(workspaceId))
             throw new ArgumentException("workspaceId is required", nameof(workspaceId));
@@ -625,7 +629,7 @@ public class SocialPublisherPostClient
             var upload = await UploadLongVideoAsync(
                 (Stream)video, videoContentType ?? "video/mp4",
                 thumbnail as Stream, thumbnailContentType, progress, cancellationToken,
-                onUploadUrl, resumeFrom);
+                onUploadUrl, resumeFrom, terminateOnCancel: terminateOnCancel);
 
             videoUrl = upload.VideoUrl;
             postId = upload.PostId;
@@ -688,7 +692,11 @@ public class SocialPublisherPostClient
         IProgress<UploadProgress>? progress = null,
         Action<string>? onUploadUrl = null,
         string? resumeFrom = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        // After the token rather than beside `resumeFrom`, even though that reads
+        // oddly: inserting an optional parameter ahead of an existing one is
+        // source-breaking for anyone passing the token positionally.
+        bool terminateOnCancel = false)
     {
         if (string.IsNullOrWhiteSpace(accountId))
             throw new ArgumentException("accountId is required", nameof(accountId));
@@ -707,7 +715,7 @@ public class SocialPublisherPostClient
             var upload = await UploadLongVideoAsync(
                 (Stream)video, videoContentType ?? "video/mp4",
                 thumbnail as Stream, thumbnailContentType, progress, cancellationToken,
-                onUploadUrl, resumeFrom);
+                onUploadUrl, resumeFrom, terminateOnCancel: terminateOnCancel);
 
             videoUrl = upload.VideoUrl;
             postId = upload.PostId;
@@ -811,7 +819,8 @@ public class SocialPublisherPostClient
         CancellationToken cancellationToken,
         Action<string>? onUploadUrl = null,
         string? resumeFrom = null,
-        string fileName = "upload")
+        string fileName = "upload",
+        bool terminateOnCancel = false)
     {
         var config = await GenerateUploadUrlsAsync(new GenerateUploadUrlsRequest
         {
@@ -835,7 +844,8 @@ public class SocialPublisherPostClient
                 progress,
                 onUploadUrl,
                 resumeFrom,
-                cancellationToken: cancellationToken);
+                cancellationToken: cancellationToken,
+                terminateOnCancel: terminateOnCancel);
         }
         else
         {

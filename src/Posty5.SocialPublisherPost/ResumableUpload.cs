@@ -63,6 +63,11 @@ public static class ResumableUpload
     /// <param name="resumeFrom">Resume a previous attempt instead of creating a new upload.</param>
     /// <param name="chunkSize">Bytes per PATCH. Defaults to the server's part size.</param>
     /// <param name="cancellationToken">Cancels the transfer. Uploaded bytes survive and can be resumed.</param>
+    /// <param name="terminateOnCancel">
+    /// Discard the partial upload when <paramref name="cancellationToken"/> fires,
+    /// instead of leaving it resumable. Off by default — see
+    /// <see cref="TerminateAsync"/> for why.
+    /// </param>
     /// <param name="transport">Test seam for driving the protocol against a scripted handler. Leave null.</param>
     public static async Task<string> UploadAsync(
         UploadUrlInfo target,
@@ -74,6 +79,7 @@ public static class ResumableUpload
         string? resumeFrom = null,
         int chunkSize = DefaultChunkSize,
         CancellationToken cancellationToken = default,
+        bool terminateOnCancel = false,
         HttpMessageHandler? transport = null)
     {
         if (!IsSupported(target))
@@ -120,28 +126,84 @@ public static class ResumableUpload
         // the right recovery. Only repeated stalls end the transfer.
         var stalls = 0;
 
-        while (offset < total)
+        try
         {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            var length = (int)Math.Min(chunkSize, total - offset);
-            var next = await PatchChunkAsync(http, uploadUrl, content, offset, length, cancellationToken);
-
-            if (next <= offset)
+            while (offset < total)
             {
-                if (++stalls >= MaxConsecutiveStalls)
-                    throw new InvalidOperationException("The upload stopped making progress and was abandoned.");
-                continue;
-            }
+                cancellationToken.ThrowIfCancellationRequested();
 
-            stalls = 0;
-            offset = next;
-            progress?.Report(new UploadProgress { BytesTransferred = offset, TotalBytes = total });
+                var length = (int)Math.Min(chunkSize, total - offset);
+                var next = await PatchChunkAsync(http, uploadUrl, content, offset, length, cancellationToken);
+
+                if (next <= offset)
+                {
+                    if (++stalls >= MaxConsecutiveStalls)
+                        throw new InvalidOperationException("The upload stopped making progress and was abandoned.");
+                    continue;
+                }
+
+                stalls = 0;
+                offset = next;
+                progress?.Report(new UploadProgress { BytesTransferred = offset, TotalBytes = total });
+            }
+        }
+        catch (OperationCanceledException) when (terminateOnCancel)
+        {
+            // CancellationToken.None on purpose: the caller's token is already
+            // cancelled, and passing it here would cancel the very request that
+            // is meant to clean up after it.
+            await TerminateAsync(uploadUrl, CancellationToken.None, transport);
+            throw;
         }
 
         // `FileURL` came back with the ticket, so the final URL is known up
         // front and there is no completion body to parse.
         return target.FileURL ?? string.Empty;
+    }
+
+    /// <summary>
+    /// Discard an upload the server is still holding (tus Termination extension).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Cancelling a transfer deliberately leaves its bytes in place, because in
+    /// most interfaces "pause" and "cancel" are the same gesture and a user who
+    /// paused a 40-minute video does not expect to start over. This is the other
+    /// half of that decision: call it for an upload URL you kept and have decided
+    /// not to resume, so the server stops holding megabytes nobody will claim.
+    /// </para>
+    /// <para>
+    /// Never throws. Nothing useful can be done about a failed cleanup of
+    /// something the server expires on its own after 24 hours, so the result is
+    /// a bool rather than an exception.
+    /// </para>
+    /// </remarks>
+    /// <returns><c>true</c> when the upload is gone, whether this call removed it or it had already expired.</returns>
+    public static async Task<bool> TerminateAsync(
+        string uploadUrl,
+        CancellationToken cancellationToken = default,
+        HttpMessageHandler? transport = null)
+    {
+        try
+        {
+            using var http = transport is null
+                ? new HttpClient()
+                : new HttpClient(transport, disposeHandler: false);
+
+            using var request = new HttpRequestMessage(HttpMethod.Delete, uploadUrl);
+            request.Headers.TryAddWithoutValidation("Tus-Resumable", TusVersion);
+
+            using var response = await http.SendAsync(request, cancellationToken);
+
+            // 404/410 mean it is already gone, which is the outcome asked for.
+            return response.StatusCode is HttpStatusCode.NoContent
+                or HttpStatusCode.NotFound
+                or HttpStatusCode.Gone;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     /// <summary>
