@@ -118,6 +118,14 @@ public class LongVideoTests
         await Assert.ThrowsAsync<ArgumentException>(() => MakeClient().ReschedulePostAsync(id, "now"));
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task DeletePost_RequiresAnId(string id)
+    {
+        await Assert.ThrowsAsync<ArgumentException>(() => MakeClient().DeletePostAsync(id));
+    }
+
     [Fact]
     public async Task ReschedulePost_RejectsAScheduleItCannotInterpret()
     {

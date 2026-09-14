@@ -158,6 +158,32 @@ var result = await client.PublishLongVideoToWorkspaceAsync(
 Resuming needs a **seekable** stream — retrying and resuming both seek to a byte
 offset. A non-seekable stream still uploads, through the single-PUT path.
 
+### Cancelling for good
+
+Cancelling leaves the uploaded bytes on the server, because in most interfaces
+"pause" and "cancel" are the same button and a user who paused a 40-minute video
+does not expect to start over. Where the cancellation really is final, say so and
+the server stops holding megabytes nobody will claim:
+
+```csharp
+await client.PublishLongVideoToWorkspaceAsync(
+    workspaceId: "workspace_123",
+    video: video,
+    youtube: youtubeConfig,
+    videoContentType: "video/mp4",
+    cancellationToken: cancellationToken,
+    terminateOnCancel: true);
+```
+
+For an upload URL you persisted earlier and have decided not to resume, discard
+it directly. It never throws — a cleanup that fails is not worth an exception,
+since the server expires abandoned uploads after 24 hours anyway:
+
+```csharp
+if (await ResumableUpload.TerminateAsync(savedUploadUrl))
+    File.Delete("upload-url.txt");
+```
+
 ### Rescheduling
 
 ```csharp

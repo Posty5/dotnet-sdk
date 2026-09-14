@@ -44,6 +44,9 @@ public class ResumableUploadTests
         /// <summary>Status the HEAD probe answers with. Used to simulate an expired upload.</summary>
         public HttpStatusCode HeadStatus { get; init; } = HttpStatusCode.OK;
 
+        /// <summary>Status the termination DELETE answers with.</summary>
+        public HttpStatusCode DeleteStatus { get; init; } = HttpStatusCode.NoContent;
+
         /// <summary>How many bytes the fake server currently holds.</summary>
         public long ServedOffset => _served;
 
@@ -63,6 +66,11 @@ public class ResumableUploadTests
                 var created = new HttpResponseMessage(HttpStatusCode.Created);
                 created.Headers.Location = new Uri(UploadUrl);
                 return created;
+            }
+
+            if (request.Method == HttpMethod.Delete)
+            {
+                return new HttpResponseMessage(DeleteStatus);
             }
 
             if (request.Method == HttpMethod.Head)
@@ -276,6 +284,82 @@ public class ResumableUploadTests
                 resumeFrom: UploadUrl, transport: handler));
 
         Assert.Contains("expired", ex.Message);
+    }
+
+    [Fact]
+    public async Task Cancelling_LeavesThePartialUploadOnTheServerByDefault()
+    {
+        using var cts = new CancellationTokenSource();
+        using var handler = new TusHandler
+        {
+            Total = 30,
+            // Cancel once the first chunk has landed, so there is something on
+            // the server to either keep or discard.
+            PatchOverride = i =>
+            {
+                if (i == 1) cts.Cancel();
+                return null;
+            },
+        };
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            ResumableUpload.UploadAsync(Target(), Content(30), "video/mp4",
+                chunkSize: 10, cancellationToken: cts.Token, transport: handler));
+
+        // "Pause" and "cancel" are the same button in most interfaces, so the
+        // bytes stay put and the transfer can be resumed by its upload URL.
+        Assert.DoesNotContain(handler.Requests, r => r.Method == "DELETE");
+    }
+
+    [Fact]
+    public async Task Cancelling_DiscardsThePartialUploadWhenAsked()
+    {
+        using var cts = new CancellationTokenSource();
+        using var handler = new TusHandler
+        {
+            Total = 30,
+            PatchOverride = i =>
+            {
+                if (i == 1) cts.Cancel();
+                return null;
+            },
+        };
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            ResumableUpload.UploadAsync(Target(), Content(30), "video/mp4",
+                chunkSize: 10, cancellationToken: cts.Token,
+                terminateOnCancel: true, transport: handler));
+
+        var deletes = handler.Requests.Where(r => r.Method == "DELETE").ToList();
+        Assert.Single(deletes);
+        Assert.Equal(UploadUrl, deletes[0].Url);
+        Assert.Equal("1.0.0", deletes[0].Headers["Tus-Resumable"]);
+    }
+
+    [Fact]
+    public async Task TerminateAsync_ReportsSuccessWhenTheServerConfirms()
+    {
+        using var handler = new TusHandler();
+
+        Assert.True(await ResumableUpload.TerminateAsync(UploadUrl, transport: handler));
+    }
+
+    [Fact]
+    public async Task TerminateAsync_TreatsAnAlreadyGoneUploadAsTerminated()
+    {
+        using var handler = new TusHandler { DeleteStatus = HttpStatusCode.Gone };
+
+        Assert.True(await ResumableUpload.TerminateAsync(UploadUrl, transport: handler));
+    }
+
+    [Fact]
+    public async Task TerminateAsync_NeverThrows()
+    {
+        // Nothing useful can be done about a failed cleanup of something the
+        // server expires on its own, so the failure is a bool, not an exception.
+        using var handler = new TusHandler { DeleteStatus = HttpStatusCode.InternalServerError };
+
+        Assert.False(await ResumableUpload.TerminateAsync(UploadUrl, transport: handler));
     }
 
     private sealed class NonSeekableStream : Stream

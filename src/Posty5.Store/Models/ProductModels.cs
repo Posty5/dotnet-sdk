@@ -103,6 +103,12 @@ public class UpdateProductInput
     /// <summary><c>null</c> = stock not tracked.</summary>
     public int? Stock { get; set; }
 
+    /// <summary>See <see cref="ProductStockInput.SaleBuffer"/>. <c>null</c> = inherit the store's.</summary>
+    public int? SaleBuffer { get; set; }
+
+    /// <summary>See <see cref="ProductStockInput.OutOfStockBehavior"/>.</summary>
+    public string? OutOfStockBehavior { get; set; }
+
     /// <summary>The merchant's own article number.</summary>
     public string? Sku { get; set; }
 
@@ -238,11 +244,46 @@ public class ProductPriceInput
     public decimal? CompareAtPrice { get; set; }
 }
 
-/// <summary>Product-level stock.</summary>
+/// <summary>Product-level stock and this product's out-of-stock policy.</summary>
+/// <remarks>
+/// The stock section is written whole: fields left unset go back to their
+/// defaults on the server rather than keeping their saved values. Send the
+/// section as you want it to end up.
+/// </remarks>
 public class ProductStockInput
 {
     /// <summary><c>null</c> = stock not tracked; the product never sells out.</summary>
     public int? Stock { get; set; }
+
+    /// <summary>
+    /// Units held back from sale on this product. <c>null</c> (the default)
+    /// means "use the store's reserve"; <c>0</c> means "sell down to the last
+    /// unit" <i>regardless</i> of it.
+    /// </summary>
+    /// <remarks>
+    /// The two are different answers, which is why this is nullable rather than
+    /// defaulting to <c>0</c> — a <c>0</c> meaning "unset" would silently
+    /// re-apply the store's buffer. A product is out of stock at
+    /// <c>stock - buffer &lt;= 0</c>, so a buffer of 3 on a stock of 3 is sold
+    /// out with three units still on the shelf.
+    /// <para>
+    /// The client omits nulls when serializing, so leaving this unset sends no
+    /// key at all — which the server reads as the same "inherit" default.
+    /// </para>
+    /// </remarks>
+    public int? SaleBuffer { get; set; }
+
+    /// <summary>
+    /// What the storefront does with this product once it is sold out:
+    /// <c>inherit</c> (the default, defer to the store), <c>showUnavailable</c>
+    /// or <c>hide</c>.
+    /// </summary>
+    /// <remarks>
+    /// A string rather than an enum, matching how every other status-like field
+    /// in this SDK is typed: the server may add a behaviour without the SDK
+    /// being the thing that refuses it.
+    /// </remarks>
+    public string? OutOfStockBehavior { get; set; }
 }
 
 /// <summary>One value inside a variant group.</summary>
@@ -427,6 +468,35 @@ public class ProductShippingInput
 
     /// <summary>Merchant-facing reason; snapshotted onto the order, never shown to buyers.</summary>
     public string? Note { get; set; }
+
+    // ─── The parcel (task12) ────────────────────────────────────────────────
+    //
+    // What a package profile prices against. Unset is "not measured", and it
+    // matters: an unmeasured parcel fits NO bracket, so the cart falls back to
+    // the store's flat rate rather than being quoted the cheapest one. The
+    // server rejects 0 — a parcel of no size is not a measurement.
+
+    /// <summary>Weight in kg. Unset = not measured.</summary>
+    public decimal? Weight { get; set; }
+
+    /// <summary>Length in cm. Unset = not measured.</summary>
+    public decimal? Length { get; set; }
+
+    /// <summary>Width in cm. Unset = not measured.</summary>
+    public decimal? Width { get; set; }
+
+    /// <summary>Height in cm. Unset = not measured.</summary>
+    public decimal? Height { get; set; }
+
+    /// <summary>
+    /// Which profile the four measurements above were filled from, when a
+    /// bracket was used as a quick-fill. Provenance only — checkout prices the
+    /// measurements, never this.
+    /// </summary>
+    public string? PackageProfileId { get; set; }
+
+    /// <summary>Which bracket of that profile. Provenance only, as above.</summary>
+    public string? PackageConditionKey { get; set; }
 }
 
 /// <summary>A buy link on a shop we do not control.</summary>

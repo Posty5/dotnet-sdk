@@ -4,6 +4,57 @@ All notable changes to the Posty5 .NET SDK will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Posty5.Store 3.1.0 - 2026-09-01
+
+### Added
+
+- **Package profiles and their assignments** (task12), on `StoreShippingClient`:
+  `ListProfilesAsync`, `GetProfileAsync`, `CreateProfileAsync`,
+  `UpdateProfileAsync`, `DeleteProfileAsync`, `AddProfileConditionsAsync`,
+  `RemoveProfileConditionAsync`, `DownloadProfileTemplateAsync`,
+  `ImportProfileConditionsAsync`, `ListAssignmentsAsync`, `AssignProfileAsync`,
+  `SetDefaultAssignmentAsync` and `RemoveAssignmentAsync`.
+  - A profile prices by the size of the parcel and answers BEFORE the flat
+    country/governorate/city chain; where no bracket matches, the flat chain
+    still answers, so profiles add to a store's setup rather than replacing it.
+  - The most specific tier holding profiles owns the answer outright and is
+    never merged with the tiers above — including for a parcel none of its own
+    brackets fit.
+- **The parcel on the product shipping section** (task12). `ProductShippingInput`
+  gains `Weight`, `Length`, `Width`, `Height`, plus `PackageProfileId` /
+  `PackageConditionKey` as provenance. Unset is "not measured", and an unmeasured
+  parcel fits no bracket at all — a limit the cart cannot be compared against is
+  unanswered, not satisfied.
+- **Stock policy on the product stock section** (task11). `ProductStockInput`
+  and `ProductSummary` gain `SaleBuffer` and `OutOfStockBehavior`, so a caller
+  can hold units back from sale and decide what a sold-out product looks like
+  without dropping to raw HTTP.
+  - `SaleBuffer` is nullable because `null` and `0` are different answers:
+    `null` inherits the store's reserve, `0` sells down to the last unit
+    regardless of it. A product is out of stock at `stock - buffer <= 0`.
+  - `OutOfStockBehavior` is a string (`inherit` / `showUnavailable` / `hide`),
+    matching how every other status-like field in this SDK is typed — the server
+    may add a behaviour without the SDK being the thing that refuses it.
+
+## [4.4.0] - 2026-09-01
+
+### Added — Posty5.SocialPublisherPost
+
+- **Explicit upload termination (tus Termination extension).** Cancelling still
+  leaves the partial upload resumable, which is the right default — in most
+  interfaces "pause" and "cancel" are the same gesture, and a user who paused a
+  40-minute video does not expect to start over. Where the cancellation really is
+  final, two ways to say so:
+  - `terminateOnCancel: true` on `PublishLongVideoToWorkspaceAsync` and
+    `PublishLongVideoToAccountAsync` sends a `DELETE` for the partial upload when
+    the token fires. It sits **after** `cancellationToken` in the parameter list
+    on purpose: inserting an optional parameter ahead of an existing one is
+    source-breaking for anyone passing the token positionally.
+  - `ResumableUpload.TerminateAsync(uploadUrl)` discards an upload URL persisted
+    from an earlier run. It never throws — a cleanup that fails is not worth an
+    exception, since the server expires abandoned uploads after 24 hours — and
+    treats 404/410 as success, because "already gone" is the outcome asked for.
+
 ## [4.3.0] - 2026-08-30
 
 ### Added — Posty5.SocialPublisherPost

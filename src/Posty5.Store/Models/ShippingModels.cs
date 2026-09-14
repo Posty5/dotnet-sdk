@@ -470,3 +470,290 @@ public class ShippingFeePreview
     [JsonExtensionData]
     public Dictionary<string, object>? Extra { get; set; }
 }
+
+// â”€â”€â”€ Package profiles (task12) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+//
+// A profile is a set of BRACKETS â€” "up to 1 kg", "up to 5 kg" â€” and an
+// assignment attaches one to a place with a fee per bracket. At checkout the
+// cart's parcel is measured, the most specific tier holding profiles answers,
+// and the first bracket the parcel fits sets the fee.
+//
+// Two things about this are easy to get backwards, and both cost money:
+//
+//   - A profile answers BEFORE the flat country/governorate/city chain. Where
+//     no bracket matches, the flat chain still answers, so profiles add to a
+//     store's existing setup rather than replacing it.
+//   - The most specific tier with any profiles owns the answer OUTRIGHT â€” it is
+//     never merged with the tiers above. A city with its own profiles ignores
+//     the governorate's completely, even for a parcel none of its brackets fit.
+
+/// <summary>
+/// One bracket of a package profile.
+/// </summary>
+/// <remarks>
+/// Every limit is nullable and <c>null</c> means "no cap on this measurement" â€”
+/// the opposite of a <c>null</c> on the parcel, which means "not measured" and
+/// fits nothing.
+/// </remarks>
+public class ShippingProfileCondition
+{
+    /// <summary>Client-owned identity a fee points at. Generated server-side when omitted.</summary>
+    public string? Key { get; set; }
+
+    /// <summary>Shown next to the fee input; generated from the limits when left empty.</summary>
+    public string? Label { get; set; }
+
+    /// <summary>Maximum weight in kg. <c>null</c> = no cap.</summary>
+    public decimal? MaxWeight { get; set; }
+
+    /// <summary>Maximum length in cm. <c>null</c> = no cap.</summary>
+    public decimal? MaxLength { get; set; }
+
+    /// <summary>Maximum width in cm. <c>null</c> = no cap.</summary>
+    public decimal? MaxWidth { get; set; }
+
+    /// <summary>Maximum height in cm. <c>null</c> = no cap.</summary>
+    public decimal? MaxHeight { get; set; }
+
+    /// <summary>Matching order. The first fitting bracket wins.</summary>
+    public int? Order { get; set; }
+}
+
+/// <summary>A package profile and its brackets.</summary>
+public class ShippingProfile
+{
+    /// <summary>Profile id.</summary>
+    [JsonPropertyName("_id")]
+    public string? Id { get; set; }
+
+    /// <summary>Display name.</summary>
+    public string? Name { get; set; }
+
+    /// <summary><c>weight</c> or <c>dimension</c>. Immutable after creation.</summary>
+    public string? Type { get; set; }
+
+    /// <summary>Merchant-facing note.</summary>
+    public string? Description { get; set; }
+
+    /// <summary>Brackets, in matching order.</summary>
+    public List<ShippingProfileCondition> Conditions { get; set; } = new();
+
+    /// <summary>How many brackets it holds.</summary>
+    public int ConditionsCount { get; set; }
+
+    /// <summary>How many places use it. A profile in use cannot be deleted.</summary>
+    public int AssignmentsCount { get; set; }
+
+    /// <summary>Creation timestamp.</summary>
+    public DateTime? CreatedAt { get; set; }
+
+    /// <summary>Last update timestamp.</summary>
+    public DateTime? UpdatedAt { get; set; }
+}
+
+/// <summary>Filters for the profiles list.</summary>
+public class ShippingProfileSearchParams
+{
+    /// <summary>Match on the profile name.</summary>
+    public string? Text { get; set; }
+
+    /// <summary><c>weight</c> or <c>dimension</c>.</summary>
+    public string? Type { get; set; }
+}
+
+/// <summary>Create a package profile.</summary>
+public class CreateShippingProfileInput
+{
+    /// <summary>Display name.</summary>
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    /// <c>weight</c> or <c>dimension</c>. Immutable afterwards: it decides which
+    /// limits a bracket may carry, so changing it would reinterpret every bracket
+    /// already written and every fee already priced against them.
+    /// </summary>
+    public string Type { get; set; } = "weight";
+
+    /// <summary>Merchant-facing note.</summary>
+    public string? Description { get; set; }
+
+    /// <summary>
+    /// Optional â€” a profile with no brackets is a legal first state, since the
+    /// name and type are saved before the brackets are known.
+    /// </summary>
+    public List<ShippingProfileCondition>? Conditions { get; set; }
+}
+
+/// <summary>Rename, re-describe, or replace the bracket list. Note the absence of Type.</summary>
+public class UpdateShippingProfileInput
+{
+    /// <summary>New display name.</summary>
+    public string? Name { get; set; }
+
+    /// <summary>New merchant-facing note.</summary>
+    public string? Description { get; set; }
+
+    /// <summary>
+    /// Replaces the bracket list wholesale. To append instead, use
+    /// <c>AddProfileConditionsAsync</c>.
+    /// </summary>
+    public List<ShippingProfileCondition>? Conditions { get; set; }
+}
+
+/// <summary>Request body for appending brackets.</summary>
+public class AddShippingProfileConditionsRequest
+{
+    /// <summary>Brackets to append. The existing ones are left alone.</summary>
+    public List<ShippingProfileCondition> Conditions { get; set; } = new();
+}
+
+/// <summary>Request body for a bracket import.</summary>
+public class ImportShippingProfileConditionsRequest
+{
+    /// <summary>The filled-in .xlsx, base64-encoded.</summary>
+    public string File { get; set; } = string.Empty;
+}
+
+/// <summary>Which tier an assignment lives at.</summary>
+public class ShippingAssignmentPlace
+{
+    /// <summary><c>country</c>, <c>governorate</c> or <c>city</c>.</summary>
+    public string Level { get; set; } = "country";
+
+    /// <summary>Required at governorate and city level.</summary>
+    public string? GovernorateCode { get; set; }
+
+    /// <summary>
+    /// Required at city level. City names repeat across governorates, so the
+    /// governorate/city pair is the identity everywhere in this module.
+    /// </summary>
+    public string? CityKey { get; set; }
+}
+
+/// <summary>One bracket's price at one place.</summary>
+public class ShippingAssignmentFee
+{
+    /// <summary>Which bracket of the profile this prices.</summary>
+    public string ConditionKey { get; set; } = string.Empty;
+
+    /// <summary><c>null</c> = not priced here yet; a parcel landing in it falls through.</summary>
+    public decimal? Fee { get; set; }
+}
+
+/// <summary>One priced bracket, with the limits it prices.</summary>
+public class ShippingAssignmentFeeRow : ShippingAssignmentFee
+{
+    /// <summary>Bracket label.</summary>
+    public string? Label { get; set; }
+
+    /// <summary>Maximum weight in kg. <c>null</c> = no cap.</summary>
+    public decimal? MaxWeight { get; set; }
+
+    /// <summary>Maximum length in cm. <c>null</c> = no cap.</summary>
+    public decimal? MaxLength { get; set; }
+
+    /// <summary>Maximum width in cm. <c>null</c> = no cap.</summary>
+    public decimal? MaxWidth { get; set; }
+
+    /// <summary>Maximum height in cm. <c>null</c> = no cap.</summary>
+    public decimal? MaxHeight { get; set; }
+
+    /// <summary>Matching order.</summary>
+    public int Order { get; set; }
+}
+
+/// <summary>One profile assigned to one place.</summary>
+public class ShippingAssignment
+{
+    /// <summary>Assignment id.</summary>
+    [JsonPropertyName("_id")]
+    public string? Id { get; set; }
+
+    /// <summary>The profile being priced.</summary>
+    public string? ProfileId { get; set; }
+
+    /// <summary>The profile's name, for display.</summary>
+    public string? ProfileName { get; set; }
+
+    /// <summary><c>weight</c> or <c>dimension</c>.</summary>
+    public string? Type { get; set; }
+
+    /// <summary><c>country</c>, <c>governorate</c> or <c>city</c>.</summary>
+    public string? Level { get; set; }
+
+    /// <summary>Empty on a country row.</summary>
+    public string? GovernorateCode { get; set; }
+
+    /// <summary>Governorate name, for display.</summary>
+    public string? GovernorateName { get; set; }
+
+    /// <summary>Empty on a country or governorate row.</summary>
+    public string? CityKey { get; set; }
+
+    /// <summary>City name, for display.</summary>
+    public string? CityName { get; set; }
+
+    /// <summary>Wins over a cheaper alternative at the same place.</summary>
+    public bool IsDefault { get; set; }
+
+    /// <summary>The profile's brackets, with this place's prices.</summary>
+    public List<ShippingAssignmentFeeRow> Fees { get; set; } = new();
+
+    /// <summary>Brackets still waiting for a price.</summary>
+    public int UnpricedCount { get; set; }
+
+    /// <summary>Display order.</summary>
+    public int Order { get; set; }
+}
+
+/// <summary>What a place's profiles look like once inheritance is applied.</summary>
+/// <remarks>
+/// <see cref="InheritedFrom"/> is what lets a UI say "these are the country's,
+/// and they stop applying the moment you add one here" instead of showing an
+/// empty list that reads like "nothing ships here".
+/// </remarks>
+public class ShippingAssignmentsView
+{
+    /// <summary>The profiles that apply.</summary>
+    public List<ShippingAssignment> Items { get; set; } = new();
+
+    /// <summary>Which tier the listed rows actually come from, or <c>none</c>.</summary>
+    public string? InheritedFrom { get; set; }
+
+    /// <summary>True when the rows belong to a level ABOVE the one being read.</summary>
+    public bool IsInherited { get; set; }
+}
+
+/// <summary>Assign a profile to a place, or re-price one already there.</summary>
+public class AssignShippingProfileInput : ShippingAssignmentPlace
+{
+    /// <summary>The profile to attach.</summary>
+    public string ProfileId { get; set; } = string.Empty;
+
+    /// <summary>
+    /// One entry per bracket. A missing or <c>null</c> fee is a bracket the
+    /// merchant has not priced â€” safe to save, and the parcel falls through to
+    /// the flat chain rather than shipping free.
+    /// </summary>
+    public List<ShippingAssignmentFee>? Fees { get; set; }
+
+    /// <summary>Make this the place's default profile.</summary>
+    public bool? IsDefault { get; set; }
+}
+
+/// <summary>Result of removing an assignment.</summary>
+public class RemoveShippingAssignmentResult
+{
+    /// <summary>The assignment that was removed.</summary>
+    [JsonPropertyName("_id")]
+    public string? Id { get; set; }
+}
+
+/// <summary>Result of deleting a profile.</summary>
+public class DeleteShippingProfileResult
+{
+    /// <summary>The profile that was deleted.</summary>
+    [JsonPropertyName("_id")]
+    public string? Id { get; set; }
+}
+
