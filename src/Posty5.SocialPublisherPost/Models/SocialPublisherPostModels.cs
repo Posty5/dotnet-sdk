@@ -172,7 +172,7 @@ public class PostInfoModel
 }
 
 // ============================================================================
-// COMMENT MODELS (post-publish auto-comment, Pro plan, +1 credit)
+// COMMENT MODELS (post-publish comments — 25 credits each)
 // ============================================================================
 
 /// <summary>
@@ -199,20 +199,61 @@ public readonly record struct CommentStatus(string Value)
 }
 
 /// <summary>
-/// Optional post-publish comment.
-/// When supplied on a create-post request, a comment is posted under each
-/// enabled platform once the video is published.
+/// One post-publish comment.
 ///
-/// Pricing: +1 credit on top of the video charge (Pro plan only).
-/// TikTok comments are not supported — TikTok will always report
-/// <see cref="CommentStatus.NotSupported"/> in the status response.
+/// Posted under each enabled platform once the post itself is live, either
+/// immediately or after a delay. Up to <see cref="CommentLimits.MaxPerPost"/>
+/// may ride on one post.
+///
+/// <para><b>Pricing: 25 credits per comment</b> that actually posts — not per
+/// post, and not "+1". The API charges <c>socialMediaPublisher.commentOnPost</c>,
+/// which its plan data prices at 25; earlier versions of this file documented
+/// "+1 credit", which was never the price. A comment aimed at no enabled
+/// platform is dropped before it is charged.</para>
+///
+/// <para><b>TikTok is not supported</b> and never will be through this API:
+/// TikTok exposes no public comment-posting endpoint. A comment aimed at it
+/// reports <see cref="CommentStatus.NotSupported"/> rather than failing.</para>
+///
+/// <para><b>An image is Facebook only.</b> Instagram's and YouTube's comment
+/// endpoints are text-only, so an image bound for either is dropped with a
+/// reason rather than failing the comment.</para>
 /// </summary>
 public class CommentRequest
 {
     /// <summary>
-    /// Comment text. Length must be between 1 and 2200 characters.
+    /// Comment text. Length must be between 1 and
+    /// <see cref="CommentLimits.MaxLength"/> characters.
     /// </summary>
     public string Text { get; set; } = string.Empty;
+
+    /// <summary>
+    /// How long to wait after the post is published, in minutes.
+    /// <c>0</c> or null posts it as soon as the post is live. Maximum
+    /// <see cref="CommentLimits.MaxDelayMinutes"/> (24 hours) — the API
+    /// refuses more.
+    /// </summary>
+    public int? DelayMinutes { get; set; }
+
+    /// <summary>
+    /// A publicly reachable image to attach. <b>Facebook only</b> (see above).
+    ///
+    /// <para>Use this OR <see cref="ImageStorageKey"/>, not both. A URL costs us
+    /// no storage and is available on every plan; uploading is plan-gated.</para>
+    /// </summary>
+    public string? ImageUrl { get; set; }
+
+    /// <summary>
+    /// The storage key of an image uploaded through the account's
+    /// <c>default-comments/upload-urls</c> endpoint.
+    ///
+    /// <para>Prefer <see cref="ImageUrl"/> unless you uploaded the bytes
+    /// yourself: the key is what tells the API the object is OURS, which is what
+    /// its cleanup path uses when the post or the comment is deleted. Sending a
+    /// public URL in this field makes the image read as external and it will
+    /// never be cleaned up.</para>
+    /// </summary>
+    public string? ImageStorageKey { get; set; }
 
     /// <summary>
     /// Post the comment on Facebook. Defaults to true.
@@ -234,6 +275,50 @@ public class CommentRequest
     /// support programmatic comments.
     /// </summary>
     public bool? PostToTiktok { get; set; }
+}
+
+/// <summary>
+/// The comment limits the API enforces.
+///
+/// Mirrored here rather than imported: this package does not depend on the API's
+/// constants, and a second literal at a call site is how a client offers six and
+/// the server refuses it.
+/// </summary>
+public static class CommentLimits
+{
+    /// <summary>At most this many comments may ride on one post.</summary>
+    public const int MaxPerPost = 5;
+
+    /// <summary>Longest a comment may be, in characters.</summary>
+    public const int MaxLength = 2200;
+
+    /// <summary>Longest a comment may wait after the post, in minutes.</summary>
+    public const int MaxDelayMinutes = 24 * 60;
+}
+
+/// <summary>
+/// One comment's status on one platform.
+///
+/// <para><c>Order</c> is the position it posts in, which is also the position it
+/// was sent in — the API takes the order from the array rather than from a
+/// field on the comment, so two comments cannot claim the same slot.</para>
+/// </summary>
+public class CommentStatusInfo : CommentInfo
+{
+    /// <summary>Position in the list, from 0. Also the order it posts in.</summary>
+    public int Order { get; set; }
+
+    /// <summary>The text as it was sent, so a status row reads without the request.</summary>
+    public string? Text { get; set; }
+
+    /// <summary>Minutes waited after the post went live. <c>0</c> means immediately.</summary>
+    public int? DelayMinutes { get; set; }
+
+    /// <summary>The image attached, if any. Facebook only; dropped elsewhere.</summary>
+    public string? ImageUrl { get; set; }
+
+    /// <summary>Set when this comment was copied from the account's saved defaults.</summary>
+    public string? DefaultCommentId { get; set; }
 }
 
 /// <summary>
@@ -339,9 +424,16 @@ public class YouTubeFullDetailsConfig
     public PostInfoModel PostInfo { get; set; } = new();
 
     /// <summary>
-    /// Per-platform comment status (only present when a comment was requested).
+    /// Per-platform comment status. With a LIST of comments this mirrors the
+    /// first entry, so a caller written before the list existed keeps reading.
     /// </summary>
     public CommentInfo? CommentInfo { get; set; }
+
+    /// <summary>
+    /// One entry per comment on this platform, in posting order. Present when
+    /// the post was created with <c>Comments</c>.
+    /// </summary>
+    public List<CommentStatusInfo>? Comments { get; set; }
 }
 
 /// <summary>
@@ -384,9 +476,16 @@ public class TikTokFullDetailsConfig
     public PostInfoModel PostInfo { get; set; } = new();
 
     /// <summary>
-    /// Per-platform comment status. TikTok always reports NotSupported.
+    /// Per-platform comment status. With a LIST of comments this mirrors the
+    /// first entry, so a caller written before the list existed keeps reading.
     /// </summary>
     public CommentInfo? CommentInfo { get; set; }
+
+    /// <summary>
+    /// One entry per comment on this platform, in posting order. Present when
+    /// the post was created with <c>Comments</c>.
+    /// </summary>
+    public List<CommentStatusInfo>? Comments { get; set; }
 }
 
 /// <summary>
@@ -410,9 +509,16 @@ public class FacebookFullDetailsConfig
     public PostInfoModel PostInfo { get; set; } = new();
 
     /// <summary>
-    /// Per-platform comment status (only present when a comment was requested).
+    /// Per-platform comment status. With a LIST of comments this mirrors the
+    /// first entry, so a caller written before the list existed keeps reading.
     /// </summary>
     public CommentInfo? CommentInfo { get; set; }
+
+    /// <summary>
+    /// One entry per comment on this platform, in posting order. Present when
+    /// the post was created with <c>Comments</c>.
+    /// </summary>
+    public List<CommentStatusInfo>? Comments { get; set; }
 }
 
 /// <summary>
@@ -443,9 +549,16 @@ public class InstagramFullDetailsConfig
     public PostInfoModel PostInfo { get; set; } = new();
 
     /// <summary>
-    /// Per-platform comment status (only present when a comment was requested).
+    /// Per-platform comment status. With a LIST of comments this mirrors the
+    /// first entry, so a caller written before the list existed keeps reading.
     /// </summary>
     public CommentInfo? CommentInfo { get; set; }
+
+    /// <summary>
+    /// One entry per comment on this platform, in posting order. Present when
+    /// the post was created with <c>Comments</c>.
+    /// </summary>
+    public List<CommentStatusInfo>? Comments { get; set; }
 }
 
 /// <summary>
@@ -637,9 +750,25 @@ public class PostSettings
     public string Source { get; set; } = string.Empty;
 
     /// <summary>
-    /// Optional post-publish comment (Pro plan, +1 credit). TikTok is not supported.
+    /// A single post-publish comment.
     /// </summary>
+    /// <remarks>
+    /// Kept for one major version so existing callers keep compiling. The API
+    /// refuses a request carrying BOTH this and <see cref="Comments"/>, so send
+    /// one or the other.
+    /// </remarks>
+    [Obsolete("Use Comments instead. Sending both is refused by the API.")]
     public CommentRequest? Comment { get; set; }
+
+    /// <summary>
+    /// Up to <see cref="CommentLimits.MaxPerPost"/> post-publish comments, in
+    /// the order they post.
+    ///
+    /// <para>Each carries its own delay, its own optional image and its own
+    /// per-platform flags — see <see cref="CommentRequest"/>. 25 credits each,
+    /// charged per comment that actually posts.</para>
+    /// </summary>
+    public List<CommentRequest>? Comments { get; set; }
 
     /// <summary>
     /// Custom tag for filtering
@@ -704,9 +833,25 @@ public class CreateSocialPublisherPostRequest
     public ScheduleConfig? Schedule { get; set; }
 
     /// <summary>
-    /// Optional post-publish comment (Pro plan, +1 credit). TikTok is not supported.
+    /// A single post-publish comment.
     /// </summary>
+    /// <remarks>
+    /// Kept for one major version so existing callers keep compiling. The API
+    /// refuses a request carrying BOTH this and <see cref="Comments"/>, so send
+    /// one or the other.
+    /// </remarks>
+    [Obsolete("Use Comments instead. Sending both is refused by the API.")]
     public CommentRequest? Comment { get; set; }
+
+    /// <summary>
+    /// Up to <see cref="CommentLimits.MaxPerPost"/> post-publish comments, in
+    /// the order they post.
+    ///
+    /// <para>Each carries its own delay, its own optional image and its own
+    /// per-platform flags — see <see cref="CommentRequest"/>. 25 credits each,
+    /// charged per comment that actually posts.</para>
+    /// </summary>
+    public List<CommentRequest>? Comments { get; set; }
 
     /// <summary>
     /// Custom tag
@@ -770,9 +915,25 @@ public class CreateSocialPublisherAccountPostRequest
     public ScheduleConfig? Schedule { get; set; }
 
     /// <summary>
-    /// Optional post-publish comment (Pro plan, +1 credit). TikTok is not supported.
+    /// A single post-publish comment.
     /// </summary>
+    /// <remarks>
+    /// Kept for one major version so existing callers keep compiling. The API
+    /// refuses a request carrying BOTH this and <see cref="Comments"/>, so send
+    /// one or the other.
+    /// </remarks>
+    [Obsolete("Use Comments instead. Sending both is refused by the API.")]
     public CommentRequest? Comment { get; set; }
+
+    /// <summary>
+    /// Up to <see cref="CommentLimits.MaxPerPost"/> post-publish comments, in
+    /// the order they post.
+    ///
+    /// <para>Each carries its own delay, its own optional image and its own
+    /// per-platform flags — see <see cref="CommentRequest"/>. 25 credits each,
+    /// charged per comment that actually posts.</para>
+    /// </summary>
+    public List<CommentRequest>? Comments { get; set; }
 
     /// <summary>
     /// Custom tag
@@ -870,7 +1031,26 @@ public class CreateImagePostToWorkspaceRequest
     public InstagramConfig? Instagram { get; set; }
 
     public ScheduleConfig? Schedule { get; set; }
+    /// <summary>
+    /// A single post-publish comment.
+    /// </summary>
+    /// <remarks>
+    /// Kept for one major version so existing callers keep compiling. The API
+    /// refuses a request carrying BOTH this and <see cref="Comments"/>, so send
+    /// one or the other.
+    /// </remarks>
+    [Obsolete("Use Comments instead. Sending both is refused by the API.")]
     public CommentRequest? Comment { get; set; }
+
+    /// <summary>
+    /// Up to <see cref="CommentLimits.MaxPerPost"/> post-publish comments, in
+    /// the order they post.
+    ///
+    /// <para>Each carries its own delay, its own optional image and its own
+    /// per-platform flags — see <see cref="CommentRequest"/>. 25 credits each,
+    /// charged per comment that actually posts.</para>
+    /// </summary>
+    public List<CommentRequest>? Comments { get; set; }
 
     public string? Tag { get; set; }
     public string? RefId { get; set; }
@@ -894,7 +1074,26 @@ public class CreateImagePostToAccountRequest
     public InstagramConfig? Instagram { get; set; }
 
     public ScheduleConfig? Schedule { get; set; }
+    /// <summary>
+    /// A single post-publish comment.
+    /// </summary>
+    /// <remarks>
+    /// Kept for one major version so existing callers keep compiling. The API
+    /// refuses a request carrying BOTH this and <see cref="Comments"/>, so send
+    /// one or the other.
+    /// </remarks>
+    [Obsolete("Use Comments instead. Sending both is refused by the API.")]
     public CommentRequest? Comment { get; set; }
+
+    /// <summary>
+    /// Up to <see cref="CommentLimits.MaxPerPost"/> post-publish comments, in
+    /// the order they post.
+    ///
+    /// <para>Each carries its own delay, its own optional image and its own
+    /// per-platform flags — see <see cref="CommentRequest"/>. 25 credits each,
+    /// charged per comment that actually posts.</para>
+    /// </summary>
+    public List<CommentRequest>? Comments { get; set; }
 
     public string? Tag { get; set; }
     public string? RefId { get; set; }

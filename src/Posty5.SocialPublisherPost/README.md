@@ -174,34 +174,70 @@ var postId = await client.PublishShortVideoToWorkspaceAsync(
 Console.WriteLine($"Published to YouTube and TikTok: {postId}");
 ```
 
-#### Example - Auto-Comment After Publish (Pro plan, +1 credit)
+#### Example - Comments After Publish (25 credits each)
 
 ```csharp
-// Queue a comment that posts under each platform once the video is live.
-// TikTok comments are not supported — TikTok will always report
-// CommentInfo.CurrentStatus == CommentStatus.NotSupported.
+// Queue up to five comments under each platform post once the video is live.
+// TikTok is never one of them: it exposes no public comment-posting endpoint,
+// so a comment aimed at it reports CommentStatus.NotSupported rather than
+// failing. An image is Facebook only - Instagram and YouTube comments are
+// text-only, so an image bound for either is dropped with a reason.
 var postId = await client.PublishShortVideoToWorkspaceAsync(
     workspaceId: "workspace-123",
     video: "https://cdn.example.com/videos/launch.mp4",
     youtube: new YouTubeConfig { Title = "Launch day", Description = "We shipped!", Tags = new List<string> { "launch" } },
     facebook: new FacebookPageConfig { Description = "We shipped!" },
-    instagram: new InstagramConfig { Description = "We shipped! 🚀" },
-    comment: new CommentRequest
+    instagram: new InstagramConfig { Description = "We shipped!" },
+    comments: new List<CommentRequest>
     {
-        Text = "Drop your favourite feature below 👇",
-        PostToFacebook = true,
-        PostToInstagram = true,
-        PostToYoutube = true,
-        // PostToTiktok defaults to false — TikTok is not supported
+        new()
+        {
+            Text = "Drop your favourite feature below",
+            PostToFacebook = true,
+            PostToInstagram = true,
+            PostToYoutube = true,
+            // PostToTiktok defaults to false - TikTok is not supported
+        },
+        new()
+        {
+            // An hour later, to catch the second wave.
+            Text = "Still reading? The changelog is in the description.",
+            DelayMinutes = 60,
+        },
+        new()
+        {
+            Text = "Here is the before and after.",
+            ImageUrl = "https://cdn.example.com/before-after.jpg",
+            PostToFacebook = true,
+            PostToInstagram = false,
+            PostToYoutube = false,
+        },
     }
 );
 
-// Later, poll status to see how each comment landed:
+// Later, poll status to see how each comment landed.
 var status = await client.GetStatusFullDetailsAsync(postId);
-Console.WriteLine($"YouTube comment:  {status.Youtube?.CommentInfo?.CurrentStatus}");
-Console.WriteLine($"Facebook URL:     {status.Facebook?.CommentInfo?.CommentURL}");
-Console.WriteLine($"TikTok comment:   {status.Tiktok?.CommentInfo?.CurrentStatus}"); // "notSupported"
+
+// One entry per comment, in posting order.
+foreach (var comment in status.Facebook?.Comments ?? new List<CommentStatusInfo>())
+{
+    Console.WriteLine($"#{comment.Order} {comment.CurrentStatus} {comment.CommentURL}");
+}
+
+// TikTok reports every comment as notSupported - the permanent answer, not a
+// failure.
+Console.WriteLine($"TikTok: {status.Tiktok?.Comments?[0]?.CurrentStatus}");
 ```
+
+> **Migrating from `comment:`.** The singular parameter and the `Comment`
+> property still compile and are marked `[Obsolete]` for one major version. Send
+> one or the other - the API refuses a request carrying both. `CommentInfo` on
+> each platform's status also stays, mirroring the first entry of `Comments`.
+
+> **Pricing.** 25 credits per comment that actually posts, from the API's
+> `socialMediaPublisher.commentOnPost`. Earlier releases of this README said
+> "+1 credit", which was never the price. A comment aimed at no enabled platform
+> is dropped before it is charged.
 
 #### Example - Multi-Platform Publishing
 

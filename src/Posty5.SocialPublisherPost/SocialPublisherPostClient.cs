@@ -152,6 +152,7 @@ public class SocialPublisherPostClient
         string? videoContentType = null,
         string? thumbnailContentType = null,
         CommentRequest? comment = null,
+        List<CommentRequest>? comments = null,
         CancellationToken cancellationToken = default)
     {
         // Build post settings.
@@ -166,7 +167,12 @@ public class SocialPublisherPostClient
             Tiktok = tiktok,
             Facebook = facebook,
             Instagram = instagram,
+            // Both forwarded: the API refuses a request carrying both, so
+            // whichever the caller supplied is the one that travels.
+#pragma warning disable CS0618 // Comment is deprecated, and forwarding it is the point.
             Comment = comment,
+#pragma warning restore CS0618
+            Comments = comments,
             Tag = tag,
             RefId = refId
         };
@@ -220,6 +226,7 @@ public class SocialPublisherPostClient
         string? videoContentType = null,
         string? thumbnailContentType = null,
         CommentRequest? comment = null,
+        List<CommentRequest>? comments = null,
         CancellationToken cancellationToken = default)
     {
         // Build post settings.
@@ -232,7 +239,12 @@ public class SocialPublisherPostClient
             Tiktok = tiktok,
             Facebook = facebook,
             Instagram = instagram,
+            // Both forwarded: the API refuses a request carrying both, so
+            // whichever the caller supplied is the one that travels.
+#pragma warning disable CS0618 // Comment is deprecated, and forwarding it is the point.
             Comment = comment,
+#pragma warning restore CS0618
+            Comments = comments,
             Tag = tag,
             RefId = refId
         };
@@ -303,7 +315,10 @@ public class SocialPublisherPostClient
             Facebook = settings.Facebook,
             Instagram = settings.Instagram,
             Schedule = settings.Schedule,
+#pragma warning disable CS0618 // Deprecated on both sides; a pass-through.
             Comment = settings.Comment,
+#pragma warning restore CS0618
+            Comments = settings.Comments,
             Tag = settings.Tag,
             RefId = settings.RefId
         }, uploadConfig.PostId, cancellationToken);
@@ -344,7 +359,10 @@ public class SocialPublisherPostClient
             Facebook = settings.Facebook,
             Instagram = settings.Instagram,
             Schedule = settings.Schedule,
+#pragma warning disable CS0618 // Deprecated on both sides; a pass-through.
             Comment = settings.Comment,
+#pragma warning restore CS0618
+            Comments = settings.Comments,
             Tag = settings.Tag,
             RefId = settings.RefId
         }, postId, cancellationToken);
@@ -380,7 +398,10 @@ public class SocialPublisherPostClient
             Facebook = settings.Facebook,
             Instagram = settings.Instagram,
             Schedule = settings.Schedule,
+#pragma warning disable CS0618 // Deprecated on both sides; a pass-through.
             Comment = settings.Comment,
+#pragma warning restore CS0618
+            Comments = settings.Comments,
             Tag = settings.Tag,
             RefId = settings.RefId
         }, uploadConfig.PostId, cancellationToken);
@@ -421,7 +442,10 @@ public class SocialPublisherPostClient
             Facebook = settings.Facebook,
             Instagram = settings.Instagram,
             Schedule = settings.Schedule,
+#pragma warning disable CS0618 // Deprecated on both sides; a pass-through.
             Comment = settings.Comment,
+#pragma warning restore CS0618
+            Comments = settings.Comments,
             Tag = settings.Tag,
             RefId = settings.RefId
         }, postId, cancellationToken);
@@ -590,6 +614,7 @@ public class SocialPublisherPostClient
         string? videoContentType = null,
         string? thumbnailContentType = null,
         CommentRequest? comment = null,
+        List<CommentRequest>? comments = null,
         IProgress<UploadProgress>? progress = null,
         Action<string>? onUploadUrl = null,
         string? resumeFrom = null,
@@ -613,7 +638,12 @@ public class SocialPublisherPostClient
             Tiktok = tiktok,
             Facebook = facebook,
             Instagram = instagram,
+            // Both forwarded: the API refuses a request carrying both, so
+            // whichever the caller supplied is the one that travels.
+#pragma warning disable CS0618 // Comment is deprecated, and forwarding it is the point.
             Comment = comment,
+#pragma warning restore CS0618
+            Comments = comments,
             Tag = tag,
             RefId = refId,
             Schedule = BuildSchedule(schedule)
@@ -653,7 +683,10 @@ public class SocialPublisherPostClient
             Facebook = settings.Facebook,
             Instagram = settings.Instagram,
             Schedule = settings.Schedule,
+#pragma warning disable CS0618 // Deprecated on both sides; a pass-through.
             Comment = settings.Comment,
+#pragma warning restore CS0618
+            Comments = settings.Comments,
             Tag = settings.Tag,
             RefId = settings.RefId
         };
@@ -689,6 +722,7 @@ public class SocialPublisherPostClient
         string? videoContentType = null,
         string? thumbnailContentType = null,
         CommentRequest? comment = null,
+        List<CommentRequest>? comments = null,
         IProgress<UploadProgress>? progress = null,
         Action<string>? onUploadUrl = null,
         string? resumeFrom = null,
@@ -739,7 +773,12 @@ public class SocialPublisherPostClient
             Facebook = facebook,
             Instagram = instagram,
             Schedule = BuildSchedule(schedule),
+            // Both forwarded: the API refuses a request carrying both, so
+            // whichever the caller supplied is the one that travels.
+#pragma warning disable CS0618 // Comment is deprecated, and forwarding it is the point.
             Comment = comment,
+#pragma warning restore CS0618
+            Comments = comments,
             Tag = tag,
             RefId = refId
         };

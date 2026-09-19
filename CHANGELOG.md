@@ -4,6 +4,46 @@ All notable changes to the Posty5 .NET SDK will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Posty5.SocialPublisherPost 4.5.0 - 2026-09-19
+
+### Added
+
+- **Up to five comments per post.** `Comments` (a `List<CommentRequest>`) on
+  every create-post request and on every publish helper that took a single
+  `comment`, each with its own `DelayMinutes`, its own optional image and its own
+  per-platform flags. `CommentLimits` exposes `MaxPerPost`, `MaxLength` and
+  `MaxDelayMinutes` so a caller can validate before sending rather than after a
+  400.
+- **An image per comment**, as `ImageUrl` (any plan, costs us no storage) or
+  `ImageStorageKey` (uploaded through the account's
+  `default-comments/upload-urls`, plan-gated). They are not interchangeable: the
+  key is what tells the API the object is ours, and therefore what its cleanup
+  path uses when the post or the comment is deleted. A public URL sent in the key
+  field makes the image read as external and it is never cleaned up.
+- **Per-comment status.** `CommentStatusInfo` on each platform's `Comments`,
+  carrying the order, the text, the delay and the outcome.
+
+### Deprecated
+
+- `CommentRequest? Comment` on every request, and the `comment:` parameter on
+  every publish helper, in favour of `Comments`. Both are `[Obsolete]` and will
+  compile for one major version. Send one or the other - the API refuses a
+  request carrying both. `CommentInfo` on each platform's status stays alongside
+  `Comments`, mirroring the first entry.
+
+### Fixed
+
+- **The documented credit cost was wrong.** A comment is **25 credits**, not
+  "+1": the API charges `socialMediaPublisher.commentOnPost`, which its plan data
+  prices at 25. Corrected on the models, the section banner and the README.
+
+### Documentation
+
+- The comment XML docs now state the two caveats a caller has no UI to learn
+  from: **TikTok is not supported** (no public comment-posting endpoint, so a
+  comment aimed at it reports `NotSupported` rather than failing), and **an image
+  is Facebook only** (Instagram's and YouTube's comment endpoints are text-only).
+
 ## Posty5.Store 3.1.0 - 2026-09-01
 
 ### Added
