@@ -149,20 +149,10 @@ public class StoreSupplierOrder
     public Dictionary<string, object>? Extra { get; set; }
 }
 
-/// <summary>A page of rows paged by number (the supplier routes do not use cursors).</summary>
-public class PagedItems<T>
-{
-    /// <summary>The rows.</summary>
-    public List<T>? Items { get; set; }
-    /// <summary>Page number.</summary>
-    public int Page { get; set; }
-    /// <summary>Rows per page.</summary>
-    public int PageSize { get; set; }
-    /// <summary>Total rows.</summary>
-    public int Total { get; set; }
-}
-
-/// <summary>Filters for the supplier-order list.</summary>
+/// <summary>
+/// Filters for the supplier-order list. Paging travels separately, as
+/// <c>Posty5.Core.Models.PaginationParams</c> (cursor + page size).
+/// </summary>
 public class SupplierOrderSearchParams
 {
     /// <summary>See <see cref="SupplierOrderStatuses"/>.</summary>

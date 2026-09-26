@@ -1,4 +1,5 @@
 using Posty5.Core.Http;
+using Posty5.Core.Models;
 using Posty5.Store.Models;
 
 namespace Posty5.Store.Clients;
@@ -246,12 +247,25 @@ public class StoreSuppliersClient : StoreClientBase
 
     // ─── Supplier orders ────────────────────────────────────────────────────
 
-    /// <summary>Supplier orders, newest first, paged by number. <c>suppliers.view</c>.</summary>
-    public async Task<PagedItems<StoreSupplierOrder>?> ListSupplierOrdersAsync(
+    /// <summary>
+    /// Supplier orders, newest first, paged by cursor like every other store list.
+    /// <c>suppliers.view</c>.
+    /// </summary>
+    /// <param name="storeId">The store.</param>
+    /// <param name="filters">Status, needs-review, connection, store order and contract-model filters.</param>
+    /// <param name="pagination">
+    /// <c>Cursor</c> is the previous page's <c>Pagination.NextCursor</c>; <c>PageSize</c> is capped
+    /// at 100 by the API. Omit it for the first page at the API's default of 25 rows.
+    /// </param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>
+    /// The list envelope: <c>Items</c> and <c>Pagination</c>. Keep passing
+    /// <c>Pagination.NextCursor</c> back while <c>Pagination.HasMore</c> is true.
+    /// </returns>
+    public async Task<PaginationResponse<StoreSupplierOrder>?> ListSupplierOrdersAsync(
         string storeId,
         SupplierOrderSearchParams? filters = null,
-        int? page = null,
-        int? pageSize = null,
+        PaginationParams? pagination = null,
         CancellationToken cancellationToken = default)
     {
         var query = Query();
@@ -260,10 +274,9 @@ public class StoreSuppliersClient : StoreClientBase
         Add(query, "integrationId", filters?.IntegrationId);
         Add(query, "orderId", filters?.OrderId);
         Add(query, "contractModel", filters?.ContractModel);
-        Add(query, "page", page);
-        Add(query, "pageSize", pageSize);
+        AddPagination(query, pagination);
 
-        var response = await Http.GetAsync<PagedItems<StoreSupplierOrder>>($"{Base}/{storeId}/orders", query, cancellationToken);
+        var response = await Http.GetAsync<PaginationResponse<StoreSupplierOrder>>($"{Base}/{storeId}/orders", query, cancellationToken);
         return response.Result;
     }
 

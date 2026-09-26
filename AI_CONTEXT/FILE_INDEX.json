@@ -117,7 +117,7 @@
     },
     {
       "path": "src/Posty5.Store/Models/SupplierOrderModels.cs",
-      "role": "Supplier order, queue params, action result, order parts, PagedItems<T>."
+      "role": "Supplier order, queue filters, action result, order parts. The queue list is cursor-paged (Core PaginationParams / PaginationResponse<T>)."
     },
     {
       "path": "src/Posty5.Store/Models/OrderModels.cs",

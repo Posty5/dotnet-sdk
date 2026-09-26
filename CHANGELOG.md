@@ -18,7 +18,11 @@ The first version of `Posty5.Store` to reach NuGet: earlier versions (up to
   supplier products (`ImportSupplierProductsResult.IsQueued` tells a queued
   import from an inline one); product links and sync; the supplier-order queue
   and the part actions `SubmitGroupAsync`, `RetryAsync`, `PayAsync`,
-  `CancelAsync`, `FulfilGroupManuallyAsync`.
+  `CancelAsync`, `FulfilGroupManuallyAsync`. `ListSupplierOrdersAsync` pages by
+  cursor like every other list: it takes `SupplierOrderSearchParams` plus
+  `PaginationParams` (`Cursor`, `PageSize` — max 100; the API uses 25 when no `PaginationParams` is passed) and
+  returns `PaginationResponse<StoreSupplierOrder>`. The page-number
+  `PagedItems<T>` an unpublished draft used for it is gone.
 - **Models** for suppliers, connections (no credential property anywhere),
   products, imports, links, supplier orders and order parts, and
   **`SupplierConstants`** — string constants for every vocabulary rather than

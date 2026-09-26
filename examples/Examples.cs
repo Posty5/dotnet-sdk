@@ -1,5 +1,6 @@
 using Posty5.Core.Configuration;
 using Posty5.Core.Http;
+using Posty5.Core.Models;
 using Posty5.QRCode;
 using Posty5.QRCode.Models;
 using Posty5.ShortLink;
@@ -259,11 +260,13 @@ public class Examples
         }
         
         // Supplier orders waiting on a person
+        // (cursor-paged: pass Pagination.NextCursor back while Pagination.HasMore)
         var queue = await store.Suppliers.ListSupplierOrdersAsync(storeId,
-            new SupplierOrderSearchParams { NeedsReview = true }, page: 1, pageSize: 20);
-        Console.WriteLine($"{queue!.Total} supplier orders need review");
+            new SupplierOrderSearchParams { NeedsReview = true }, new PaginationParams { PageSize = 20 });
+        Console.WriteLine($"{queue!.Items.Count} supplier orders need review on this page" +
+            (queue.Pagination.HasMore ? " (more follow)" : ""));
         
-        foreach (var supplierOrder in queue.Items!)
+        foreach (var supplierOrder in queue.Items)
         {
             Console.WriteLine($"Order {supplierOrder.OrderNumber}: {supplierOrder.ReviewReason} — {supplierOrder.ReviewMessage}");
             

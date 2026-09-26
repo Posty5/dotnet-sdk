@@ -184,7 +184,7 @@ public class StoreSuppliersRouteTests : IDisposable
     public async Task SupplierOrderRoutes_EncodeThePartKey()
     {
         var client = _server.Client();
-        await client.ListSupplierOrdersAsync("s1", new SupplierOrderSearchParams { NeedsReview = true }, page: 1);
+        await client.ListSupplierOrdersAsync("s1", new SupplierOrderSearchParams { NeedsReview = true }, new PaginationParams { PageSize = 25 });
         await client.GetSupplierOrderAsync("s1", "so1");
         await client.SubmitGroupAsync("s1", "o1", "supplier:i1", payNow: true);
         await client.RetryAsync("s1", "so1", acceptCost: true);
@@ -194,7 +194,7 @@ public class StoreSuppliersRouteTests : IDisposable
 
         Assert.Equal(new[]
         {
-            $"GET {Base}/orders?needsReview=true&page=1",
+            $"GET {Base}/orders?needsReview=true&pageSize=25",
             $"GET {Base}/orders/so1",
             $"POST {Base}/orders/o1/groups/supplier%3Ai1/submit",
             $"POST {Base}/orders/so1/retry",
@@ -204,6 +204,26 @@ public class StoreSuppliersRouteTests : IDisposable
         }, _server.Requests.Select(r => $"{r.Method} {r.PathAndQuery}"));
         Assert.Contains("\"payNow\":true", _server.Requests[2].Body);
         Assert.Contains("\"acceptCost\":true", _server.Requests[3].Body);
+    }
+
+    [Fact]
+    public async Task ListSupplierOrders_PagesByCursor_AndReadsTheListEnvelope()
+    {
+        _server.ResultJson = "{\"items\":[{\"_id\":\"so2\"}],\"pagination\":{\"nextCursor\":\"c3\",\"previousCursor\":\"c1\",\"hasMore\":true,\"totalCount\":30,\"pageSize\":25}}";
+        var page = await _server.Client().ListSupplierOrdersAsync("s1",
+            new SupplierOrderSearchParams { Status = SupplierOrderStatuses.Failed },
+            new PaginationParams { Cursor = "c2", PageSize = 25 });
+
+        var request = _server.Requests.Single();
+        Assert.Equal($"GET {Base}/orders?status=failed&cursor=c2&pageSize=25", $"{request.Method} {request.PathAndQuery}");
+        Assert.DoesNotContain("page=", request.PathAndQuery);
+
+        Assert.NotNull(page);
+        Assert.Equal("so2", Assert.Single(page!.Items).Id);
+        Assert.Equal("c3", page.Pagination.NextCursor);
+        Assert.Equal("c1", page.Pagination.PreviousCursor);
+        Assert.True(page.Pagination.HasMore);
+        Assert.Equal(25, page.Pagination.PageSize);
     }
 
     [Fact]
@@ -287,10 +307,17 @@ public class StoreSuppliersLiveTests : IDisposable
     [StoreFixtureFact]
     public async Task ListSupplierOrders_ThenGetTheFirst()
     {
-        var queue = await _store.Suppliers.ListSupplierOrdersAsync(StoreId, new SupplierOrderSearchParams { NeedsReview = true }, pageSize: 5);
+        var queue = await _store.Suppliers.ListSupplierOrdersAsync(StoreId, new SupplierOrderSearchParams { NeedsReview = true }, new PaginationParams { PageSize = 5 });
         Assert.NotNull(queue?.Items);
+        Assert.NotNull(queue!.Pagination);
+        if (queue.Pagination.HasMore)
+        {
+            var next = await _store.Suppliers.ListSupplierOrdersAsync(StoreId, new SupplierOrderSearchParams { NeedsReview = true },
+                new PaginationParams { Cursor = queue.Pagination.NextCursor, PageSize = 5 });
+            Assert.NotNull(next?.Items);
+        }
 
-        var any = await _store.Suppliers.ListSupplierOrdersAsync(StoreId, pageSize: 1);
+        var any = await _store.Suppliers.ListSupplierOrdersAsync(StoreId, pagination: new PaginationParams { PageSize = 1 });
         var first = any?.Items?.FirstOrDefault();
         if (first?.Id is null)
         {

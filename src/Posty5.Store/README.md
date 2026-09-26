@@ -275,9 +275,20 @@ if (preview!.Rows![0].DuplicateOf == null)
     }
 }
 
-// 4. Watch the queue and act on a paused part.
-var queue = await store.Suppliers.ListSupplierOrdersAsync(storeId, new SupplierOrderSearchParams { NeedsReview = true });
-foreach (var supplierOrder in queue!.Items!.Where(o => o.ReviewReason == SupplierReviewReasons.CostChanged))
+// 4. Watch the queue and act on a paused part. The queue pages by cursor; read
+//    every page first, because a retry changes the list the cursor walks.
+var paused = new List<StoreSupplierOrder>();
+string? cursor = null;
+do
+{
+    var queue = await store.Suppliers.ListSupplierOrdersAsync(storeId,
+        new SupplierOrderSearchParams { NeedsReview = true },
+        new PaginationParams { Cursor = cursor, PageSize = 100 });
+    paused.AddRange(queue!.Items);
+    cursor = queue.Pagination.HasMore ? queue.Pagination.NextCursor : null;
+} while (cursor != null);
+
+foreach (var supplierOrder in paused.Where(o => o.ReviewReason == SupplierReviewReasons.CostChanged))
 {
     await store.Suppliers.RetryAsync(storeId, supplierOrder.Id!, acceptCost: true);
 }
@@ -296,7 +307,12 @@ foreach (var supplierOrder in queue!.Items!.Where(o => o.ReviewReason == Supplie
 - **Vocabularies are strings**, with names in `SupplierOrderStatuses`,
   `SupplierReviewReasons`, `SupplierAutomationModes` and friends — a value added
   on the server never breaks deserialization.
-- Supplier routes page by number (`page`, `pageSize`), not by cursor.
+- The supplier-order queue (`ListSupplierOrdersAsync`) pages by cursor like
+  every other list — `PaginationParams` (`Cursor`, `PageSize`: max 100; the
+  API uses 25 when no `PaginationParams` is passed), answered as
+  `PaginationResponse<StoreSupplierOrder>`. Only
+  the supplier's own catalogue (`BrowseProductsAsync`) pages by number
+  (`page`, `pageSize`).
 
 ## API
 
@@ -417,7 +433,7 @@ foreach (var supplierOrder in queue!.Items!.Where(o => o.ReviewReason == Supplie
 | `UpdateLinkAsync(storeId, linkId, changes)` | `PUT /{storeId}/links/{linkId}` | `suppliers.import` |
 | `DeleteLinkAsync(storeId, linkId)` | `DELETE /{storeId}/links/{linkId}` | `suppliers.import` |
 | `SyncLinkAsync(storeId, linkId)` | `POST /{storeId}/links/{linkId}/sync` | `suppliers.import` |
-| `ListSupplierOrdersAsync(storeId, filters?, page?, pageSize?)` | `GET /{storeId}/orders` | `suppliers.view` |
+| `ListSupplierOrdersAsync(storeId, filters?, pagination?)` | `GET /{storeId}/orders` | `suppliers.view` |
 | `GetSupplierOrderAsync(storeId, supplierOrderId)` | `GET /{storeId}/orders/{supplierOrderId}` | `suppliers.view` |
 | `SubmitGroupAsync(storeId, orderId, groupKey, payNow?)` | `POST /{storeId}/orders/{orderId}/groups/{groupKey}/submit` | `suppliers.orders.manage` |
 | `RetryAsync(storeId, supplierOrderId, acceptCost?)` | `POST /{storeId}/orders/{supplierOrderId}/retry` | `suppliers.orders.manage` |
@@ -434,7 +450,9 @@ sub-clients.
 ## Pagination
 
 Lists page by opaque cursor, not by page number, so a list stays stable while
-rows are written underneath it:
+rows are written underneath it. This includes the supplier-order queue
+(`store.Suppliers.ListSupplierOrdersAsync`); the one exception is a supplier's
+own catalogue (`store.Suppliers.BrowseProductsAsync`), which pages by `page`:
 
 ```csharp
 string? cursor = null;
