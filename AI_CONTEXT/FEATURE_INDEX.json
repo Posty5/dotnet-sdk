@@ -68,6 +68,11 @@
       "source": "src/Posty5.Store/Clients/StoreShippingClient.cs"
     },
     {
+      "name": "Store suppliers and fulfilment (dropshipping)",
+      "owner": "store",
+      "source": "src/Posty5.Store/Clients/StoreSuppliersClient.cs"
+    },
+    {
       "name": "File downloads (.xlsx exports and templates)",
       "owner": "core",
       "source": "src/Posty5.Core/Http/HttpClient.cs"

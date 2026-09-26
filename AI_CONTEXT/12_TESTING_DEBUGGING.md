@@ -12,3 +12,12 @@
 3. Check configuration names without printing values.
 4. Run the narrow check, then the project build/typecheck.
 5. Record any check that could not run and why.
+
+## Store dropshipping tests
+
+`tests/Posty5.Tests/StoreSuppliersClientTests.cs` has an offline class
+(`StoreSuppliersRouteTests`): the real `Posty5HttpClient` is pointed at a local
+`HttpListener` that records each request and answers with the API envelope, so
+every route, verb, query and body is pinned without the network. The live class
+reads only, and returns early unless `POSTY5_TEST_STORE_ID` is set.
+

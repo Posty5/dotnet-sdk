@@ -7,7 +7,7 @@ namespace Posty5.Store;
 
 /// <summary>
 /// Client for managing an Online Store via the Posty5 API — catalogue, orders,
-/// tags, customers and shipping.
+/// tags, customers, shipping and dropshipping suppliers.
 /// </summary>
 /// <remarks>
 /// Authenticate with an API key on <see cref="Posty5HttpClient"/> (sent as the
@@ -15,7 +15,9 @@ namespace Posty5.Store;
 /// by the key owner's store permission: <c>products.manage</c> for the catalogue
 /// and tags, <c>orders.view</c> / <c>orders.create</c> /
 /// <c>orders.updateStatus</c> for orders and customers, <c>settings.manage</c>
-/// for shipping. A store's owner holds all of them.
+/// for shipping, and <c>suppliers.view</c> / <c>suppliers.manage</c> /
+/// <c>suppliers.import</c> / <c>suppliers.orders.manage</c> for dropshipping.
+/// A store's owner holds all of them.
 /// <para>
 /// An API key carries the full identity of the user who created it — it is not
 /// scoped to one store. Treat it as you would a password.
@@ -48,6 +50,9 @@ public class StoreClient
     /// <summary>Shipping countries, cities and fees.</summary>
     public StoreShippingClient Shipping { get; }
 
+    /// <summary>Dropshipping: supplier connections, imports, product links and supplier orders.</summary>
+    public StoreSuppliersClient Suppliers { get; }
+
     /// <summary>Creates a new Store client.</summary>
     /// <param name="httpClient">HTTP client instance from Posty5.Core.</param>
     public StoreClient(Posty5HttpClient httpClient)
@@ -59,6 +64,7 @@ public class StoreClient
         Tags = new StoreTagsClient(httpClient);
         Customers = new StoreCustomersClient(httpClient);
         Shipping = new StoreShippingClient(httpClient);
+        Suppliers = new StoreSuppliersClient(httpClient);
     }
 
     // ─── Shorthands ─────────────────────────────────────────────────────────

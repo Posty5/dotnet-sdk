@@ -4,6 +4,33 @@ All notable changes to the Posty5 .NET SDK will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Posty5.Store 3.2.0 - 2026-09-26
+
+The first version of `Posty5.Store` to reach NuGet: earlier versions (up to
+3.1.0) were never published.
+
+### Added
+
+- **`store.Suppliers`** — `StoreSuppliersClient`, one method per dropshipping
+  route under `/api/store-suppliers`: the supplier catalogue; connecting,
+  configuring, testing and disconnecting a supplier (and `StartOAuthAsync` for
+  suppliers connected by signing in); browsing, previewing and importing
+  supplier products (`ImportSupplierProductsResult.IsQueued` tells a queued
+  import from an inline one); product links and sync; the supplier-order queue
+  and the part actions `SubmitGroupAsync`, `RetryAsync`, `PayAsync`,
+  `CancelAsync`, `FulfilGroupManuallyAsync`.
+- **Models** for suppliers, connections (no credential property anywhere),
+  products, imports, links, supplier orders and order parts, and
+  **`SupplierConstants`** — string constants for every vocabulary rather than
+  enums, so a value added on the server never breaks deserialization.
+- **Orders**: `StoreOrder.FulfilmentGroups`, `StoreOrder.SupplierOrders`,
+  `StoreOrderSummary.FulfilmentSummary`, and `OrderSearchParams.NeedsAttention`.
+
+### Changed
+
+- CI now packs `Posty5.Store` (it was missing from the pack list), and the test
+  project references it.
+
 ## Posty5.SocialPublisherPost 4.5.0 - 2026-09-19
 
 ### Added

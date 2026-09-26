@@ -4,7 +4,7 @@
 | --- | --- | --- |
 | `Posty5Options` | BaseUrl, ApiKey, Debug plus fixed timeout/retry settings. | `src/Posty5.Core/Configuration/Posty5Options.cs` |
 | `Posty5HttpClient` | GetAsync/PostAsync/PutAsync/PatchAsync/DeleteAsync, GetBytesAsync (file downloads) and SetApiKey. | `src/Posty5.Core/Http/HttpClient.cs` |
-| `StoreClient` | Five sub-clients — `Products`, `Orders`, `Tags`, `Customers`, `Shipping` — plus four legacy shorthands. | `src/Posty5.Store/StoreClient.cs` |
+| `StoreClient` | Six sub-clients — `Products`, `Orders`, `Tags`, `Customers`, `Shipping`, `Suppliers` (dropshipping, `/api/store-suppliers`) — plus four legacy shorthands. | `src/Posty5.Store/StoreClient.cs` |
 | `ShortLinkClient` | ListAsync/GetAsync/CreateAsync/UpdateAsync/DeleteAsync. | `src/Posty5.ShortLink/ShortLinkClient.cs` |
 | `QRCodeClient` | Create/update by type plus GetAsync/ListAsync/DeleteAsync. | `src/Posty5.QRCode/QRCodeClient.cs` |
 | `HtmlHostingClient` | File/GitHub create/update, get/list/lookups/cache/delete. | `src/Posty5.HtmlHosting/HtmlHostingClient.cs` |

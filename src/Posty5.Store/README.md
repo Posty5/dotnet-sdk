@@ -1,7 +1,7 @@
 # Posty5.Store
 
 Online Store management client for the [Posty5](https://posty5.com) .NET SDK —
-run a store's **catalogue, orders, tags, customers and shipping** from anywhere.
+run a store's **catalogue, orders, tags, customers, shipping and dropshipping suppliers** from anywhere.
 
 ## Install
 
@@ -16,7 +16,9 @@ Create an [API key](https://studio.posty5.com) and pass it to the core
 `Posty5HttpClient` (sent as the `X-API-Key` header). Every call is scoped to a
 store id and authorized by the key owner's store permission — `products.manage`
 for the catalogue and tags, `orders.*` for orders and customers,
-`settings.manage` for shipping. A store's owner holds all of them.
+`settings.manage` for shipping, and `suppliers.view` / `suppliers.manage` /
+`suppliers.import` / `suppliers.orders.manage` for dropshipping. A store's
+owner holds all of them.
 
 > An API key carries the full identity of the user who created it; it is not
 > scoped to a single store. Treat it as you would a password.
@@ -31,8 +33,8 @@ var http = new Posty5HttpClient(new Posty5Options { ApiKey = Environment.GetEnvi
 var store = new StoreClient(http);
 ```
 
-The client is split into five areas: `store.Products`, `store.Orders`,
-`store.Tags`, `store.Customers` and `store.Shipping`.
+The client is split into six areas: `store.Products`, `store.Orders`,
+`store.Tags`, `store.Customers`, `store.Shipping` and `store.Suppliers`.
 
 ## Products
 
@@ -142,6 +144,13 @@ The status workflow is enforced server-side: `pending → confirmed → processi
 shipped → delivered`, with `cancelled`/`refused` reachable from any non-terminal
 state and the three terminal states accepting nothing further.
 
+An order with dropshipped items is split into parts: `order.FulfilmentGroups`
+holds one for the store's own items and one per supplier connection, each with
+its own `Status` and `Shipment`. The order moves at the pace of its slowest
+part, so on a multi-part order `shipped` and `delivered` are reached by the
+parts rather than set by hand. List rows carry `FulfilmentSummary`, and
+`new OrderSearchParams { NeedsAttention = true }` finds orders with a paused part.
+
 ## Tags
 
 ```csharp
@@ -227,6 +236,67 @@ Per-product surcharges are separate, and always charged **per unit**:
 await store.Products.UpdateShippingAsync(storeId, productId,
     new ProductShippingInput { ExtraFeePerUnit = 5, Note = "Bulky" });
 ```
+
+## Suppliers
+
+Dropshipping: connect a supplier account, import its products, and follow the
+orders sent to it. Connecting, importing, sending and paying need the store
+owner's plan to include dropshipping (Pro and above).
+
+```csharp
+// 1. Connect — the credential keys come from the catalogue entry.
+var catalogue = await store.Suppliers.GetCatalogueAsync(storeId);
+var cj = catalogue!.Items!.First(s => s.Key == "cjdropshipping");
+// cj.CredentialFields → [{ Key = "apiKey", Label = "API key", Secret = true }]
+var connection = await store.Suppliers.ConnectAsync(storeId, new ConnectSupplierInput
+{
+    SupplierKey = "cjdropshipping",
+    Mode = SupplierModes.Test, // CJdropshipping has a sandbox: test orders are never charged or shipped
+    Credentials = new() { ["apiKey"] = Environment.GetEnvironmentVariable("CJ_API_KEY")! },
+});
+
+// 2. Decide what it may do on its own — every connection starts on "manual".
+await store.Suppliers.UpdateAutomationAsync(storeId, connection!.Id!,
+    new SupplierAutomationInput { Mode = SupplierAutomationModes.Submit, MaxCostPerOrder = 50 });
+
+// 3. Browse, preview, import.
+var page = await store.Suppliers.BrowseProductsAsync(storeId, connection.Id!, new BrowseSupplierProductsParams { Q = "mug" });
+var request = new ImportSupplierProductsInput
+{
+    Items = { new ImportSupplierProductItem { SupplierProductId = page!.Items![0].SupplierProductId! } },
+};
+var preview = await store.Suppliers.PreviewImportAsync(storeId, connection.Id!, request);
+if (preview!.Rows![0].DuplicateOf == null)
+{
+    var result = await store.Suppliers.ImportProductsAsync(storeId, connection.Id!, request);
+    if (result!.IsQueued)
+    {
+        var status = await store.Suppliers.GetImportStatusAsync(storeId, result.JobId!);
+    }
+}
+
+// 4. Watch the queue and act on a paused part.
+var queue = await store.Suppliers.ListSupplierOrdersAsync(storeId, new SupplierOrderSearchParams { NeedsReview = true });
+foreach (var supplierOrder in queue!.Items!.Where(o => o.ReviewReason == SupplierReviewReasons.CostChanged))
+{
+    await store.Suppliers.RetryAsync(storeId, supplierOrder.Id!, acceptCost: true);
+}
+```
+
+- **Credentials are write-only.** No response carries them; a connection says
+  only `HasCredentials`. Debug mode logs the method and URL, never a body.
+- **Paused outcomes throw.** `SubmitGroupAsync`, `RetryAsync` and `PayAsync`
+  answer a pause (`needsReview`, `failed`, a part already being sent) as a 400,
+  so they throw `Posty5ValidationException`; read the supplier order again to see why.
+- **No duplicates.** A second submit finds the first supplier order, and
+  `PayAsync` reads the supplier's status first — an order already paid there is
+  recorded, not paid again.
+- **Money.** A key holding `suppliers.orders.manage` can spend the merchant's
+  balance at the supplier. Treat it accordingly.
+- **Vocabularies are strings**, with names in `SupplierOrderStatuses`,
+  `SupplierReviewReasons`, `SupplierAutomationModes` and friends — a value added
+  on the server never breaks deserialization.
+- Supplier routes page by number (`page`, `pageSize`), not by cursor.
 
 ## API
 
@@ -320,6 +390,41 @@ await store.Products.UpdateShippingAsync(storeId, productId,
 | `ClearRouteAsync(storeId, rateId)` | `DELETE /{storeId}/routes/{rateId}` |
 | `PreviewFeeAsync(storeId, countryIso, governorateCode?, cityKey?)` | `GET /{storeId}/preview-fee` |
 
+### `store.Suppliers` — `/api/store-suppliers`
+
+| Method | Endpoint | Permission |
+| --- | --- | --- |
+| `GetCatalogueAsync(storeId)` | `GET /{storeId}/catalogue` | `suppliers.view` |
+| `ListAsync(storeId)` | `GET /{storeId}` | `suppliers.view` |
+| `ConnectAsync(storeId, input)` | `POST /{storeId}` | `suppliers.manage` |
+| `StartOAuthAsync(storeId, input)` | `POST /{storeId}/oauth/start` | `suppliers.manage` |
+| `ReplaceCredentialsAsync(storeId, id, input)` | `PUT /{storeId}/{id}` | `suppliers.manage` |
+| `UpdateSettingsAsync(storeId, id, input)` | `PUT /{storeId}/{id}/settings` | `suppliers.manage` |
+| `UpdateAutomationAsync(storeId, id, automation)` | `PUT /{storeId}/{id}/automation` | `suppliers.manage` |
+| `SetEnabledAsync(storeId, id, enabled)` | `PUT /{storeId}/{id}/enabled` | `suppliers.manage` |
+| `TestAsync(storeId, id)` | `POST /{storeId}/{id}/test` | `suppliers.manage` |
+| `GetBalanceAsync(storeId, id)` | `GET /{storeId}/{id}/balance` | `suppliers.view` |
+| `GetDisconnectImpactAsync(storeId, id)` | `GET /{storeId}/{id}/impact` | `suppliers.view` |
+| `DisconnectAsync(storeId, id, force?)` | `DELETE /{storeId}/{id}` | `suppliers.manage` |
+| `BrowseProductsAsync(storeId, id, filters?, page?, pageSize?)` | `GET /{storeId}/{id}/products` | `suppliers.import` |
+| `GetProductAsync(storeId, id, supplierProductId)` | `GET /{storeId}/{id}/products/{supplierProductId}` | `suppliers.import` |
+| `ResolveUrlAsync(storeId, id, url)` | `POST /{storeId}/{id}/products/resolve-url` | `suppliers.import` |
+| `PreviewImportAsync(storeId, id, input)` | `POST /{storeId}/{id}/import/preview` | `suppliers.import` |
+| `ImportProductsAsync(storeId, id, input)` | `POST /{storeId}/{id}/import` | `suppliers.import` |
+| `GetImportStatusAsync(storeId, jobId)` | `GET /{storeId}/imports/{jobId}` | `suppliers.import` |
+| `ListLinksAsync(storeId, productId?)` | `GET /{storeId}/links` | `suppliers.view` |
+| `CreateLinkAsync(storeId, input)` | `POST /{storeId}/links` | `suppliers.import` |
+| `UpdateLinkAsync(storeId, linkId, changes)` | `PUT /{storeId}/links/{linkId}` | `suppliers.import` |
+| `DeleteLinkAsync(storeId, linkId)` | `DELETE /{storeId}/links/{linkId}` | `suppliers.import` |
+| `SyncLinkAsync(storeId, linkId)` | `POST /{storeId}/links/{linkId}/sync` | `suppliers.import` |
+| `ListSupplierOrdersAsync(storeId, filters?, page?, pageSize?)` | `GET /{storeId}/orders` | `suppliers.view` |
+| `GetSupplierOrderAsync(storeId, supplierOrderId)` | `GET /{storeId}/orders/{supplierOrderId}` | `suppliers.view` |
+| `SubmitGroupAsync(storeId, orderId, groupKey, payNow?)` | `POST /{storeId}/orders/{orderId}/groups/{groupKey}/submit` | `suppliers.orders.manage` |
+| `RetryAsync(storeId, supplierOrderId, acceptCost?)` | `POST /{storeId}/orders/{supplierOrderId}/retry` | `suppliers.orders.manage` |
+| `PayAsync(storeId, supplierOrderId)` | `POST /{storeId}/orders/{supplierOrderId}/pay` | `suppliers.orders.manage` |
+| `CancelAsync(storeId, supplierOrderId)` | `POST /{storeId}/orders/{supplierOrderId}/cancel` | `suppliers.orders.manage` |
+| `FulfilGroupManuallyAsync(storeId, orderId, groupKey)` | `POST /{storeId}/orders/{orderId}/groups/{groupKey}/fulfil-manually` | `suppliers.orders.manage` |
+
 ### Shorthands
 
 `BulkCreateProductsAsync`, `SearchOrdersAsync`, `CreateOrderAsync` and
@@ -352,6 +457,8 @@ file itself rather than the JSON envelope, so they return a `FileResponse`
 Product, order and store operations (`addProduct`, `manualOrder`,
 `orderStatusChange`, `exportOrders`, AI generation) are charged to the store
 owner per the account's plan. Tag operations are free and unmetered.
+Importing a supplier product is charged like adding a product; connecting,
+linking, syncing and every supplier-order action are free.
 
 ## License
 

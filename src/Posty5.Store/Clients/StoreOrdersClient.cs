@@ -94,6 +94,9 @@ public class StoreOrdersClient : StoreClientBase
     /// reachable from any non-terminal state and the terminal states accepting
     /// nothing further. Charges the deferred orderStatusChange. The note is
     /// customer-facing — it reaches the status event and the notification email.
+    /// On an order in several parts, <c>shipped</c> and <c>delivered</c> are reached
+    /// by the parts themselves (the order moves at the pace of its slowest part),
+    /// not set by hand.
     /// </summary>
     public async Task<StoreOrder?> UpdateStatusAsync(
         string storeId,
@@ -131,6 +134,7 @@ public class StoreOrdersClient : StoreClientBase
         Add(query, "tagIds", filters.TagIds);
         Add(query, "fromDate", filters.FromDate);
         Add(query, "toDate", filters.ToDate);
+        Add(query, "needsAttention", filters.NeedsAttention);
 
         return query;
     }

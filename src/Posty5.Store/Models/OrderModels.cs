@@ -40,6 +40,9 @@ public class OrderSearchParams
 
     /// <summary>Created-at range end.</summary>
     public string? ToDate { get; set; }
+
+    /// <summary>Dropshipping: only orders with a part that needs attention.</summary>
+    public bool? NeedsAttention { get; set; }
 }
 
 /// <summary>Order search filters plus the statistics window.</summary>
@@ -82,6 +85,9 @@ public class StoreOrderSummary
 
     /// <summary>Creation timestamp.</summary>
     public string? CreatedAt { get; set; }
+
+    /// <summary>Dropshipping: progress across the order's parts.</summary>
+    public OrderFulfilmentSummary? FulfilmentSummary { get; set; }
 }
 
 /// <summary>One line of a manual order.</summary>
@@ -210,6 +216,15 @@ public class StoreOrder
 
     /// <summary>Money on the order.</summary>
     public StoreOrderTotals? Totals { get; set; }
+
+    /// <summary>
+    /// Dropshipping: the order's parts — one for the store's own items and one per
+    /// supplier connection. An order from before parts existed has one merchant part.
+    /// </summary>
+    public List<OrderFulfilmentGroup>? FulfilmentGroups { get; set; }
+
+    /// <summary>The supplier orders behind the parts; present only for a caller holding <c>suppliers.view</c>.</summary>
+    public List<StoreSupplierOrder>? SupplierOrders { get; set; }
 
     /// <summary>Every field the API returned, including those not typed above.</summary>
     [JsonExtensionData]
