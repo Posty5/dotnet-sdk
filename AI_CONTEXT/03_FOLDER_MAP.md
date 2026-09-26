@@ -12,6 +12,7 @@
 | `src/Posty5.HtmlHostingFormSubmission` | Submission client/models. |
 | `src/Posty5.SocialPublisherWorkspace` | Social workspace client/models. |
 | `src/Posty5.SocialPublisherPost` | Social post client/models/uploads. |
+| `src/Posty5.Store` | Online store client/models: `StoreClient.cs` facade, `Clients/` (products, orders, tags, customers, shipping, suppliers on `StoreClientBase`), `Models/` (incl. `SupplierConstants.cs` string vocabularies). |
 | `tests/Posty5.Tests` | xUnit integration/client tests and assets. |
 | `examples` | Consumer usage examples. |
 

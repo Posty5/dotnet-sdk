@@ -5,6 +5,7 @@ using System.Text.Json;
 using Posty5.Core.Configuration;
 using Posty5.Core.Exceptions;
 using Posty5.Core.Http;
+using Posty5.Core.Models;
 using Posty5.Store;
 using Posty5.Store.Clients;
 using Posty5.Store.Models;
@@ -227,29 +228,258 @@ public class StoreSuppliersRouteTests : IDisposable
 }
 
 /// <summary>
-/// Live, like the rest of this suite, and only when the store fixtures are set
-/// (<c>POSTY5_TEST_STORE_ID</c>). Reads only — never connects, imports, sends or pays.
+/// Live, like the rest of this suite: there is no transport injection in
+/// <see cref="Posty5HttpClient"/>, so these call the configured API. Each fact
+/// is reported as <b>skipped</b> — naming the variable — when its fixture is not
+/// set (<see cref="StoreFixtureFactAttribute"/>). By default they read, link,
+/// sync and unlink, and flip one automation setting and restore it; they never
+/// connect, disconnect or send a credential. Import (charges credits) and the
+/// group actions sit behind further variables.
 /// </summary>
-public class StoreSuppliersLiveTests
+[Collection("Sequential")]
+public class StoreSuppliersLiveTests : IDisposable
 {
-    private static readonly string? StoreId = Environment.GetEnvironmentVariable("POSTY5_TEST_STORE_ID", EnvironmentVariableTarget.User)
-        ?? Environment.GetEnvironmentVariable("POSTY5_TEST_STORE_ID");
+    private readonly StoreClient _store = new(TestConfig.CreateHttpClient());
+    private static string StoreId => TestConfig.StoreId;
+    private static string IntegrationId => TestConfig.SupplierIntegrationId;
 
-    [Fact]
-    public async Task ListsConnections_WithoutCredentials()
+    /// <summary>Anything a fact created and could not remove itself is removed here.</summary>
+    public void Dispose()
     {
-        if (string.IsNullOrEmpty(StoreId)) return; // no fixture — nothing to read
+        foreach (var linkId in TestConfig.CreatedResources.SupplierLinks.ToList())
+        {
+            try { _store.Suppliers.DeleteLinkAsync(StoreId, linkId).GetAwaiter().GetResult(); } catch { /* already gone */ }
+            TestConfig.CreatedResources.SupplierLinks.Remove(linkId);
+        }
+        foreach (var productId in TestConfig.CreatedResources.StoreProducts.ToList())
+        {
+            try { _store.Products.DeleteAsync(StoreId, productId).GetAwaiter().GetResult(); } catch { /* already gone */ }
+            TestConfig.CreatedResources.StoreProducts.Remove(productId);
+        }
+    }
 
-        var store = new StoreClient(TestConfig.CreateHttpClient());
-        var catalogue = await store.Suppliers.GetCatalogueAsync(StoreId);
+    /// <summary>A paused outcome is thrown (HTTP 400) rather than returned; read it from either side.</summary>
+    private static async Task<string> OutcomeOf(Func<Task<SupplierOrderActionResult?>> action)
+    {
+        try
+        {
+            return JsonSerializer.Serialize(await action());
+        }
+        catch (Posty5ValidationException paused)
+        {
+            return paused.Message;
+        }
+    }
+
+    [StoreFixtureFact]
+    public async Task GetCatalogueAndList_CarryNoCredentials()
+    {
+        var catalogue = await _store.Suppliers.GetCatalogueAsync(StoreId);
         Assert.NotNull(catalogue?.Items);
 
-        foreach (var connection in await store.Suppliers.ListAsync(StoreId))
+        foreach (var connection in await _store.Suppliers.ListAsync(StoreId))
         {
             Assert.NotNull(connection.Id);
+            Assert.NotNull(connection.Automation);
         }
+    }
 
-        var queue = await store.Suppliers.ListSupplierOrdersAsync(StoreId, new SupplierOrderSearchParams { NeedsReview = true }, pageSize: 5);
+    [StoreFixtureFact]
+    public async Task ListSupplierOrders_ThenGetTheFirst()
+    {
+        var queue = await _store.Suppliers.ListSupplierOrdersAsync(StoreId, new SupplierOrderSearchParams { NeedsReview = true }, pageSize: 5);
         Assert.NotNull(queue?.Items);
+
+        var any = await _store.Suppliers.ListSupplierOrdersAsync(StoreId, pageSize: 1);
+        var first = any?.Items?.FirstOrDefault();
+        if (first?.Id is null)
+        {
+            Console.WriteLine("No supplier orders on the fixture store; GetSupplierOrderAsync not exercised.");
+            return;
+        }
+        var row = await _store.Suppliers.GetSupplierOrderAsync(StoreId, first.Id);
+        Assert.Equal(first.Id, row?.Id);
+        Assert.False(string.IsNullOrEmpty(row?.Status));
+    }
+
+    [StoreFixtureFact]
+    public async Task Orders_NeedsAttentionFilter_AndPartsDeserialise()
+    {
+        var page = await _store.Orders.SearchAsync(StoreId, new OrderSearchParams { NeedsAttention = true }, new PaginationParams { PageSize = 5 });
+        Assert.NotNull(page?.Items);
+
+        var orderId = TestConfig.OrderId.Length > 0
+            ? TestConfig.OrderId
+            : (await _store.Orders.SearchAsync(StoreId, pagination: new PaginationParams { PageSize = 1 }))?.Items.FirstOrDefault()?.Id;
+        if (orderId is null)
+        {
+            Console.WriteLine("No orders on the fixture store; Orders.GetAsync not exercised.");
+            return;
+        }
+        var order = await _store.Orders.GetAsync(StoreId, orderId);
+        Assert.NotNull(order);
+        foreach (var group in order!.FulfilmentGroups ?? new())
+        {
+            Assert.False(string.IsNullOrEmpty(group.Key));
+            Assert.Contains(group.Kind, new[] { FulfilmentKinds.Merchant, FulfilmentKinds.ThirdParty });
+            Assert.NotNull(group.LineKeys);
+        }
+    }
+
+    [StoreFixtureFact]
+    public async Task ListLinks_ReturnsAList()
+    {
+        var links = await _store.Suppliers.ListLinksAsync(StoreId, TestConfig.ProductId.Length > 0 ? TestConfig.ProductId : null);
+        Assert.NotNull(links);
+    }
+
+    [StoreFixtureFact(TestConfig.SupplierIntegrationIdVar)]
+    public async Task GetBalance_AndTest_OnTheTestConnection()
+    {
+        var balance = await _store.Suppliers.GetBalanceAsync(StoreId, IntegrationId);
+        Assert.False(string.IsNullOrEmpty(balance?.Currency));
+
+        var test = await _store.Suppliers.TestAsync(StoreId, IntegrationId);
+        Assert.NotNull(test);
+    }
+
+    [StoreFixtureFact(TestConfig.SupplierIntegrationIdVar)]
+    public async Task BrowseProducts_OneSmallPage()
+    {
+        var page = await _store.Suppliers.BrowseProductsAsync(StoreId, IntegrationId, page: 1, pageSize: 5);
+        Assert.NotNull(page?.Items);
+        Assert.True(page!.Items!.Count <= 5);
+        Assert.All(page.Items, item => Assert.False(string.IsNullOrEmpty(item.SupplierProductId)));
+    }
+
+    [StoreFixtureFact(TestConfig.SupplierIntegrationIdVar, TestConfig.SupplierProductIdVar)]
+    public async Task PreviewImport_CreatesAndChargesNothing()
+    {
+        var preview = await _store.Suppliers.PreviewImportAsync(StoreId, IntegrationId, new ImportSupplierProductsInput
+        {
+            Items = { new ImportSupplierProductItem { SupplierProductId = TestConfig.SupplierProductId } },
+        });
+        var row = Assert.Single(preview!.Rows!);
+        Assert.Equal(TestConfig.SupplierProductId, row.SupplierProductId);
+        Assert.NotNull(preview.Totals);
+    }
+
+    [StoreFixtureFact(TestConfig.SupplierIntegrationIdVar)]
+    public async Task UpdateAutomation_RoundTrip_IsRestored()
+    {
+        var before = (await _store.Suppliers.ListAsync(StoreId)).Single(c => c.Id == IntegrationId).Automation!;
+        try
+        {
+            var changed = await _store.Suppliers.UpdateAutomationAsync(StoreId, IntegrationId,
+                new SupplierAutomationInput { AllowUnpaidOrders = !before.AllowUnpaidOrders });
+            Assert.Equal(!before.AllowUnpaidOrders, changed!.Automation!.AllowUnpaidOrders);
+        }
+        finally
+        {
+            var restored = await _store.Suppliers.UpdateAutomationAsync(StoreId, IntegrationId, new SupplierAutomationInput
+            {
+                Mode = before.Mode,
+                AllowUnpaidOrders = before.AllowUnpaidOrders,
+                MaxCostPerOrder = before.MaxCostPerOrder,
+                MaxCostRatio = before.MaxCostRatio,
+                AllowedCountries = before.AllowedCountries ?? new(),
+            });
+            Assert.Equal(before.AllowUnpaidOrders, restored!.Automation!.AllowUnpaidOrders);
+        }
+    }
+
+    [StoreFixtureFact(TestConfig.SupplierIntegrationIdVar, TestConfig.SupplierProductIdVar, TestConfig.ProductIdVar)]
+    public async Task CreateUpdateSyncDeleteLink_OnTheTestProduct()
+    {
+        var product = await _store.Suppliers.GetProductAsync(StoreId, IntegrationId, TestConfig.SupplierProductId);
+        var variantId = product!.Variants!.First().SupplierVariantId!;
+
+        var link = await _store.Suppliers.CreateLinkAsync(StoreId, new CreateSupplierLinkInput
+        {
+            ProductId = TestConfig.ProductId,
+            IntegrationId = IntegrationId,
+            SupplierProductId = TestConfig.SupplierProductId,
+            Variants = { new SupplierLinkVariantInput { SupplierVariantId = variantId } },
+            SyncNow = false,
+        });
+        TestConfig.CreatedResources.SupplierLinks.Add(link!.Id!);
+        Assert.Equal(TestConfig.SupplierProductId, link.SupplierProductId);
+
+        var updated = await _store.Suppliers.UpdateLinkAsync(StoreId, link.Id!, new UpdateSupplierLinkInput
+        {
+            Sync = new() { [LinkSyncFields.Price] = false },
+        });
+        Assert.False(updated!.Sync![LinkSyncFields.Price]);
+
+        // Never synced (SyncNow = false), so the once-a-minute limit does not apply yet.
+        var synced = await _store.Suppliers.SyncLinkAsync(StoreId, link.Id!);
+        Assert.Equal(link.Id, synced?.Link?.Id);
+        Assert.NotNull(synced?.Changed);
+
+        await _store.Suppliers.DeleteLinkAsync(StoreId, link.Id!);
+        TestConfig.CreatedResources.SupplierLinks.Remove(link.Id!);
+    }
+
+    // ─── Guarded: charges, or acts on a supplier order ──────────────────────
+
+    [StoreFixtureFact(TestConfig.AllowChargesVar, TestConfig.SupplierIntegrationIdVar, TestConfig.SupplierProductIdVar)]
+    public async Task ImportProducts_OneDraft_ThenDeleted()
+    {
+        var result = await _store.Suppliers.ImportProductsAsync(StoreId, IntegrationId, new ImportSupplierProductsInput
+        {
+            Items = { new ImportSupplierProductItem { SupplierProductId = TestConfig.SupplierProductId } },
+            Defaults = new ImportSupplierProductDefaults { Status = "draft" },
+            AllowDuplicate = true,
+        });
+        Assert.NotNull(result);
+
+        // One product is under the inline limit, but a queued answer is still a valid answer.
+        var rows = result!.IsQueued
+            ? (await _store.Suppliers.GetImportStatusAsync(StoreId, result.JobId!))?.Rows ?? new()
+            : result.Rows!;
+        foreach (var created in rows.Where(r => r.ProductId is not null))
+        {
+            TestConfig.CreatedResources.StoreProducts.Add(created.ProductId!);
+        }
+        if (!result.IsQueued)
+        {
+            Assert.Equal("added", Assert.Single(rows).State);
+        }
+    }
+
+    [StoreFixtureFact(TestConfig.OrderIdVar, TestConfig.GroupKeyVar)]
+    public async Task SubmitGroup_OnTheTestConnection_AnswersTestMode()
+    {
+        var outcome = await OutcomeOf(() => _store.Suppliers.SubmitGroupAsync(StoreId, TestConfig.OrderId, TestConfig.GroupKey));
+        Assert.Contains(SupplierReviewReasons.TestMode, outcome);
+    }
+
+    [StoreFixtureFact(TestConfig.OrderIdVar, TestConfig.GroupKeyVar)]
+    public async Task RetryAndPay_OnTheTestConnection_MoveNoMoney()
+    {
+        var row = await FixturePartSupplierOrder();
+        Assert.Contains(SupplierReviewReasons.TestMode, await OutcomeOf(() => _store.Suppliers.RetryAsync(StoreId, row.Id!)));
+
+        var paid = await OutcomeOf(() => _store.Suppliers.PayAsync(StoreId, row.Id!));
+        Assert.DoesNotContain($"\"status\":\"{SupplierOrderStatuses.Confirmed}\"", paid);
+    }
+
+    [StoreFixtureFact(TestConfig.OrderIdVar, TestConfig.GroupKeyVar, TestConfig.AllowPartTakeoverVar)]
+    public async Task CancelThenFulfilManually_EndsTheFixturePart()
+    {
+        var row = await FixturePartSupplierOrder();
+        await OutcomeOf(() => _store.Suppliers.CancelAsync(StoreId, row.Id!));
+        Assert.Equal(SupplierOrderStatuses.Cancelled, (await _store.Suppliers.GetSupplierOrderAsync(StoreId, row.Id!))?.Status);
+
+        var manual = await _store.Suppliers.FulfilGroupManuallyAsync(StoreId, TestConfig.OrderId, TestConfig.GroupKey);
+        Assert.Equal(TestConfig.OrderId, manual?.OrderId);
+    }
+
+    private async Task<StoreSupplierOrder> FixturePartSupplierOrder()
+    {
+        var page = await _store.Suppliers.ListSupplierOrdersAsync(StoreId, new SupplierOrderSearchParams { OrderId = TestConfig.OrderId });
+        var row = page?.Items?.FirstOrDefault(r => r.FulfilmentGroupKey == TestConfig.GroupKey);
+        Assert.NotNull(row);
+        return row!;
     }
 }

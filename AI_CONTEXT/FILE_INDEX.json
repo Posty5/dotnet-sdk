@@ -72,6 +72,74 @@
       "role": "Social post client/models/uploads."
     },
     {
+      "path": "src/Posty5.Store",
+      "role": "Online store client/models (Posty5.Store): products, orders, tags, customers, shipping, suppliers."
+    },
+    {
+      "path": "src/Posty5.Store/StoreClient.cs",
+      "role": "StoreClient facade: six sub-clients and the four shorthands."
+    },
+    {
+      "path": "src/Posty5.Store/Clients/StoreClientBase.cs",
+      "role": "Shared base: Query()/Add(...) query building for the store sub-clients."
+    },
+    {
+      "path": "src/Posty5.Store/Clients/StoreProductsClient.cs",
+      "role": "store.Products - /api/store-products."
+    },
+    {
+      "path": "src/Posty5.Store/Clients/StoreOrdersClient.cs",
+      "role": "store.Orders - /api/store-orders (incl. the NeedsAttention filter)."
+    },
+    {
+      "path": "src/Posty5.Store/Clients/StoreTagsClient.cs",
+      "role": "store.Tags - /api/store-tags."
+    },
+    {
+      "path": "src/Posty5.Store/Clients/StoreCustomersClient.cs",
+      "role": "store.Customers - /api/store-customers."
+    },
+    {
+      "path": "src/Posty5.Store/Clients/StoreShippingClient.cs",
+      "role": "store.Shipping - /api/store-shipping."
+    },
+    {
+      "path": "src/Posty5.Store/Clients/StoreSuppliersClient.cs",
+      "role": "store.Suppliers - /api/store-suppliers (dropshipping: connections, catalogue, import, links, supplier orders, part actions)."
+    },
+    {
+      "path": "src/Posty5.Store/Models/SupplierConstants.cs",
+      "role": "Dropshipping vocabularies as string constants (no enums)."
+    },
+    {
+      "path": "src/Posty5.Store/Models/SupplierModels.cs",
+      "role": "Supplier catalogue, connection (no credential property), products, import, links."
+    },
+    {
+      "path": "src/Posty5.Store/Models/SupplierOrderModels.cs",
+      "role": "Supplier order, queue params, action result, order parts, PagedItems<T>."
+    },
+    {
+      "path": "src/Posty5.Store/Models/OrderModels.cs",
+      "role": "Store order models incl. FulfilmentGroups, SupplierOrders, FulfilmentSummary."
+    },
+    {
+      "path": "src/Posty5.Store/README.md",
+      "role": "Posty5.Store package README (Suppliers walk-through, API tables)."
+    },
+    {
+      "path": "tests/Posty5.Tests/StoreSuppliersClientTests.cs",
+      "role": "Suppliers route tests (local HttpListener) and fixture-gated live facts."
+    },
+    {
+      "path": "tests/Posty5.Tests/StoreFixtureFactAttribute.cs",
+      "role": "[StoreFixtureFact]: a live store fact reported as skipped when its POSTY5_TEST_* fixture is missing."
+    },
+    {
+      "path": "tests/Posty5.Tests/TestConfig.cs",
+      "role": "Test options, env lookup, store fixture reads (HasStoreFixture), cleanup lists."
+    },
+    {
       "path": "tests/Posty5.Tests",
       "role": "xUnit integration/client tests and assets."
     },

@@ -128,7 +128,7 @@ public class StoreSupplierAutomation
     public bool AllowUnpaidOrders { get; set; }
     /// <summary>The most one order may cost at the supplier.</summary>
     public decimal? MaxCostPerOrder { get; set; }
-    /// <summary>The most the supplier cost may be, as a percentage of what the shopper paid.</summary>
+    /// <summary>The most the supplier cost may be, as a fraction of what the shopper paid (0.7 = 70%).</summary>
     public decimal? MaxCostRatio { get; set; }
     /// <summary>ISO-2 countries orders may be sent to; empty means any.</summary>
     public List<string>? AllowedCountries { get; set; }
@@ -253,7 +253,7 @@ public class SupplierAutomationInput
     public bool? AllowUnpaidOrders { get; set; }
     /// <summary>The most one order may cost at the supplier.</summary>
     public decimal? MaxCostPerOrder { get; set; }
-    /// <summary>The most the cost may be, as a percentage of what the shopper paid.</summary>
+    /// <summary>The most the cost may be, as a fraction of what the shopper paid (0.7 = 70%).</summary>
     public decimal? MaxCostRatio { get; set; }
     /// <summary>ISO-2 countries orders may be sent to.</summary>
     public List<string>? AllowedCountries { get; set; }

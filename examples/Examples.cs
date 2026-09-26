@@ -8,6 +8,8 @@ using Posty5.HtmlHosting;
 using Posty5.HtmlHosting.Models;
 using Posty5.SocialPublisher;
 using Posty5.SocialPublisher.Models;
+using Posty5.Store;
+using Posty5.Store.Models;
 
 namespace Posty5.Examples;
 
@@ -39,6 +41,9 @@ public class Examples
         
         // Social Publisher Examples
         await SocialPublisherExamples(httpClient);
+        
+        // Store dropshipping (suppliers) Examples
+        await SuppliersExample(httpClient);
     }
     
     static async Post QRCodeExamples(Posty5HttpClient httpClient)
@@ -206,5 +211,87 @@ public class Examples
         // Publish immediately
         await postClient.PublishAsync(post.Id!);
         Console.WriteLine("Post published immediately!");
+    }
+    
+    /// <summary>
+    /// Dropshipping on an online store: read the suppliers, browse and preview an
+    /// import, then work the queue of supplier orders that need a person.
+    /// Connecting a supplier is left to the cPanel (or the README walk-through):
+    /// this example starts from a connection that already exists and never spends
+    /// money — Preview charges nothing, and only a cost change is accepted.
+    /// </summary>
+    static async Task SuppliersExample(Posty5HttpClient httpClient)
+    {
+        Console.WriteLine("\n=== Store Suppliers (Dropshipping) Examples ===\n");
+        
+        var store = new StoreClient(httpClient);
+        var storeId = Environment.GetEnvironmentVariable("POSTY5_STORE_ID") ?? "your-store-id";
+        
+        // The suppliers this store can connect, and the ones it has
+        var catalogue = await store.Suppliers.GetCatalogueAsync(storeId);
+        Console.WriteLine($"Suppliers offered: {string.Join(", ", catalogue!.Items!.Select(s => s.Key))}");
+        
+        var connections = await store.Suppliers.ListAsync(storeId);
+        var connection = connections.FirstOrDefault(c => c.Enabled);
+        if (connection == null)
+        {
+            Console.WriteLine("No supplier connected yet — connect one in the store's control panel first.");
+            return;
+        }
+        Console.WriteLine($"Using {connection.SupplierKey} ({connection.Mode}), automation: {connection.Automation?.Mode}");
+        
+        // Browse the supplier's catalogue — paged by number, at most 48 a page
+        var page = await store.Suppliers.BrowseProductsAsync(storeId, connection.Id!,
+            new BrowseSupplierProductsParams { Q = "mug" }, page: 1, pageSize: 12);
+        Console.WriteLine($"Found {page!.Total ?? page.Items!.Count} products matching \"mug\"");
+        
+        // Preview an import: prices, credits and duplicates — nothing is created or charged
+        if (page.Items!.Count > 0)
+        {
+            var preview = await store.Suppliers.PreviewImportAsync(storeId, connection.Id!, new ImportSupplierProductsInput
+            {
+                Items = { new ImportSupplierProductItem { SupplierProductId = page.Items[0].SupplierProductId! } }
+            });
+            var row = preview!.Rows![0];
+            Console.WriteLine(row.DuplicateOf == null
+                ? $"Would import \"{row.Name}\" for {preview.Totals!.Credits} credits"
+                : $"\"{row.Name}\" is already in the store");
+        }
+        
+        // Supplier orders waiting on a person
+        var queue = await store.Suppliers.ListSupplierOrdersAsync(storeId,
+            new SupplierOrderSearchParams { NeedsReview = true }, page: 1, pageSize: 20);
+        Console.WriteLine($"{queue!.Total} supplier orders need review");
+        
+        foreach (var supplierOrder in queue.Items!)
+        {
+            Console.WriteLine($"Order {supplierOrder.OrderNumber}: {supplierOrder.ReviewReason} — {supplierOrder.ReviewMessage}");
+            
+            // A price change at the supplier: accept it and send again (audited with the caller)
+            if (supplierOrder.ReviewReason == SupplierReviewReasons.CostChanged)
+            {
+                try
+                {
+                    var result = await store.Suppliers.RetryAsync(storeId, supplierOrder.Id!, acceptCost: true);
+                    Console.WriteLine($"  Retried: {result!.Status}");
+                }
+                catch (Posty5.Core.Exceptions.Posty5ValidationException paused)
+                {
+                    // A pause is answered as a 400 — the message names the reason
+                    Console.WriteLine($"  Still paused: {paused.Message}");
+                }
+            }
+        }
+        
+        // The parts of one order, with their tracking once shipped
+        var firstOrderId = queue.Items!.FirstOrDefault()?.OrderId;
+        if (firstOrderId != null)
+        {
+            var order = await store.Orders.GetAsync(storeId, firstOrderId);
+            foreach (var part in order!.FulfilmentGroups ?? new())
+            {
+                Console.WriteLine($"  {part.Label}: {part.Status} {part.Shipment?.TrackingNumber}");
+            }
+        }
     }
 }
