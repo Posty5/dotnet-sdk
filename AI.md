@@ -1,5 +1,7 @@
 # Posty5 .NET SDK - AI Entry Point
 
+> New feature? It ships with an article, a guide page, and SDK + MCP coverage when it has a public API — see [`../AI_RULES.md`](../AI_RULES.md) §14.
+
 This repository is the .NET 8 multi-project SDK solution. Eight NuGet-ready .NET projects sharing Posty5.Core and typed clients/models for links, QR codes, hosting, variables, form submissions, and social publishing.
 
 ## Required reading order
