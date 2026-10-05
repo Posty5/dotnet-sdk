@@ -25,6 +25,8 @@ internal sealed class RecordingServer : IDisposable
 
     public List<(string Method, string PathAndQuery, string Body)> Requests { get; } = new();
     public string ResultJson { get; set; } = "{}";
+    /// <summary>The envelope's <c>message</c>; an error answer carries the API's text here.</summary>
+    public string Message { get; set; } = "ok";
     public HttpStatusCode Status { get; set; } = HttpStatusCode.OK;
     public string BaseUrl { get; }
 
@@ -53,7 +55,7 @@ internal sealed class RecordingServer : IDisposable
             var body = await reader.ReadToEndAsync();
             lock (Requests) Requests.Add((context.Request.HttpMethod, context.Request.RawUrl ?? "", body));
 
-            var payload = Encoding.UTF8.GetBytes($"{{\"message\":\"ok\",\"result\":{ResultJson}}}");
+            var payload = Encoding.UTF8.GetBytes($"{{\"message\":{JsonSerializer.Serialize(Message)},\"result\":{ResultJson}}}");
             context.Response.StatusCode = (int)Status;
             context.Response.ContentType = "application/json";
             await context.Response.OutputStream.WriteAsync(payload);

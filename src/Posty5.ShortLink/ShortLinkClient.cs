@@ -1,3 +1,5 @@
+using Posty5.Core.Exceptions;
+using Posty5.Core.Helpers;
 using Posty5.Core.Http;
 using Posty5.Core.Models;
 using Posty5.ShortLink.Models;
@@ -85,6 +87,102 @@ public class ShortLinkClient
     {
         var response = await _http.GetAsync<ShortLinkFullDetailsModel>($"{ShortLinkConst.BasePath}/{id}", cancellationToken: cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Short link not found");
+    }
+
+    /// <summary>
+    /// Visit analytics of one short link: totals, a series and breakdowns
+    /// (<c>GET /api/short-link/{id}/analytics</c>). Reading analytics costs no credits.
+    /// </summary>
+    /// <remarks>
+    /// <para>Bots and link-preview crawlers are excluded from every <c>Visits</c>
+    /// and counted only in <see cref="LinkAnalyticsTotals.BotVisits"/>.</para>
+    /// <para><c>UniqueVisitors</c> over more than one day is the sum of daily
+    /// uniques (the visitor hash rotates daily).</para>
+    /// <para>Data starts on <see cref="LinkAnalyticsMeta.AnalyticsStartedAt"/>,
+    /// when Posty5 started recording visits; nothing earlier exists.</para>
+    /// <para>Plan limits come from the API: unless you name breakdowns, you get
+    /// every breakdown your plan allows and the rest are listed in
+    /// <see cref="LinkAnalyticsMeta.Locked"/>; naming one
+    /// in <see cref="LinkAnalyticsQuery.Breakdown"/>, or a
+    /// <see cref="LinkAnalyticsQuery.From"/> older than your plan's history, throws
+    /// <see cref="Posty5Exception"/> with <see cref="Posty5Exception.StatusCode"/>
+    /// 403 and the API's message (<c>This feature is not available on your current plan.</c>,
+    /// or <c>You Have Not Permission</c>) in <see cref="Posty5Exception.ResponseBody"/>.</para>
+    /// </remarks>
+    /// <param name="id">Short link ID</param>
+    /// <param name="query">Range, interval, time zone and breakdowns; <c>null</c> for the API defaults (last 30 days, by day, every breakdown your plan allows).</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The analytics answer</returns>
+    /// <exception cref="ArgumentOutOfRangeException"><see cref="LinkAnalyticsQuery.Limit"/> is outside 1-50.</exception>
+    /// <exception cref="ArgumentException"><paramref name="id"/> is empty, or both <see cref="LinkAnalyticsQuery.AllBreakdowns"/> and <see cref="LinkAnalyticsQuery.Breakdown"/> are set.</exception>
+    /// <exception cref="Posty5ValidationException">
+    /// 400: the API refused the query (e.g. an unknown interval or time zone), or no
+    /// short link with that ID is visible to this API key (<c>The Short Link Is Not Found</c>; the API answers
+    /// 400, not 404, for a missing record).
+    /// </exception>
+    /// <example>
+    /// <code>
+    /// var analytics = await shortLinkClient.GetAnalyticsAsync("link123", new LinkAnalyticsQuery
+    /// {
+    ///     From = new DateTime(2026, 10, 1),
+    ///     To = new DateTime(2026, 10, 31),
+    ///     Interval = LinkAnalyticsInterval.Week,
+    ///     AllBreakdowns = true
+    /// });
+    /// Console.WriteLine(analytics.Totals.Visits);
+    /// foreach (var row in analytics.Breakdowns.GetValueOrDefault("device") ?? new())
+    ///     Console.WriteLine($"{row.Key}: {row.Visits}");
+    /// </code>
+    /// </example>
+    public async Task<LinkAnalyticsModel> GetAnalyticsAsync(
+        string id,
+        LinkAnalyticsQuery? query = null,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await _http.GetAsync<LinkAnalyticsModel>(
+            LinkAnalyticsQueryHelper.BuildPath(ShortLinkConst.BasePath, id),
+            LinkAnalyticsQueryHelper.ToQueryParams(query),
+            cancellationToken);
+
+        return response.Result ?? throw new InvalidOperationException("Short link analytics were not returned");
+    }
+
+    /// <summary>
+    /// Account-wide statistics over all your short links (<c>GET /api/short-link/statistics</c>):
+    /// lifetime totals, visit totals in the range, a <c>daily</c> list in UTC days
+    /// and the top ten short links by visits in the range.
+    /// </summary>
+    /// <remarks>
+    /// <para><c>VisitsInRange</c>, <c>UniqueVisitorsInRange</c>, <c>BotVisitsInRange</c>,
+    /// <c>Daily[].VisitorsSum</c> and <c>TopLinks[].VisitsInRange</c> come from visit
+    /// analytics: bots excluded, uniques summed per UTC day, nothing before
+    /// analytics launched. <c>TotalVisitors</c> is the lifetime counter and still
+    /// includes older visits.</para>
+    /// <para>Days are UTC days whatever your account time zone; use
+    /// <see cref="GetAnalyticsAsync"/> for one short link in your time zone.</para>
+    /// </remarks>
+    /// <param name="query">Preset period or custom <c>From</c>/<c>To</c>; <c>null</c> for the last 30 days.</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The resolved range and the statistics</returns>
+    /// <exception cref="ArgumentException"><c>From</c>/<c>To</c> set with a non-custom <c>Period</c>, or <c>From</c> after <c>To</c>.</exception>
+    /// <example>
+    /// <code>
+    /// var stats = await shortLinkClient.GetStatisticsAsync(new LinkStatisticsQuery { Period = LinkStatisticsPeriod.Last7Days });
+    /// Console.WriteLine($"{stats.Data.Totals.VisitsInRange} visits since {stats.Range.From:d}");
+    /// foreach (var day in stats.Data.Daily)
+    ///     Console.WriteLine($"{day.Day}: {day.VisitorsSum}");
+    /// </code>
+    /// </example>
+    public async Task<ShortLinkStatisticsModel> GetStatisticsAsync(
+        LinkStatisticsQuery? query = null,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await _http.GetAsync<ShortLinkStatisticsModel>(
+            LinkAnalyticsQueryHelper.BuildStatisticsPath(ShortLinkConst.BasePath),
+            LinkAnalyticsQueryHelper.ToStatisticsQueryParams(query),
+            cancellationToken);
+
+        return response.Result ?? throw new InvalidOperationException("Short link statistics were not returned");
     }
 
     /// <summary>

@@ -40,6 +40,22 @@
       "role": "Examples"
     },
     {
+      "path": "src/Posty5.Core/Models/LinkAnalyticsModels.cs",
+      "role": "Link/QR analytics (VA, C2): LinkAnalyticsQuery, LinkAnalyticsModel and its parts, LinkAnalyticsInterval/LinkAnalyticsBreakdown value types."
+    },
+    {
+      "path": "src/Posty5.Core/Models/LinkStatisticsModels.cs",
+      "role": "Account-wide /statistics (VA): LinkStatisticsQuery, LinkStatisticsPeriod, LinkStatisticsResponse<TData>, range, shared visit totals, UTC daily row."
+    },
+    {
+      "path": "src/Posty5.Core/Helpers/LinkAnalyticsQueryHelper.cs",
+      "role": "Builds {basePath}/{id}/analytics and {basePath}/statistics with their queries (yyyy-MM-dd dates, breakdown comma list or 'all', period); used by ShortLinkClient and QRCodeClient."
+    },
+    {
+      "path": "src/Posty5.Core/Configuration/LinkAnalyticsConst.cs",
+      "role": "Internal wire names of the analytics endpoint: path segment, query keys, date format, 'all'."
+    },
+    {
       "path": "src/Posty5.Core",
       "role": "Options, HTTP, exceptions, common response/pagination models, converters."
     },
@@ -146,6 +162,10 @@
     {
       "path": "tests/Posty5.Tests/LinkQrTruthPassFactAttribute.cs",
       "role": "[LinkQrTruthPassFact]: a live short-link/QR fact skipped unless POSTY5_TEST_LINK_QR_TP=true (API carries the link-qr truth pass)."
+    },
+    {
+      "path": "tests/Posty5.Tests/LinkQrVisitAnalyticsFactAttribute.cs",
+      "role": "[LinkQrVisitAnalyticsFact]: a live GetAnalyticsAsync fact skipped unless POSTY5_TEST_LINK_QR_VA=true (API serves the analytics endpoints)."
     },
     {
       "path": "tests/Posty5.Tests/ShortLinkClientTests.cs",

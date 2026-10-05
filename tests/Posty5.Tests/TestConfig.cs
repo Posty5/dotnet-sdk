@@ -90,6 +90,13 @@ public static class TestConfig
 
     public static bool ApiHasLinkQrTruthPass => string.Equals(Env(LinkQrTruthPassVar), "true", StringComparison.OrdinalIgnoreCase);
 
+    // ─── Link + QR visit analytics (LinkQrVisitAnalyticsFact) ────────────────
+
+    /// <summary><c>true</c> when the API under test serves <c>GET /api/short-link|qr-code/{id}/analytics</c> (VA).</summary>
+    public const string LinkQrVisitAnalyticsVar = "POSTY5_TEST_LINK_QR_VA";
+
+    public static bool ApiHasLinkQrVisitAnalytics => string.Equals(Env(LinkQrVisitAnalyticsVar), "true", StringComparison.OrdinalIgnoreCase);
+
     // Store created resource IDs for cleanup
     public static class CreatedResources
     {

@@ -30,6 +30,7 @@ Posty5 empowers businesses, marketers, and developers to streamline their online
 - **🎨 Custom Slugs** - `CustomLandingId`: 4-32 lowercase letters, digits or hyphens (Starter plan and above)
 - **🔄 Editable URLs** - Update the destination without changing the short link
 - **📊 Visit Counts** - `NumberOfVisitors` and `LastVisitorDate` per link
+- **📈 Visit Analytics** - `GetAnalyticsAsync`: visits, unique visitors, a daily/weekly/monthly series and breakdowns by channel, country, device, OS, browser, referrer and language, bots counted apart
 - **📱 QR Code per Link** - Every short link gets a QR code in the template you choose
 - **🏷️ Tag & Reference Support** - Organize links with custom tags and reference IDs
 - **🎯 Landing Pages** - Optionally show visitors a page with your title and description before they continue
@@ -43,6 +44,12 @@ Posty5 empowers businesses, marketers, and developers to streamline their online
 - Use with `Posty5.HtmlHosting` to create short links for hosted pages
 
 ---
+
+## ⬆️ Upgrading to 3.2.0
+
+- New: `GetAnalyticsAsync(id, query?)` - visit analytics (totals, series, breakdowns) for one short link.
+- New: `GetStatisticsAsync(query?)` - account-wide counts over all your short links, with visit totals in the range and a UTC daily list.
+- Additive; nothing else changed. Needs `Posty5.Core` 3.2.0 (the shared `LinkAnalytics*` / `LinkStatistics*` models).
 
 ## ⬆️ Upgrading to 3.1.0
 
@@ -290,6 +297,89 @@ await shortLinks.UpdateAsync("link-id-123", new ShortLinkUpdateRequestModel
     TemplateId = "your-template-id"
 });
 ```
+
+---
+
+### Visit Analytics
+
+#### GetStatisticsAsync
+
+Account-wide counts over all your short links: `GET /api/short-link/statistics`.
+
+**Parameters:**
+
+- `query` (`LinkStatisticsQuery?`): `Period` (`LinkStatisticsPeriod.Today`, `Last7Days`, `Last30Days`, `Month`, `Custom`; default last 30 days) or a custom `From` / `To` (sent as `yyyy-MM-dd`). Setting `From`/`To` with a non-custom `Period`, or `From` after `To`, throws `ArgumentException` before sending.
+
+**Returns:** `Task<ShortLinkStatisticsModel>` - `Range { From, To, Period }` and `Data`:
+
+- `Totals`: `TotalLinks`, `TotalVisitors` (lifetime counter, includes visits from before analytics launched), `AvgVisitorsPerLink`, and from visit analytics `VisitsInRange`, `UniqueVisitorsInRange` (sum of daily uniques), `BotVisitsInRange`
+- `Daily`: one row per **UTC day** - `Day` (`yyyy-MM-dd`), `CreatedCount` (short links created), `VisitorsSum` (visits by people, bots excluded)
+- `TopLinks`: the ten short links with the most visits in the range, each with `VisitsInRange`
+
+**Example:**
+
+```csharp
+using Posty5.Core.Models;
+
+var stats = await shortLinks.GetStatisticsAsync(new LinkStatisticsQuery { Period = LinkStatisticsPeriod.Last7Days });
+Console.WriteLine($"{stats.Data.Totals.VisitsInRange} visits ({stats.Data.Totals.BotVisitsInRange} bots)");
+foreach (var day in stats.Data.Daily)
+    Console.WriteLine($"{day.Day}: {day.VisitorsSum} visits, {day.CreatedCount} created");
+```
+
+#### GetAnalyticsAsync
+
+Visits, unique visitors, a series and breakdowns (country, device, OS, browser, referrer, channel, language) for one short link: `GET /api/short-link/{id}/analytics`. Needs an API with link + QR visit analytics.
+
+**Parameters:**
+
+- `id` (string): Short link ID
+- `query` (`LinkAnalyticsQuery?`): Range, interval, time zone and breakdowns; `null` for the API defaults
+
+**`LinkAnalyticsQuery`** (every property optional):
+
+| Property | Sent as | API default |
+| --- | --- | --- |
+| `From`, `To` (`DateTime?`) | `from` / `to`, `yyyy-MM-dd` (date part only) | last 30 days, up to today |
+| `Interval` (`LinkAnalyticsInterval.Day` / `Week` / `Month`) | `interval` | `day` |
+| `Tz` (IANA name, e.g. `Africa/Cairo`) | `tz` | your account time zone, else UTC |
+| `Breakdown` (`LinkAnalyticsBreakdown.Country`, `Device`, `Os`, `Browser`, `Referrer`, `Channel`, `Language`, `Variant`, `Rule`) | `breakdown`, comma list | every breakdown your plan allows |
+| `AllBreakdowns` (`bool`) | `breakdown=all` (same answer as leaving `Breakdown` unset) - cannot be combined with `Breakdown` | `false` |
+| `Limit` (`int?`, 1-50; outside that range throws `ArgumentOutOfRangeException` before sending) | `limit`: rows per breakdown; the overflow comes back as key `other`, a missing value as `unknown` | 10 |
+
+**Returns:** `Task<LinkAnalyticsModel>` - `Totals { Visits, UniqueVisitors, BotVisits }`, `Series` (`{ Date, Visits, UniqueVisitors }` per bucket, `Date` as `yyyy-MM-dd`), `Breakdowns` (keyed by wire name: `"country"`, `"device"`, ...; rows `{ Key, Visits, UniqueVisitors }`) and `Meta { From, To, Interval, Timezone, Source, AnalyticsStartedAt, Locked, MaxHistoryDays }`. The models live in `Posty5.Core.Models`.
+
+**Example:**
+
+```csharp
+using Posty5.Core.Models;
+
+var analytics = await shortLinks.GetAnalyticsAsync("link-id-123", new LinkAnalyticsQuery
+{
+    From = new DateTime(2026, 10, 1),
+    To = new DateTime(2026, 10, 31),
+    Interval = LinkAnalyticsInterval.Week,
+    AllBreakdowns = true
+});
+
+Console.WriteLine($"{analytics.Totals.Visits} visits, {analytics.Totals.BotVisits} bot visits");
+foreach (var point in analytics.Series)
+    Console.WriteLine($"{point.Date}: {point.Visits}");
+foreach (var row in analytics.Breakdowns.GetValueOrDefault("channel") ?? new())
+    Console.WriteLine($"{row.Key}: {row.Visits}"); // click / scan
+foreach (var locked in analytics.Meta.Locked)
+    Console.WriteLine($"{locked.Breakdown} needs {locked.RequiredPlan}");
+```
+
+**What the numbers mean:**
+
+- Bots and link-preview crawlers are excluded from every `Visits` and counted only in `Totals.BotVisits`.
+- `UniqueVisitors` over more than one day is the **sum of daily uniques** (the visitor hash rotates daily, so one person on two days counts twice).
+- Data starts on `Meta.AnalyticsStartedAt`, when Posty5 started recording visits; nothing earlier exists.
+- Days are counted in `Tz` (default: your account time zone). When part of the range is older than raw-event retention, the answer uses UTC days and `Meta.Timezone` says `UTC`.
+- Reading analytics costs no credits. Your plan decides which breakdowns and how much history you get: unless you name breakdowns you get every one your plan allows, and the others are listed in `Meta.Locked` with `RequiredPlan` as a plan key (e.g. `basic` = Starter). `Meta.MaxHistoryDays` is `30` on Free and `null` (unlimited) on Starter and up. Naming a locked breakdown in `Breakdown`, or a `From` older than your plan's history, throws `Posty5Exception` with `StatusCode == 403` and the API's message (`This feature is not available on your current plan.`) in `ResponseBody`; a short link you may not read answers 403 `You Have Not Permission`.
+- `Meta.Source` is `events`, `rollup` or `mixed`.
+- A missing short link answers **400**, not 404: `Posty5ValidationException` whose message contains `The Short Link Is Not Found`.
 
 ---
 

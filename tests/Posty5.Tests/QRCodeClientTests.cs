@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text.Json;
 using Xunit;
 using Posty5.QRCode;
@@ -5,6 +6,7 @@ using Posty5.QRCode.Models;
 using Posty5.Core.Configuration;
 using Posty5.Core.Exceptions;
 using Posty5.Core.Http;
+using Posty5.Core.Models;
 using Posty5.Tests.Store;
 
 namespace Posty5.Tests.Integration;
@@ -683,6 +685,62 @@ public class QRCodeClientTests : IDisposable
 
     #endregion
 
+    #region Visit analytics (VA)
+
+    [LinkQrVisitAnalyticsFact]
+    public async Task GetAnalytics_NewQRCode_ReturnsZerosAndMeta()
+    {
+        var created = await CreateAnalyticsQRCodeAsync();
+
+        var analytics = await _client.GetAnalyticsAsync(created.Id!);
+
+        Assert.Equal(0, analytics.Totals.Visits);
+        Assert.Equal(0, analytics.Totals.BotVisits);
+        Assert.False(string.IsNullOrEmpty(analytics.Meta.AnalyticsStartedAt));
+    }
+
+    [LinkQrVisitAnalyticsFact]
+    public async Task GetAnalytics_AllBreakdowns_IncludesChannel()
+    {
+        var created = await CreateAnalyticsQRCodeAsync();
+
+        var analytics = await _client.GetAnalyticsAsync(created.Id!, new LinkAnalyticsQuery { AllBreakdowns = true });
+
+        Assert.Contains(LinkAnalyticsBreakdown.Channel.Value, analytics.Breakdowns.Keys);
+        Assert.All(analytics.Meta.Locked, locked => Assert.DoesNotContain(locked.Breakdown, analytics.Breakdowns.Keys));
+    }
+
+    [LinkQrVisitAnalyticsFact]
+    public async Task GetAnalytics_ExplicitList_AndInvalidInterval()
+    {
+        var created = await CreateAnalyticsQRCodeAsync();
+
+        var analytics = await _client.GetAnalyticsAsync(created.Id!, new LinkAnalyticsQuery
+        {
+            Breakdown = new[] { LinkAnalyticsBreakdown.Device }
+        });
+        Assert.Contains(LinkAnalyticsBreakdown.Device.Value, analytics.Breakdowns.Keys);
+
+        await Assert.ThrowsAsync<Posty5ValidationException>(() => _client.GetAnalyticsAsync(created.Id!, new LinkAnalyticsQuery
+        {
+            Interval = new LinkAnalyticsInterval("fortnight")
+        }));
+    }
+
+    private async Task<QRCodeModel> CreateAnalyticsQRCodeAsync()
+    {
+        var created = await _client.CreateURLAsync(new QRCodeCreateURLRequestModel
+        {
+            Name = $"VA analytics - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
+            TemplateId = TestConfig.TemplateId,
+            Url = new QRCodeUrlTargetModel { Url = "https://posty5.com" }
+        });
+        TestConfig.CreatedResources.QRCodes.Add(created.Id!);
+        return created;
+    }
+
+    #endregion
+
     public void Dispose()
     {
         // Cleanup is handled by collection fixture if needed
@@ -826,5 +884,131 @@ public class QRCodeClientPayloadTests : IDisposable
         Assert.Equal(QRCodeStatusType.Approved, item.Status);
         Assert.Equal("hi", item.QrCodeTarget?.Sms?.Message);
     }
-}
 
+    // ─── GetAnalyticsAsync (VA) ──────────────────────────────────────────────
+
+    [Fact]
+    public async Task GetAnalyticsAsync_CallsTheQRCodeAnalyticsPath_WithTheSameQueryAsShortLinks()
+    {
+        _server.ResultJson = ShortLinkClientPayloadTests.AnalyticsSampleJson;
+
+        await _client.GetAnalyticsAsync("q1", new LinkAnalyticsQuery
+        {
+            From = new DateTime(2026, 9, 1),
+            Interval = LinkAnalyticsInterval.Month,
+            AllBreakdowns = true,
+            Limit = 50
+        });
+
+        var (method, path, _) = _server.Requests.Single();
+        Assert.Equal("GET", method);
+        Assert.StartsWith("/api/qr-code/q1/analytics?", path);
+        var query = ShortLinkClientPayloadTests.Query(path);
+        Assert.Equal("2026-09-01", query["from"]);
+        Assert.Null(query["to"]);
+        Assert.Equal("month", query["interval"]);
+        Assert.Equal("all", query["breakdown"]);
+        Assert.Equal("50", query["limit"]);
+    }
+
+    [Fact]
+    public async Task GetAnalyticsAsync_ReadsTheAnswer()
+    {
+        _server.ResultJson = ShortLinkClientPayloadTests.AnalyticsSampleJson;
+
+        var analytics = await _client.GetAnalyticsAsync("q1");
+
+        Assert.Equal(12, analytics.Totals.Visits);
+        Assert.Equal(4, analytics.Breakdowns["channel"].Single(row => row.Key == "scan").Visits);
+        Assert.Equal("country", Assert.Single(analytics.Meta.Locked).Breakdown);
+    }
+
+    [Fact]
+    public async Task GetAnalyticsAsync_MissingQRCode_Is400WithTheApiMessage()
+    {
+        _server.Status = HttpStatusCode.BadRequest;
+        _server.Message = "The QR Code Is Not Found";
+        _server.ResultJson = "null";
+
+        var error = await Assert.ThrowsAsync<Posty5ValidationException>(() => _client.GetAnalyticsAsync("missing"));
+
+        Assert.Contains("The QR Code Is Not Found", error.Message);
+    }
+
+    [Fact]
+    public async Task GetAnalyticsAsync_NotTheOwner_Is403YouHaveNotPermission()
+    {
+        _server.Status = HttpStatusCode.Forbidden;
+        _server.Message = "You Have Not Permission";
+        _server.ResultJson = "null";
+
+        var error = await Assert.ThrowsAsync<Posty5Exception>(() => _client.GetAnalyticsAsync("q1"));
+
+        Assert.Equal(403, error.StatusCode);
+        Assert.Contains("You Have Not Permission", error.ResponseBody);
+    }
+
+    [Fact]
+    public async Task GetAnalyticsAsync_LimitOutside1To50_ThrowsBeforeSending()
+    {
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            _client.GetAnalyticsAsync("q1", new LinkAnalyticsQuery { Limit = 51 }));
+
+        Assert.Empty(_server.Requests);
+    }
+
+    [Fact]
+    public async Task GetAnalyticsAsync_FeatureLock403_IsAPosty5ExceptionWithStatus403()
+    {
+        _server.Status = HttpStatusCode.Forbidden;
+        _server.Message = "This feature is not available on your current plan.";
+        _server.ResultJson = "null";
+
+        var error = await Assert.ThrowsAsync<Posty5Exception>(() => _client.GetAnalyticsAsync("q1"));
+
+        Assert.Equal(403, error.StatusCode);
+        Assert.Contains("not available on your current plan", error.ResponseBody);
+    }
+
+    // ─── GetStatisticsAsync (VA) ─────────────────────────────────────────────
+
+    private const string QRStatisticsSampleJson = """
+        {
+          "range": { "from": "2026-10-05T00:00:00.000Z", "to": "2026-10-05T23:59:59.999Z", "period": "today" },
+          "data": {
+            "totals": { "totalQRCodes": 2, "totalVisitors": 7, "avgVisitorsPerQRCode": 3.5, "visitsInRange": 3, "uniqueVisitorsInRange": 2, "botVisitsInRange": 1 },
+            "daily": [ { "_id": "2026-10-05", "createdCount": 1, "visitorsSum": 3 } ],
+            "topQRCodes": [ { "_id": "q1", "name": "Menu", "numberOfVisitors": 5, "createdAt": "2026-10-01T10:00:00.000Z", "visitsInRange": 3 } ]
+          }
+        }
+        """;
+
+    [Fact]
+    public async Task GetStatisticsAsync_CallsTheQRCodeStatisticsPath_WithPeriod()
+    {
+        _server.ResultJson = QRStatisticsSampleJson;
+
+        await _client.GetStatisticsAsync(new LinkStatisticsQuery { Period = LinkStatisticsPeriod.Today });
+
+        var (method, path, _) = _server.Requests.Single();
+        Assert.Equal("GET", method);
+        Assert.Equal("/api/qr-code/statistics?period=today", path);
+    }
+
+    [Fact]
+    public async Task GetStatisticsAsync_ReadsTheRebuiltAnswer()
+    {
+        _server.ResultJson = QRStatisticsSampleJson;
+
+        var stats = await _client.GetStatisticsAsync();
+
+        Assert.Equal(2, stats.Data.Totals.TotalQRCodes);
+        Assert.Equal(3.5, stats.Data.Totals.AvgVisitorsPerQRCode);
+        Assert.Equal(3, stats.Data.Totals.VisitsInRange);
+        Assert.Equal(1, stats.Data.Totals.BotVisitsInRange);
+        Assert.Equal("2026-10-05", Assert.Single(stats.Data.Daily).Day);
+        var top = Assert.Single(stats.Data.TopQRCodes);
+        Assert.Equal("q1", top.Id);
+        Assert.Equal(3, top.VisitsInRange);
+    }
+}

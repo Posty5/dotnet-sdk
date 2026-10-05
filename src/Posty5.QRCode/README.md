@@ -29,6 +29,7 @@ Posty5 empowers businesses, marketers, and developers to streamline their online
 - **📱 7 QR Code Types** - URL, Free Text, Email, WiFi, SMS, Phone Call, and Geolocation
 - **🎨 Template Support** - Style every code with one of your QR code templates
 - **📊 Visit Counts** - `NumberOfVisitors` and `LastVisitorDate` count visits to the code's Posty5 page (`QrCodeLandingPageURL`). A downloaded QR image encodes its content directly, so scanning it is **not** counted
+- **📈 Visit Analytics** - `GetAnalyticsAsync`: visits, unique visitors, a series and breakdowns by channel (scan vs click), country, device, OS, browser, referrer and language, bots counted apart
 - **🏷️ Tag & Reference Support** - Organize QR codes with custom tags and reference IDs
 - **🎯 Landing Pages** - `IsEnableLandingPage` + `PageInfo` put your title and description on the code's Posty5 page
 - **🔍 Filtering** - By name, status, tag, reference ID, template or source
@@ -43,6 +44,12 @@ The text a QR image encodes is built by the API from the content you send (`qrCo
 - Create URL QR codes pointing to `Posty5.HtmlHosting` hosted pages
 
 ---
+
+## ⬆️ Upgrading to 3.2.0
+
+- New: `GetAnalyticsAsync(id, query?)` - visit analytics (totals, series, breakdowns) for one QR code.
+- New: `GetStatisticsAsync(query?)` - account-wide counts over all your QR codes, with visit totals in the range and a UTC daily list.
+- Additive; nothing else changed. Needs `Posty5.Core` 3.2.0 (the shared `LinkAnalytics*` / `LinkStatistics*` models).
 
 ## ⬆️ Upgrading to 3.1.0
 
@@ -386,6 +393,92 @@ foreach (var qr in marketingQRs.Items)
     Console.WriteLine($"{qr.Name} - {qr.QrCodeLandingPageURL}");
 }
 ```
+
+---
+
+### Visit Analytics
+
+#### GetStatisticsAsync
+
+Account-wide counts over all your QR codes: `GET /api/qr-code/statistics`.
+
+**Parameters:**
+
+- `query` (`LinkStatisticsQuery?`): `Period` (`LinkStatisticsPeriod.Today`, `Last7Days`, `Last30Days`, `Month`, `Custom`; default last 30 days) or a custom `From` / `To` (sent as `yyyy-MM-dd`). Setting `From`/`To` with a non-custom `Period`, or `From` after `To`, throws `ArgumentException` before sending.
+
+**Returns:** `Task<QRCodeStatisticsModel>` - `Range { From, To, Period }` and `Data`:
+
+- `Totals`: `TotalQRCodes`, `TotalVisitors` (lifetime counter, includes visits from before analytics launched), `AvgVisitorsPerQRCode`, and from visit analytics `VisitsInRange`, `UniqueVisitorsInRange` (sum of daily uniques), `BotVisitsInRange`
+- `Daily`: one row per **UTC day** - `Day` (`yyyy-MM-dd`), `CreatedCount` (QR codes created), `VisitorsSum` (visits by people, bots excluded)
+- `TopQRCodes`: the ten QR codes with the most visits in the range, each with `VisitsInRange`
+
+Visits are visits to the codes' Posty5 pages; a scan of a static code opens its content directly and is not counted.
+
+**Example:**
+
+```csharp
+using Posty5.Core.Models;
+
+var stats = await qrCodes.GetStatisticsAsync(new LinkStatisticsQuery { Period = LinkStatisticsPeriod.Last7Days });
+Console.WriteLine($"{stats.Data.Totals.VisitsInRange} visits ({stats.Data.Totals.BotVisitsInRange} bots)");
+foreach (var day in stats.Data.Daily)
+    Console.WriteLine($"{day.Day}: {day.VisitorsSum} visits, {day.CreatedCount} created");
+```
+
+#### GetAnalyticsAsync
+
+Visits, unique visitors, a series and breakdowns (country, device, OS, browser, referrer, channel, language) for one QR code: `GET /api/qr-code/{id}/analytics`. Needs an API with link + QR visit analytics.
+
+**Parameters:**
+
+- `id` (string): QR code ID
+- `query` (`LinkAnalyticsQuery?`): Range, interval, time zone and breakdowns; `null` for the API defaults
+
+**`LinkAnalyticsQuery`** (every property optional):
+
+| Property | Sent as | API default |
+| --- | --- | --- |
+| `From`, `To` (`DateTime?`) | `from` / `to`, `yyyy-MM-dd` (date part only) | last 30 days, up to today |
+| `Interval` (`LinkAnalyticsInterval.Day` / `Week` / `Month`) | `interval` | `day` |
+| `Tz` (IANA name, e.g. `Africa/Cairo`) | `tz` | your account time zone, else UTC |
+| `Breakdown` (`LinkAnalyticsBreakdown.Country`, `Device`, `Os`, `Browser`, `Referrer`, `Channel`, `Language`, `Variant`, `Rule`) | `breakdown`, comma list | every breakdown your plan allows |
+| `AllBreakdowns` (`bool`) | `breakdown=all` (same answer as leaving `Breakdown` unset) - cannot be combined with `Breakdown` | `false` |
+| `Limit` (`int?`, 1-50; outside that range throws `ArgumentOutOfRangeException` before sending) | `limit`: rows per breakdown; the overflow comes back as key `other`, a missing value as `unknown` | 10 |
+
+**Returns:** `Task<LinkAnalyticsModel>` - `Totals { Visits, UniqueVisitors, BotVisits }`, `Series` (`{ Date, Visits, UniqueVisitors }` per bucket, `Date` as `yyyy-MM-dd`), `Breakdowns` (keyed by wire name: `"country"`, `"device"`, ...; rows `{ Key, Visits, UniqueVisitors }`) and `Meta { From, To, Interval, Timezone, Source, AnalyticsStartedAt, Locked, MaxHistoryDays }`. The models live in `Posty5.Core.Models`.
+
+**Example:**
+
+```csharp
+using Posty5.Core.Models;
+
+var analytics = await qrCodes.GetAnalyticsAsync("qr-code-id-123", new LinkAnalyticsQuery
+{
+    From = new DateTime(2026, 10, 1),
+    To = new DateTime(2026, 10, 31),
+    Interval = LinkAnalyticsInterval.Week,
+    AllBreakdowns = true
+});
+
+Console.WriteLine($"{analytics.Totals.Visits} visits, {analytics.Totals.BotVisits} bot visits");
+foreach (var point in analytics.Series)
+    Console.WriteLine($"{point.Date}: {point.Visits}");
+foreach (var row in analytics.Breakdowns.GetValueOrDefault("channel") ?? new())
+    Console.WriteLine($"{row.Key}: {row.Visits}"); // click / scan
+foreach (var locked in analytics.Meta.Locked)
+    Console.WriteLine($"{locked.Breakdown} needs {locked.RequiredPlan}");
+```
+
+**What the numbers mean:**
+
+- Bots and link-preview crawlers are excluded from every `Visits` and counted only in `Totals.BotVisits`.
+- `UniqueVisitors` over more than one day is the **sum of daily uniques** (the visitor hash rotates daily, so one person on two days counts twice).
+- Data starts on `Meta.AnalyticsStartedAt`, when Posty5 started recording visits; nothing earlier exists.
+- Days are counted in `Tz` (default: your account time zone). When part of the range is older than raw-event retention, the answer uses UTC days and `Meta.Timezone` says `UTC`.
+- Reading analytics costs no credits. Your plan decides which breakdowns and how much history you get: unless you name breakdowns you get every one your plan allows, and the others are listed in `Meta.Locked` with `RequiredPlan` as a plan key (e.g. `basic` = Starter). `Meta.MaxHistoryDays` is `30` on Free and `null` (unlimited) on Starter and up. Naming a locked breakdown in `Breakdown`, or a `From` older than your plan's history, throws `Posty5Exception` with `StatusCode == 403` and the API's message (`This feature is not available on your current plan.`) in `ResponseBody`; a QR code you may not read answers 403 `You Have Not Permission`.
+- `Meta.Source` is `events`, `rollup` or `mixed`.
+- A missing QR code answers **400**, not 404: `Posty5ValidationException` whose message contains `The QR Code Is Not Found`.
+- A static QR code (text, Wi-Fi, ...) counts visits to its Posty5 page only; scanning a downloaded image that encodes its content directly never reaches Posty5 and is not counted. The `channel` breakdown tells scans from clicks.
 
 ---
 

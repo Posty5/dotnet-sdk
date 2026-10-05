@@ -1,4 +1,5 @@
 using Posty5.Core.Converts;
+using Posty5.Core.Models;
 using System.Text.Json.Serialization;
 
 namespace Posty5.QRCode.Models;
@@ -743,4 +744,56 @@ public class DeleteResponse
     /// Success message
     /// </summary>
     public string Message { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Account-wide QR-code statistics (<c>GET /api/qr-code/statistics</c>):
+/// the resolved <see cref="LinkStatisticsResponse{TData}.Range"/> plus
+/// <see cref="QRCodeStatisticsDataModel"/>.
+/// </summary>
+public class QRCodeStatisticsModel : LinkStatisticsResponse<QRCodeStatisticsDataModel>
+{
+}
+
+/// <summary>The <c>data</c> of <see cref="QRCodeStatisticsModel"/>.</summary>
+public class QRCodeStatisticsDataModel
+{
+    /// <summary>Lifetime QR code count and counters, plus the visit totals in the range.</summary>
+    public QRCodeStatisticsTotalsModel Totals { get; set; } = new();
+
+    /// <summary>One row per UTC day that had a QR code created or a visit to a code's Posty5 page, oldest first.</summary>
+    public List<LinkStatisticsDailyRow> Daily { get; set; } = new();
+
+    /// <summary>The ten QR codes with the most visits in the range, most first; codes with no visit in the range are left out.</summary>
+    public List<QRCodeStatisticsTopQRCodeModel> TopQRCodes { get; set; } = new();
+}
+
+/// <summary>Totals of <see cref="QRCodeStatisticsDataModel"/>.</summary>
+public class QRCodeStatisticsTotalsModel : LinkStatisticsVisitTotals
+{
+    /// <summary>Your QR codes (lifetime, deleted ones excluded).</summary>
+    public long TotalQRCodes { get; set; }
+
+    /// <summary><see cref="LinkStatisticsVisitTotals.TotalVisitors"/> / <see cref="TotalQRCodes"/> (0 with no links).</summary>
+    public double AvgVisitorsPerQRCode { get; set; }
+}
+
+/// <summary>One of <see cref="QRCodeStatisticsDataModel.TopQRCodes"/>.</summary>
+public class QRCodeStatisticsTopQRCodeModel
+{
+    /// <summary>Database ID</summary>
+    [JsonPropertyName("_id")]
+    public string? Id { get; set; }
+
+    /// <summary>QR code name</summary>
+    public string? Name { get; set; }
+
+    /// <summary>Lifetime visit counter</summary>
+    public long? NumberOfVisitors { get; set; }
+
+    /// <summary>Creation time</summary>
+    public DateTime? CreatedAt { get; set; }
+
+    /// <summary>Visits by people in the range (bots excluded).</summary>
+    public long VisitsInRange { get; set; }
 }

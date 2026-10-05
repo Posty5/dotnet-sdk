@@ -1,4 +1,5 @@
 using Posty5.Core.Converts;
+using Posty5.Core.Models;
 using System.Diagnostics;
 using System.Text.Json.Serialization;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -511,6 +512,64 @@ public readonly record struct ShortLinkStatusType (string Value)
     public static readonly ShortLinkStatusType Approved = new("approved");
 
     public override string ToString ( ) => Value;
+}
+
+/// <summary>
+/// Account-wide short-link statistics (<c>GET /api/short-link/statistics</c>):
+/// the resolved <see cref="LinkStatisticsResponse{TData}.Range"/> plus
+/// <see cref="ShortLinkStatisticsDataModel"/>.
+/// </summary>
+public class ShortLinkStatisticsModel : LinkStatisticsResponse<ShortLinkStatisticsDataModel>
+{
+}
+
+/// <summary>The <c>data</c> of <see cref="ShortLinkStatisticsModel"/>.</summary>
+public class ShortLinkStatisticsDataModel
+{
+    /// <summary>Lifetime link count and counters, plus the visit totals in the range.</summary>
+    public ShortLinkStatisticsTotalsModel Totals { get; set; } = new();
+
+    /// <summary>One row per UTC day that had a link created or a visit, oldest first.</summary>
+    public List<LinkStatisticsDailyRow> Daily { get; set; } = new();
+
+    /// <summary>The ten links with the most visits in the range, most first; links with no visit in the range are left out.</summary>
+    public List<ShortLinkStatisticsTopLinkModel> TopLinks { get; set; } = new();
+}
+
+/// <summary>Totals of <see cref="ShortLinkStatisticsDataModel"/>.</summary>
+public class ShortLinkStatisticsTotalsModel : LinkStatisticsVisitTotals
+{
+    /// <summary>Your short links (lifetime, deleted ones excluded).</summary>
+    public long TotalLinks { get; set; }
+
+    /// <summary><see cref="LinkStatisticsVisitTotals.TotalVisitors"/> / <see cref="TotalLinks"/> (0 with no links).</summary>
+    public double AvgVisitorsPerLink { get; set; }
+}
+
+/// <summary>One of <see cref="ShortLinkStatisticsDataModel.TopLinks"/>.</summary>
+public class ShortLinkStatisticsTopLinkModel
+{
+    /// <summary>Database ID</summary>
+    [JsonPropertyName("_id")]
+    public string? Id { get; set; }
+
+    /// <summary>Link name</summary>
+    public string? Name { get; set; }
+
+    /// <summary>Destination URL</summary>
+    public string? BaseUrl { get; set; }
+
+    /// <summary>The short code</summary>
+    public string? ShortLinkId { get; set; }
+
+    /// <summary>Lifetime visit counter</summary>
+    public long? NumberOfVisitors { get; set; }
+
+    /// <summary>Creation time</summary>
+    public DateTime? CreatedAt { get; set; }
+
+    /// <summary>Visits by people in the range (bots excluded).</summary>
+    public long VisitsInRange { get; set; }
 }
 
 /// <summary>

@@ -152,6 +152,28 @@ foreach (var qr in result.Items)
 }
 ```
 
+### Visit Analytics
+```csharp
+using Posty5.Core.Models;
+
+var analytics = await qrCodeClient.GetAnalyticsAsync("qr_code_id", new LinkAnalyticsQuery
+{
+    From = new DateTime(2026, 10, 1),
+    Interval = LinkAnalyticsInterval.Day,
+    Breakdown = new[] { LinkAnalyticsBreakdown.Channel, LinkAnalyticsBreakdown.Device }
+    // leave Breakdown unset (or AllBreakdowns = true): every breakdown your plan allows, the rest in Meta.Locked
+});
+Console.WriteLine($"Visits: {analytics.Totals.Visits}, bots: {analytics.Totals.BotVisits}");
+```
+Bots are excluded from `Visits`; `UniqueVisitors` over several days is the sum of daily uniques; data starts on `Meta.AnalyticsStartedAt`. A breakdown your plan does not include, named explicitly, throws `Posty5Exception` with `StatusCode == 403`. `Limit` is 1-50 (default 10; overflow as `other`, missing values as `unknown`). A missing QR code answers 400 (`Posty5ValidationException`, "The QR Code Is Not Found").
+
+### Account Statistics
+```csharp
+var stats = await qrCodeClient.GetStatisticsAsync(new LinkStatisticsQuery { Period = LinkStatisticsPeriod.Month });
+Console.WriteLine($"{stats.Data.Totals.TotalQRCodes} codes, {stats.Data.Totals.VisitsInRange} visits this month");
+```
+`Daily` is in UTC days; `TopQRCodes` are the ten codes with the most visits in the range.
+
 ## Advanced Features
 
 ### Custom Landing Page ID
@@ -204,6 +226,8 @@ var qrCode = await qrCodeClient.CreateURLAsync(new QRCodeCreateURLRequestModel
 | SMS | `CreateSMSAsync()` | `UpdateSMSAsync()` |
 | URL | `CreateURLAsync()` | `UpdateURLAsync()` |
 | Geolocation | `CreateGeolocationAsync()` | `UpdateGeolocationAsync()` |
+
+Every type: `GetAsync()`, `ListAsync()`, `DeleteAsync()`, `GetAnalyticsAsync()`. Account-wide: `GetStatisticsAsync()`.
 
 ## Common Properties
 
