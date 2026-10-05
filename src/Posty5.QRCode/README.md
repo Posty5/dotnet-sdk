@@ -621,3 +621,23 @@ MIT License - see [LICENSE](../../LICENSE) file for details.
 ---
 
 Made with ❤️ by the Posty5 team
+
+## Bulk create, export and bulk jobs
+
+Same methods as `ShortLinkClient` (`CreateManyAsync`, `ExportAsync`, bulk jobs).
+Rows carry a type and that type's target:
+
+```csharp
+var result = await qrCodeClient.CreateManyAsync(new[]
+{
+    QRCodeBulkRow.ForUrl(new QRCodeUrlTargetModel { Url = "https://example.com" }),
+    QRCodeBulkRow.ForWifi(new QRCodeWifiTargetModel { Name = "Cafe", AuthenticationType = "WPA", Password = "secret" }),
+});
+
+// A CSV job also builds a ZIP of images named by the fileName column
+var job = await qrCodeClient.CreateBulkJobAsync(new CreateBulkJobRequest { Content = File.ReadAllText("qr.csv") });
+job = await qrCodeClient.WaitForBulkJobAsync(job.Id);
+var zip = await qrCodeClient.GetBulkJobResultUrlAsync(job.Id, BulkJobFile.Zip);
+```
+
+A static QR code encodes its content directly and produces no scan events.

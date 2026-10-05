@@ -159,9 +159,26 @@ public class Posty5HttpClient : IDisposable
     /// <param name="data">Request body data</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>API response</returns>
-    public async Task<ApiResponse<T>> PostAsync<T>(
-        string path, 
+    public Task<ApiResponse<T>> PostAsync<T>(
+        string path,
         object data,
+        CancellationToken cancellationToken = default)
+        => PostAsync<T>(path, data, null, cancellationToken);
+
+    /// <summary>
+    /// Perform a POST request with headers for this request only
+    /// (e.g. <c>Idempotency-Key</c>), sent on top of the client's default headers.
+    /// </summary>
+    /// <typeparam name="T">Response type</typeparam>
+    /// <param name="path">API endpoint path</param>
+    /// <param name="data">Request body data</param>
+    /// <param name="headers">Per-request headers; null for none</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>API response</returns>
+    public async Task<ApiResponse<T>> PostAsync<T>(
+        string path,
+        object data,
+        IDictionary<string, string>? headers,
         CancellationToken cancellationToken = default)
     {
         if (_options.Debug)
@@ -174,7 +191,7 @@ public class Posty5HttpClient : IDisposable
             var json = JsonSerializer.Serialize(data, _jsonOptions);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
             
-            var response = await _httpClient.PostAsync(path, content, cancellationToken);
+            var response = await SendAsync(HttpMethod.Post, path, content, headers, cancellationToken);
             return await ProcessResponseAsync<T>(response);
         }
         catch (Exception ex) when (ex is not Posty5Exception)
@@ -191,9 +208,25 @@ public class Posty5HttpClient : IDisposable
     /// <param name="data">Request body data</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>API response</returns>
-    public async Task<ApiResponse<T>> PutAsync<T>(
-        string path, 
+    public Task<ApiResponse<T>> PutAsync<T>(
+        string path,
         object data,
+        CancellationToken cancellationToken = default)
+        => PutAsync<T>(path, data, null, cancellationToken);
+
+    /// <summary>
+    /// Perform a PUT request with headers for this request only.
+    /// </summary>
+    /// <typeparam name="T">Response type</typeparam>
+    /// <param name="path">API endpoint path</param>
+    /// <param name="data">Request body data</param>
+    /// <param name="headers">Per-request headers; null for none</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>API response</returns>
+    public async Task<ApiResponse<T>> PutAsync<T>(
+        string path,
+        object data,
+        IDictionary<string, string>? headers,
         CancellationToken cancellationToken = default)
     {
         if (_options.Debug)
@@ -206,7 +239,7 @@ public class Posty5HttpClient : IDisposable
             var json = JsonSerializer.Serialize(data, _jsonOptions);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
             
-            var response = await _httpClient.PutAsync(path, content, cancellationToken);
+            var response = await SendAsync(HttpMethod.Put, path, content, headers, cancellationToken);
             return await ProcessResponseAsync<T>(response);
         }
         catch (Exception ex) when (ex is not Posty5Exception)
@@ -260,9 +293,24 @@ public class Posty5HttpClient : IDisposable
     /// <param name="queryParams">Query parameters</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The file's bytes, content type and suggested filename</returns>
-    public async Task<FileResponse> GetBytesAsync(
+    public Task<FileResponse> GetBytesAsync(
         string path,
         Dictionary<string, object?>? queryParams = null,
+        CancellationToken cancellationToken = default)
+        => GetBytesAsync(path, queryParams, null, cancellationToken);
+
+    /// <summary>
+    /// Perform a GET request for a file download, with headers for this request only.
+    /// </summary>
+    /// <param name="path">API endpoint path</param>
+    /// <param name="queryParams">Query parameters</param>
+    /// <param name="headers">Per-request headers; null for none</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The file's bytes, content type and suggested filename</returns>
+    public async Task<FileResponse> GetBytesAsync(
+        string path,
+        Dictionary<string, object?>? queryParams,
+        IDictionary<string, string>? headers,
         CancellationToken cancellationToken = default)
     {
         var url = BuildUrl(path, queryParams);
@@ -274,7 +322,7 @@ public class Posty5HttpClient : IDisposable
 
         try
         {
-            var response = await _httpClient.GetAsync(url, cancellationToken);
+            var response = await SendAsync(HttpMethod.Get, url, null, headers, cancellationToken);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -301,8 +349,22 @@ public class Posty5HttpClient : IDisposable
     /// <param name="path">API endpoint path</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>API response</returns>
+    public Task<ApiResponse<T>> DeleteAsync<T>(
+        string path,
+        CancellationToken cancellationToken = default)
+        => DeleteAsync<T>(path, null, cancellationToken);
+
+    /// <summary>
+    /// Perform a DELETE request with headers for this request only.
+    /// </summary>
+    /// <typeparam name="T">Response type</typeparam>
+    /// <param name="path">API endpoint path</param>
+    /// <param name="headers">Per-request headers; null for none</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>API response</returns>
     public async Task<ApiResponse<T>> DeleteAsync<T>(
         string path,
+        IDictionary<string, string>? headers,
         CancellationToken cancellationToken = default)
     {
         if (_options.Debug)
@@ -312,13 +374,44 @@ public class Posty5HttpClient : IDisposable
 
         try
         {
-            var response = await _httpClient.DeleteAsync(path, cancellationToken);
+            var response = await SendAsync(HttpMethod.Delete, path, null, headers, cancellationToken);
             return await ProcessResponseAsync<T>(response);
         }
         catch (Exception ex) when (ex is not Posty5Exception)
         {
             throw new Posty5Exception($"DELETE request to {path} failed", ex);
         }
+    }
+
+    /// <summary>
+    /// Send one request with optional per-request headers. The API-key header
+    /// cannot be replaced here, as with <see cref="Posty5Options.DefaultHeaders"/>.
+    /// </summary>
+    private Task<HttpResponseMessage> SendAsync(
+        HttpMethod method,
+        string url,
+        HttpContent? content,
+        IDictionary<string, string>? headers,
+        CancellationToken cancellationToken)
+    {
+        var request = new HttpRequestMessage(method, url) { Content = content };
+
+        if (headers != null)
+        {
+            foreach (var (name, value) in headers)
+            {
+                if (string.IsNullOrWhiteSpace(name))
+                    throw new ArgumentException("A request header needs a name.", nameof(headers));
+                if (string.Equals(name.Trim(), Posty5HttpDefaults.ApiKeyHeader, StringComparison.OrdinalIgnoreCase))
+                    throw new ArgumentException(
+                        $"{Posty5HttpDefaults.ApiKeyHeader} cannot be set per request. Use Posty5Options.ApiKey or SetApiKey.",
+                        nameof(headers));
+                if (!request.Headers.TryAddWithoutValidation(name, value))
+                    throw new ArgumentException($"'{name}' cannot be sent as a request header.", nameof(headers));
+            }
+        }
+
+        return _httpClient.SendAsync(request, cancellationToken);
     }
 
     private async Task<ApiResponse<T>> ProcessResponseAsync<T>(HttpResponseMessage response)

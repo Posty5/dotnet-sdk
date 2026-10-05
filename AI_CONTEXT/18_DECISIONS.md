@@ -71,4 +71,8 @@ otherwise versioned independently (SocialPublisherPost is on 4.x).
 
 **Status:** decided 2026-10-05 (VA, C4). A 403 already surfaces as `Posty5Exception` with `StatusCode == 403` and the API body (its `message`) in `ResponseBody`; `Exception.Message` is the generic status text. VA does not change `Posty5HttpClient` error mapping, because that would change every client's 403 and `feat/mcp-wave-2` is editing the same file. Surfacing the API's `message` as `Exception.Message` for every status is a separate Core change.
 
+## D15 - Per-request headers are overloads on Posty5HttpClient; bulk mechanics live once in Core.
+
+**Status:** decided 2026-10-06 (BW, C7). `Idempotency-Key` needs per-request headers and `versioned-writes-major` had not added them, so BW defines them: `PostAsync`/`PutAsync`/`DeleteAsync`/`GetBytesAsync` gain an overload taking `IDictionary<string,string>? headers` (the old signatures forward to it, so existing callers and positional `CancellationToken` arguments are unchanged). `X-API-Key` is refused per request as it is in `DefaultHeaders`. The concurrency task reuses this overload for `If-Match`. The chunking/retry/job code is one `LinkBulkOperations` class in Core and the shared answer/job models are in `Posty5.Core.Models.LinkBulkModels`, because short links and QR codes use the same routes and shapes; only row types live per package.
+
 Do not invent historical rationale. Record evidence-based current decisions and label unknown rationale explicitly.

@@ -4,6 +4,33 @@ All notable changes to the Posty5 .NET SDK will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Posty5.Core, Posty5.ShortLink, Posty5.QRCode, new Posty5.Webhooks - unreleased (bulk + webhooks, BW)
+
+Needs the API's bulk and webhook releases (an older API answers 404). Additive;
+rides the unreleased 3.2.0 line, so no further version bump. `Posty5.Webhooks`
+starts at 3.2.0 (lockstep).
+
+### Added
+
+- Core: per-request header overloads of `PostAsync`, `PutAsync`, `DeleteAsync`
+  and `GetBytesAsync` (`IDictionary<string,string>? headers`; `X-API-Key` refused).
+  Existing signatures unchanged. `BulkDefaults`, `LinkBulkModels`
+  (`BulkCreateResult`, `LinkBulkJob`, `ExportOptions`, …), `LinkBulkOperations`,
+  `CamelCaseEnumConverter<T>`.
+- ShortLink / QRCode: `CreateManyAsync` (sequential chunks of ≤ 100,
+  `Idempotency-Key: {key}-{chunk}`, one retry with the same key on a network
+  error or 5xx, rows renumbered to input position, `IProgress<BulkProgress>`),
+  `ExportAsync`, `CreateBulkJobAsync`, `ValidateBulkJobAsync` (dry run),
+  `ListBulkJobsAsync`, `GetBulkJobAsync`, `GetBulkJobResultUrlAsync`,
+  `CancelBulkJobAsync`, `WaitForBulkJobAsync`. Rows: `ShortLinkBulkRow`,
+  `QRCodeBulkRow` (`ForUrl`, `ForWifi`, … factories). Cancelling
+  `CreateManyAsync` returns no partial result; chunks already sent stay created.
+- `Posty5.Webhooks`: `WebhookEndpointClient` (list/get/create/update/delete,
+  rotate secret, send test, deliveries, redeliver, event types) and
+  `WebhookSignature.Verify` (Standard Webhooks HMAC-SHA256, fixed-time compare,
+  rotation, 5-minute tolerance) returning a typed `WebhookEvent`;
+  `WebhookSignatureException.Reason`.
+
 ## Posty5.QRCode - unreleased (dynamic QR codes)
 
 Needs the API's dynamic QR release. Additive; no version bump in this change.

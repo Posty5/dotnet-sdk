@@ -455,3 +455,31 @@ MIT License - see [LICENSE](../../LICENSE) file for details.
 ---
 
 Made with ❤️ by the Posty5 team
+
+## Bulk create, export and bulk jobs
+
+Needs the bulk-create feature on your plan; each created row costs the normal
+create cost. `CreateManyAsync` sends chunks of up to 100 rows, each with an
+`Idempotency-Key`, and retries a failed chunk once with the same key, so nothing
+is created or charged twice.
+
+```csharp
+var result = await shortLinkClient.CreateManyAsync(rows, new CreateManyOptions
+{
+    Defaults = new BulkCreateDefaults { TemplateId = "template_123" },
+    Progress = new Progress<BulkProgress>(p => Console.WriteLine($"{p.Processed}/{p.Total}")),
+});
+foreach (var item in result.Items.Where(i => i.Status == BulkRowStatus.Failed))
+    Console.WriteLine($"row {item.Row}: {item.Errors![0].Message}");
+
+// Up to 5,000 rows from a CSV, in the background
+var job = await shortLinkClient.CreateBulkJobAsync(new CreateBulkJobRequest { Content = File.ReadAllText("links.csv") });
+job = await shortLinkClient.WaitForBulkJobAsync(job.Id);
+var link = await shortLinkClient.GetBulkJobResultUrlAsync(job.Id, BulkJobFile.Result); // valid 15 minutes
+
+// Export (free)
+var file = await shortLinkClient.ExportAsync(new ExportOptions { Format = ExportFormat.Csv });
+```
+
+Cancelling `CreateManyAsync` stops between chunks; chunks already sent stay
+created — call again with the same `IdempotencyKey` to finish without duplicates.

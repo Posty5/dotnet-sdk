@@ -10,7 +10,7 @@ namespace Posty5.ShortLink;
 /// <summary>
 /// Client for managing short links via Posty5 API
 /// </summary>
-public class ShortLinkClient
+public partial class ShortLinkClient
 {
     private readonly Posty5HttpClient _http;
 

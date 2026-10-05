@@ -14,13 +14,18 @@
     },
     {
       "name": "short-link",
-      "purpose": "Short-link list/get/create/update/delete.",
+      "purpose": "Short-link list/get/create/update/delete; bulk create (CreateManyAsync), export, bulk jobs (ShortLinkClient.Bulk.cs).",
       "primary_path": "src/Posty5.ShortLink"
     },
     {
       "name": "qr-code",
-      "purpose": "Create/update seven QR types plus get/list/delete; QRCodeTemplateClient lists user and public templates.",
+      "purpose": "Create/update seven QR types plus get/list/delete; QRCodeTemplateClient lists user and public templates; bulk create, export, bulk jobs with ZIP (QRCodeClient.Bulk.cs).",
       "primary_path": "src/Posty5.QRCode"
+    },
+    {
+      "name": "webhooks",
+      "purpose": "Posty5.Webhooks: WebhookEndpointClient (/api/webhook-endpoints) and WebhookSignature.Verify (Standard Webhooks) with polymorphic WebhookEvent models.",
+      "primary_path": "src/Posty5.Webhooks"
     },
     {
       "name": "html-hosting",
