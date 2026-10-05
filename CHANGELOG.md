@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 
+- **`ReschedulePostAsync` was refused by the API.** It sent the create routes'
+  `schedule: { type, scheduledAt }` object; the edit route
+  (`PUT /api/social-publisher-post/{id}`) takes `scheduleType` + `scheduledAt`
+  flat and refuses unknown keys. `ReschedulePostRequest` now carries
+  `ScheduleType` and `ScheduledAt` (omitted with "now", which the API requires).
+
 - **`GetStatusAsync` called a route that does not exist.** It sent
   `GET /api/social-publisher-post/{id}`, which the API has never served (only
   `PUT` and `DELETE` live there), so every call failed with

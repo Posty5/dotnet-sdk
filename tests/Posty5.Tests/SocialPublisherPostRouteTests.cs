@@ -29,6 +29,32 @@ public class SocialPublisherPostRouteTests : IDisposable
         return ($"{request.Method} {request.PathAndQuery}", json.RootElement.Clone());
     }
 
+    // ─── Reschedule (fixed): the edit route takes the schedule flat ─────────
+
+    [Fact]
+    public async Task ReschedulePostAsync_SendsScheduleTypeAndScheduledAtFlat()
+    {
+        await Client().ReschedulePostAsync("p1", new DateTime(2026, 9, 20, 8, 0, 0, DateTimeKind.Utc), "New caption");
+
+        var (route, body) = Last();
+        Assert.Equal($"PUT {Base}/p1", route);
+        Assert.Equal("schedule", body.GetProperty("scheduleType").GetString());
+        Assert.Equal(new DateTime(2026, 9, 20, 8, 0, 0, DateTimeKind.Utc), body.GetProperty("scheduledAt").GetDateTime().ToUniversalTime());
+        Assert.Equal("New caption", body.GetProperty("caption").GetString());
+        Assert.False(body.TryGetProperty("schedule", out _));
+    }
+
+    [Fact]
+    public async Task ReschedulePostAsync_Now_SendsNoScheduledAt()
+    {
+        await Client().ReschedulePostAsync("p1", "now");
+
+        var (_, body) = Last();
+        Assert.Equal("now", body.GetProperty("scheduleType").GetString());
+        Assert.False(body.TryGetProperty("scheduledAt", out _));
+        Assert.False(body.TryGetProperty("caption", out _));
+    }
+
     // ─── Status (fixed) and remove (new) ────────────────────────────────────
 
     [Fact]

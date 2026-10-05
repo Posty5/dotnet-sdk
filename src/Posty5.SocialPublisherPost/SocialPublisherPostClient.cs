@@ -891,7 +891,7 @@ public class SocialPublisherPostClient
 
         await _http.PutAsync<object>(
             $"{BasePath}/{id}",
-            new ReschedulePostRequest { Schedule = built, Caption = caption },
+            new ReschedulePostRequest { ScheduleType = built.Type, ScheduledAt = built.Type == "schedule" ? built.ScheduledAt : null, Caption = caption },
             cancellationToken: cancellationToken);
     }
 

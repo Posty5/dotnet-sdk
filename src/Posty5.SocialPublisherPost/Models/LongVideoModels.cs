@@ -186,8 +186,11 @@ public class LongVideoQuoteRequest
 /// </summary>
 public class ReschedulePostRequest
 {
-    /// <summary>New publish moment. Type is "now" or "schedule".</summary>
-    public ScheduleConfig Schedule { get; set; } = new();
+    /// <summary>"now" or "schedule". The edit route takes the schedule flat, not as the create routes' <c>schedule</c> object.</summary>
+    public string ScheduleType { get; set; } = "now";
+
+    /// <summary>The new publish moment when <see cref="ScheduleType"/> is "schedule"; null (not sent) with "now", which the API requires.</summary>
+    public DateTime? ScheduledAt { get; set; }
 
     /// <summary>Optionally replace the caption at the same time.</summary>
     public string? Caption { get; set; }
