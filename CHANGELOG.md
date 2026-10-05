@@ -4,6 +4,155 @@ All notable changes to the Posty5 .NET SDK will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Posty5.ShortLink 3.2.0, Posty5.QRCode 3.2.0, Posty5.Core 3.2.0 - unreleased
+
+Link + QR visit analytics (VA), plus the link + QR truth pass (TP) below.
+VA is additive; TP's changes are listed per package at the end of this entry.
+`GetAnalyticsAsync` needs the API's visit-analytics release (an older API
+answers 404). Core is 3.2.0 because `Posty5.Core` 3.1.0 is the MCP release
+(`feat/mcp-wave-2`), which ships first.
+
+### Added
+
+- `ShortLinkClient.GetAnalyticsAsync(id, query?, ct)` -
+  `GET /api/short-link/{id}/analytics`, and
+  `QRCodeClient.GetAnalyticsAsync(id, query?, ct)` -
+  `GET /api/qr-code/{id}/analytics`. Same semantics as the npm SDK's
+  `getAnalytics`.
+- `Posty5.Core.Models`: `LinkAnalyticsQuery` (`From`/`To` sent as
+  `yyyy-MM-dd`, culture-independent; `Interval`; `Tz`; `Breakdown` comma list;
+  `AllBreakdowns` sends `breakdown=all`; `Limit` 1-50, default 10, overflow
+  as key `other`, missing values as `unknown`), the answer
+  `LinkAnalyticsModel` (`Totals`, `Series`, `Breakdowns` keyed by wire name,
+  `Meta` with `Locked`, `Timezone`, `Source`, `AnalyticsStartedAt`,
+  `MaxHistoryDays`), and the value types `LinkAnalyticsInterval` /
+  `LinkAnalyticsBreakdown` (the nine C2 names).
+- `ShortLinkClient.GetStatisticsAsync(query?, ct)` -
+  `GET /api/short-link/statistics`, and `QRCodeClient.GetStatisticsAsync(query?, ct)` -
+  `GET /api/qr-code/statistics`: account-wide counts. Query
+  `LinkStatisticsQuery` (`Period` = `today|7d|30d|month|custom`, or a custom
+  `From`/`To` as `yyyy-MM-dd`; default the last 30 days). Answer
+  `ShortLinkStatisticsModel` / `QRCodeStatisticsModel`: `Range`, and `Data` with
+  `Totals` (`TotalLinks`/`TotalQRCodes`, lifetime `TotalVisitors`,
+  `AvgVisitorsPerLink`/`AvgVisitorsPerQRCode`, plus `VisitsInRange`,
+  `UniqueVisitorsInRange`, `BotVisitsInRange`), `Daily` (UTC days:
+  `CreatedCount`, `VisitorsSum` = visits by people that day) and
+  `TopLinks`/`TopQRCodes` (top ten by visits in the range, each with
+  `VisitsInRange`). With the visit-analytics API, `VisitorsSum` means visits
+  per day, no longer visitors of links created that day.
+- `Posty5.Core.Models`: `LinkStatisticsQuery`, `LinkStatisticsPeriod`,
+  `LinkStatisticsResponse<TData>`, `LinkStatisticsRange`,
+  `LinkStatisticsVisitTotals`, `LinkStatisticsDailyRow`.
+- `Posty5.Core.Helpers.LinkAnalyticsQueryHelper`: the one query builder both
+  clients use, for analytics and statistics. Statistics with `From`/`To` and a
+  non-custom `Period`, or `From` after `To`, throws `ArgumentException` before
+  sending.
+
+### Behaviour
+
+- `AllBreakdowns` together with a non-empty `Breakdown`, or an empty `id`,
+  throws `ArgumentException`, and a `Limit` outside 1-50 throws
+  `ArgumentOutOfRangeException`, before any request. An unset or empty
+  `Breakdown` omits the parameter, and the API then returns every breakdown
+  the plan allows (the same answer as `AllBreakdowns`).
+- Bots are excluded from `Visits` (counted in `BotVisits`); `UniqueVisitors`
+  over more than one day is the sum of daily uniques; data starts on
+  `Meta.AnalyticsStartedAt`.
+- A breakdown the plan does not include, named explicitly, or a `From` older
+  than the plan's history, is the API's feature-lock 403: `Posty5Exception`
+  with `StatusCode == 403` and the API's message (`This feature is not
+  available on your current plan.`; `You Have Not Permission` for a record you
+  may not read) in `ResponseBody` (the core's existing mapping; no plan names
+  in the SDK). `Meta.Locked[].RequiredPlan` is a plan key such as `basic`;
+  `Meta.MaxHistoryDays` is `30` on Free, `null` on Starter and up;
+  `Meta.Source` is `events`, `rollup` or `mixed`. Reading analytics costs no
+  credits.
+- A missing short link or QR code answers **400** (`Posty5ValidationException`,
+  "The Short Link Is Not Found" / "The QR Code Is Not Found"), not 404.
+- `Meta` values and `Series[].Date` are kept as the API's strings, so a value a
+  later API adds cannot fail deserialization and no time-zone conversion can
+  shift a day.
+
+### Posty5.ShortLink 3.2.0 - truth pass (TP)
+
+Link + QR truth pass (TP): the client sends every field the API accepts and
+nothing it rejects. Several fields need the API's truth-pass release; they are
+marked "(API TP)" below and an older API answers 400 to a request that sets them.
+
+#### Added
+
+- `AndroidUrl` / `IosUrl` on `ShortLinkCreateRequestModel` and
+  `ShortLinkUpdateRequestModel` (API TP, S13). Allowed schemes: `https:`,
+  `http:` or an app scheme (`myapp://…`), never `javascript:`/`data:`/
+  `vbscript:`/`file:`/`about:`/`blob:`. Create: a value wins, absent falls back
+  to the target page's `al:*` meta. Update: a value wins and `""` clears;
+  `null` is not sent, so the API re-derives the link when `BaseUrl` changed and
+  keeps it otherwise.
+- `IsEnableLandingPage` on `ShortLinkCreateRequestModel`.
+
+#### Changed
+
+- **`CreateAsync` sends every field.** 3.1.0 and earlier sent only name, base URL, template
+  ID and custom landing ID: `RefId`, `Tag` and `PageInfo` never reached the API.
+  It now sends those plus `IsEnableLandingPage`, `AndroidUrl` and `IosUrl`.
+- **`UpdateAsync` sends an explicit body**: no `IsEnableMonetization` (a 400 in
+  3.1.0 and earlier when set), plus `templateType` and `createdFrom` like `CreateAsync`
+  (the API resets an omitted `createdFrom` to `"api"`). `IsEnableLandingPage`
+  left `null` is not sent, so the API keeps the stored value (API TP; an older
+  API turned the landing page off).
+- **`TemplateId` and `BaseUrl` are `required`** on the create and update
+  models. The API refuses an API-key call without a template ID, so code that
+  left it out never succeeded; code that sets it after construction (instead
+  of in an object initializer) has to move it into the initializer.
+- `UpdateAsync` throws `ArgumentException` for an empty `BaseUrl` instead of
+  sending a request the API rejects.
+- `ShortLinkListParamsModel.PageInfoTitle` is sent as `pageInfo.title`; 3.1.0 and earlier
+  sent `pageinfo.title`, which matched no field.
+
+#### Deprecated
+
+- `IsEnableMonetization` on every short-link model: `[Obsolete]`, `[JsonIgnore]`,
+  never sent and always `null` when read (the API never accepted or returned
+  it). Removed in 4.0.0. A `TreatWarningsAsErrors` build sees CS0618 for code
+  that still sets it.
+- `ShortLinkListParamsModel.Search`, `FromDate`, `ToDate`: the API's short-link
+  search has no such filters; `[Obsolete]` and no longer sent.
+
+#### Documentation
+
+- README: real type names (`ShortLinkCreateRequestModel`, cursor
+  `PaginationParams`, `Items`), landing page and deep-link sections, an
+  "Upgrading to 3.2.0" note; monetization and analytics claims removed.
+
+### Posty5.QRCode 3.2.0 - truth pass (TP)
+
+#### Added
+
+- `IsEnableLandingPage` on `QRCodeRequestBaseModel` (every create and update).
+
+#### Changed
+
+- **The typed create/update methods no longer send `options.text`** for email,
+  WiFi, call, SMS, URL and geolocation codes; they send `qrCodeTarget` only and
+  the API builds the encoded text. 3.1.0 and earlier built it client-side without escaping,
+  so a subject with `&` or a WiFi password with `;` produced a code that opened
+  the wrong thing. Free text still sends `options.text` equal to the text.
+- **`TemplateId` is `required`** on every request model (it was a non-null
+  string defaulting to `""`, which the API refuses for API-key calls).
+
+#### Deprecated
+
+- `IsEnableMonetization` on `QRCodeModel`, `QRCodeRequestBaseModel` and
+  `QRCodeListParamsModel`: `[Obsolete]`, `[JsonIgnore]`, never sent (every
+  payload carried it in 3.1.0 and earlier). Removed in 4.0.0.
+
+#### Documentation
+
+- README and QUICK_REFERENCE use the real type names; "dynamic QR", "scan
+  analytics", "short link" and monetization claims removed; `NumberOfVisitors`
+  documented as visits to the code's Posty5 page (scanning a downloaded image is
+  not counted). Package description no longer says "dynamic".
+
 ## Posty5.SocialPublisherPost 4.6.0 - 2026-10-05
 
 ### Fixed

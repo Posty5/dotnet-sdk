@@ -152,7 +152,7 @@ public class CoreHeadersAndOriginTests : IDisposable
     public async Task ShortLinkCreate_StampsThePackageLabelByDefault()
     {
         _server.ResultJson = "{\"_id\":\"l1\"}";
-        await new ShortLinkClient(_server.Http()).CreateAsync(new ShortLinkCreateRequestModel { Name = "n", BaseUrl = "https://example.com" });
+        await new ShortLinkClient(_server.Http()).CreateAsync(new ShortLinkCreateRequestModel { Name = "n", BaseUrl = "https://example.com", TemplateId = "t1" });
 
         using var body = JsonDocument.Parse(_server.Requests.Single().Body);
         Assert.Equal("dotnetPackage", body.RootElement.GetProperty("createdFrom").GetString());
@@ -163,7 +163,7 @@ public class CoreHeadersAndOriginTests : IDisposable
     {
         _server.ResultJson = "{\"_id\":\"l1\"}";
         var http = _server.Http(new Posty5Options { ApiKey = "k", CreatedFrom = "my-crm" });
-        await new ShortLinkClient(http).CreateAsync(new ShortLinkCreateRequestModel { Name = "n", BaseUrl = "https://example.com" });
+        await new ShortLinkClient(http).CreateAsync(new ShortLinkCreateRequestModel { Name = "n", BaseUrl = "https://example.com", TemplateId = "t1" });
 
         using var body = JsonDocument.Parse(_server.Requests.Single().Body);
         Assert.Equal("my-crm", body.RootElement.GetProperty("createdFrom").GetString());

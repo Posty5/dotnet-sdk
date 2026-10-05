@@ -1,4 +1,5 @@
 using Posty5.Core.Converts;
+using Posty5.Core.Models;
 using System.Text.Json.Serialization;
 
 namespace Posty5.QRCode.Models;
@@ -301,13 +302,16 @@ public class QRCodeModel
     
     
     /// <summary>
-    /// Number of visitors/scans
+    /// Number of visits to the code's Posty5 page (<see cref="QrCodeLandingPageURL"/>).
+    /// A downloaded QR image encodes its content directly, so scanning it is
+    /// not counted here.
     /// </summary>
     public int? NumberOfVisitors { get; set; }
-    
- 
+
+
     /// <summary>
-    /// Whether landing page is enabled
+    /// Whether the code's Posty5 page shows <see cref="PageInfo"/>. Also
+    /// returned in API-key list results from the API's link-qr truth pass on.
     /// </summary>
     public bool? IsEnableLandingPage { get; set; }
     
@@ -322,12 +326,15 @@ public class QRCodeModel
     public string? LastVisitorDate { get; set; }
     
     /// <summary>
-    /// Whether monetization is enabled
+    /// Never returned by the API; always <c>null</c>.
     /// </summary>
+    [Obsolete(QRCodeConst.MonetizationObsolete)]
+    [JsonIgnore]
     public bool? IsEnableMonetization { get; set; }
-    
+
     /// <summary>
-    /// QR code status (new, pending, approved, rejected)
+    /// QR code status (new, pending, approved, rejected). Also returned in
+    /// API-key list results from the API's link-qr truth pass on.
     /// </summary>
     public QRCodeStatusType Status { get; set; }
     
@@ -418,9 +425,11 @@ public class QRCodeRequestBaseModel
     public string? Name { get; set; }
     
     /// <summary>
-    /// Template ID
+    /// QR code template ID. Required on create and update for API-key callers,
+    /// which every SDK call is: the API answers "Template Id Is Required"
+    /// without it. Your template IDs are on the dashboard's QR code templates page.
     /// </summary>
-    public string TemplateId { get; set; } = string.Empty;
+    public required string TemplateId { get; set; }
     
     /// <summary>
     /// External reference ID for filtering/tracking
@@ -438,14 +447,24 @@ public class QRCodeRequestBaseModel
     public string? CustomLandingId { get; set; }
     
     /// <summary>
-    /// Enable monetization (default: false)
+    /// Whether the code's Posty5 page shows <see cref="PageInfo"/>. Omitted
+    /// (<c>null</c>): the API stores <c>false</c> on create and keeps the stored
+    /// value on update.
     /// </summary>
-    public bool? IsEnableMonetization { get; set; }
-    
+    public bool? IsEnableLandingPage { get; set; }
+
     /// <summary>
-    /// Page information (required when monetization is enabled)
+    /// Page information. <see cref="QRCodePageInfoModel.Title"/> is required
+    /// when <see cref="IsEnableLandingPage"/> is <c>true</c>.
     /// </summary>
     public QRCodePageInfoModel? PageInfo { get; set; }
+
+    /// <summary>
+    /// Never accepted by the API; ignored and never sent.
+    /// </summary>
+    [Obsolete(QRCodeConst.MonetizationObsolete)]
+    [JsonIgnore]
+    public bool? IsEnableMonetization { get; set; }
 }
 
 /// <summary>
@@ -668,8 +687,10 @@ public class QRCodeListParamsModel
     public string? RefId { get; set; }
     
     /// <summary>
-    /// Filter by monetization enabled
+    /// No such filter exists; ignored and never sent.
     /// </summary>
+    [Obsolete(QRCodeConst.MonetizationObsolete)]
+    [JsonIgnore]
     public bool? IsEnableMonetization { get; set; }
     
     /// <summary>
@@ -723,4 +744,56 @@ public class DeleteResponse
     /// Success message
     /// </summary>
     public string Message { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Account-wide QR-code statistics (<c>GET /api/qr-code/statistics</c>):
+/// the resolved <see cref="LinkStatisticsResponse{TData}.Range"/> plus
+/// <see cref="QRCodeStatisticsDataModel"/>.
+/// </summary>
+public class QRCodeStatisticsModel : LinkStatisticsResponse<QRCodeStatisticsDataModel>
+{
+}
+
+/// <summary>The <c>data</c> of <see cref="QRCodeStatisticsModel"/>.</summary>
+public class QRCodeStatisticsDataModel
+{
+    /// <summary>Lifetime QR code count and counters, plus the visit totals in the range.</summary>
+    public QRCodeStatisticsTotalsModel Totals { get; set; } = new();
+
+    /// <summary>One row per UTC day that had a QR code created or a visit to a code's Posty5 page, oldest first.</summary>
+    public List<LinkStatisticsDailyRow> Daily { get; set; } = new();
+
+    /// <summary>The ten QR codes with the most visits in the range, most first; codes with no visit in the range are left out.</summary>
+    public List<QRCodeStatisticsTopQRCodeModel> TopQRCodes { get; set; } = new();
+}
+
+/// <summary>Totals of <see cref="QRCodeStatisticsDataModel"/>.</summary>
+public class QRCodeStatisticsTotalsModel : LinkStatisticsVisitTotals
+{
+    /// <summary>Your QR codes (lifetime, deleted ones excluded).</summary>
+    public long TotalQRCodes { get; set; }
+
+    /// <summary><see cref="LinkStatisticsVisitTotals.TotalVisitors"/> / <see cref="TotalQRCodes"/> (0 with no links).</summary>
+    public double AvgVisitorsPerQRCode { get; set; }
+}
+
+/// <summary>One of <see cref="QRCodeStatisticsDataModel.TopQRCodes"/>.</summary>
+public class QRCodeStatisticsTopQRCodeModel
+{
+    /// <summary>Database ID</summary>
+    [JsonPropertyName("_id")]
+    public string? Id { get; set; }
+
+    /// <summary>QR code name</summary>
+    public string? Name { get; set; }
+
+    /// <summary>Lifetime visit counter</summary>
+    public long? NumberOfVisitors { get; set; }
+
+    /// <summary>Creation time</summary>
+    public DateTime? CreatedAt { get; set; }
+
+    /// <summary>Visits by people in the range (bots excluded).</summary>
+    public long VisitsInRange { get; set; }
 }

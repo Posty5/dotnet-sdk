@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.Json;
 using Posty5.Core.Configuration;
 using Posty5.Core.Http;
 
@@ -23,6 +24,8 @@ internal sealed class RecordingServer : IDisposable
 
     /// <summary>The JSON placed in the envelope's <c>result</c>.</summary>
     public string ResultJson { get; set; } = "{}";
+    /// <summary>The envelope's <c>message</c>; an error answer carries the API's text here.</summary>
+    public string Message { get; set; } = "ok";
     public HttpStatusCode Status { get; set; } = HttpStatusCode.OK;
     public string BaseUrl { get; }
 
@@ -60,7 +63,7 @@ internal sealed class RecordingServer : IDisposable
                 Headers.Add(headers);
             }
 
-            var payload = Encoding.UTF8.GetBytes($"{{\"message\":\"ok\",\"result\":{ResultJson}}}");
+            var payload = Encoding.UTF8.GetBytes($"{{\"message\":{JsonSerializer.Serialize(Message)},\"result\":{ResultJson}}}");
             context.Response.StatusCode = (int)Status;
             context.Response.ContentType = "application/json";
             await context.Response.OutputStream.WriteAsync(payload);

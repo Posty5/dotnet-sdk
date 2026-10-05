@@ -8,10 +8,10 @@
     
     <!-- NuGet Package Properties -->
     <PackageId>Posty5.QRCode</PackageId>
-    <Version>3.1.0</Version>
+    <Version>3.2.0</Version>
     <Authors>Posty5</Authors>
     <Company>Posty5</Company>
-    <Description>QR Code management client for Posty5 .NET SDK - Create and manage dynamic QR codes for email, WiFi, phone calls, SMS, URLs, and geolocation</Description>
+    <Description>QR Code management client for Posty5 .NET SDK - Create and manage QR codes for free text, email, WiFi, phone calls, SMS, URLs, and geolocation</Description>
     <PackageTags>posty5;qrcode;qr;barcode;api;sdk</PackageTags>
     <PackageProjectUrl>https://posty5.com</PackageProjectUrl>
     <RepositoryUrl>https://github.com/posty5/dotnet-sdk</RepositoryUrl>

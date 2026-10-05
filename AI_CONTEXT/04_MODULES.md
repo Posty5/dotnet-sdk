@@ -2,7 +2,7 @@
 
 | Area | Purpose | Primary path |
 | --- | --- | --- |
-| `core` | Posty5Options (incl. `DefaultHeaders`, `CreatedFrom`), Posty5HttpClient (`X-Posty5-Client`, `ResolveCreatedFrom`, no retries), errors, response/pagination/`AgentOrigin` types, converters. | `src/Posty5.Core` |
+| `core` | Posty5Options (incl. `DefaultHeaders`, `CreatedFrom`), Posty5HttpClient (`X-Posty5-Client`, `ResolveCreatedFrom`, no retries), errors, response/pagination/`AgentOrigin` types, converters, shared link/QR analytics models + `LinkAnalyticsQueryHelper`. | `src/Posty5.Core` |
 | `account` | Who the API key is, credits, credit history and summary, live operation costs (read-only). | `src/Posty5.Account` |
 | `short-link` | Short-link list/get/create/update/delete. | `src/Posty5.ShortLink` |
 | `qr-code` | Create/update seven QR types plus get/list/delete; user and public template lists. | `src/Posty5.QRCode` |

@@ -18,6 +18,20 @@
       "sensitive": false
     },
     {
+      "name": "POSTY5_TEST_LINK_QR_TP",
+      "purpose": "true when the API under test carries the link-qr truth pass; enables [LinkQrTruthPassFact] live facts.",
+      "source": "tests/Posty5.Tests/TestConfig.cs",
+      "category": "environment",
+      "sensitive": false
+    },
+    {
+      "name": "POSTY5_TEST_LINK_QR_VA",
+      "purpose": "true when the API under test serves GET /api/short-link|qr-code/{id}/analytics; enables [LinkQrVisitAnalyticsFact] live facts.",
+      "source": "tests/Posty5.Tests/TestConfig.cs",
+      "category": "environment",
+      "sensitive": false
+    },
+    {
       "name": "Posty5Options.BaseUrl",
       "purpose": "Per-client API base URL.",
       "source": "src/Posty5.Core/Configuration/Posty5Options.cs",

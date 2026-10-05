@@ -27,7 +27,7 @@ Posty5 empowers businesses, marketers, and developers to streamline their online
 - **HTTP Client** - System.Net.Http-based client with built-in retry logic using Polly
 - **Authentication** - API key management for secure API communication
 - **Error Handling** - Typed exception classes for robust error management
-- **Type Definitions** - Full C# type support with comprehensive models
+- **Type Definitions** - Full C# type support with comprehensive models, including the `LinkAnalytics*` models shared by `ShortLinkClient.GetAnalyticsAsync` and `QRCodeClient.GetAnalyticsAsync`
 - **Configuration** - Flexible configuration options with dependency injection support
 - **.NET 8.0 Support** - Built with the latest .NET features
 
@@ -230,6 +230,10 @@ The main HTTP client for making API requests.
 **SetApiKey(string apiKey)**
 
 - Updates the API key for subsequent requests
+
+### Link analytics models (`Posty5.Core.Models`)
+
+`LinkAnalyticsQuery` (`From`, `To`, `Interval`, `Tz`, `Breakdown`, `AllBreakdowns`, `Limit`) and the answer `LinkAnalyticsModel` (`Totals`, `Series`, `Breakdowns`, `Meta`), with the value types `LinkAnalyticsInterval` and `LinkAnalyticsBreakdown`. `LinkStatisticsQuery` / `LinkStatisticsPeriod` and the shared parts of the account-wide statistics answer (`LinkStatisticsResponse<TData>`, `LinkStatisticsRange`, `LinkStatisticsVisitTotals`, `LinkStatisticsDailyRow`) are here too. `Posty5.Core.Helpers.LinkAnalyticsQueryHelper` builds the queries both clients send, so a short link and a QR code are asked the same way. See the `Posty5.ShortLink` / `Posty5.QRCode` READMEs for usage.
 
 ---
 

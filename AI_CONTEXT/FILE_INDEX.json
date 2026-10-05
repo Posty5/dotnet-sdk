@@ -60,6 +60,22 @@
       "role": "Examples"
     },
     {
+      "path": "src/Posty5.Core/Models/LinkAnalyticsModels.cs",
+      "role": "Link/QR analytics (VA, C2): LinkAnalyticsQuery, LinkAnalyticsModel and its parts, LinkAnalyticsInterval/LinkAnalyticsBreakdown value types."
+    },
+    {
+      "path": "src/Posty5.Core/Models/LinkStatisticsModels.cs",
+      "role": "Account-wide /statistics (VA): LinkStatisticsQuery, LinkStatisticsPeriod, LinkStatisticsResponse<TData>, range, shared visit totals, UTC daily row."
+    },
+    {
+      "path": "src/Posty5.Core/Helpers/LinkAnalyticsQueryHelper.cs",
+      "role": "Builds {basePath}/{id}/analytics and {basePath}/statistics with their queries (yyyy-MM-dd dates, breakdown comma list or 'all', period); used by ShortLinkClient and QRCodeClient."
+    },
+    {
+      "path": "src/Posty5.Core/Configuration/LinkAnalyticsConst.cs",
+      "role": "Internal wire names of the analytics endpoint: path segment, query keys, date format, 'all'."
+    },
+    {
       "path": "src/Posty5.Core",
       "role": "Options, HTTP, exceptions, common response/pagination models, converters."
     },
@@ -80,12 +96,20 @@
       "role": "Short-link client/models."
     },
     {
+      "path": "src/Posty5.ShortLink/ShortLinkConst.cs",
+      "role": "Short-link fixed values: base path, templateType/createdFrom, pageInfo.title filter key, [Obsolete] texts."
+    },
+    {
       "path": "src/Posty5.QRCode",
       "role": "QR client/models."
     },
     {
       "path": "src/Posty5.QRCode/QRCodeTemplateClient.cs",
       "role": "QRCodeTemplateClient: ListUserTemplatesAsync, ListPublicTemplatesAsync (/api/qr-code-template/*-lookup); routes in QRCodeTemplateRoutes.cs."
+    },
+    {
+      "path": "src/Posty5.QRCode/QRCodeConst.cs",
+      "role": "QR fixed values: the [Obsolete] text for IsEnableMonetization."
     },
     {
       "path": "src/Posty5.HtmlHosting",
@@ -193,7 +217,7 @@
     },
     {
       "path": "tests/Posty5.Tests/RecordingServer.cs",
-      "role": "Shared offline test server: the real Posty5HttpClient against a local HttpListener; records verb, path+query, body and headers."
+      "role": "Shared offline test server: the real Posty5HttpClient against a local HttpListener; records verb, path+query, body and headers; status, result and message of the answer are settable."
     },
     {
       "path": "tests/Posty5.Tests/CoreHeadersAndOriginTests.cs",
@@ -226,6 +250,22 @@
     {
       "path": "tests/Posty5.Tests/ApiKeyFactAttribute.cs",
       "role": "[ApiKeyFact]: a live read-only fact reported as skipped when POSTY5_API_KEY is not set."
+    },
+    {
+      "path": "tests/Posty5.Tests/LinkQrTruthPassFactAttribute.cs",
+      "role": "[LinkQrTruthPassFact]: a live short-link/QR fact skipped unless POSTY5_TEST_LINK_QR_TP=true (API carries the link-qr truth pass)."
+    },
+    {
+      "path": "tests/Posty5.Tests/LinkQrVisitAnalyticsFactAttribute.cs",
+      "role": "[LinkQrVisitAnalyticsFact]: a live GetAnalyticsAsync fact skipped unless POSTY5_TEST_LINK_QR_VA=true (API serves the analytics endpoints)."
+    },
+    {
+      "path": "tests/Posty5.Tests/ShortLinkClientTests.cs",
+      "role": "Live short-link tests, TP-gated live facts, and ShortLinkClientPayloadTests (offline body/query capture via RecordingServer)."
+    },
+    {
+      "path": "tests/Posty5.Tests/QRCodeClientTests.cs",
+      "role": "Live QR tests, a TP-gated refId fact, and QRCodeClientPayloadTests (offline body/query capture via RecordingServer)."
     },
     {
       "path": "tests/Posty5.Tests/TestConfig.cs",

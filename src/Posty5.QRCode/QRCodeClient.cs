@@ -1,4 +1,6 @@
 using Posty5.Core.Configuration;
+using Posty5.Core.Exceptions;
+using Posty5.Core.Helpers;
 using Posty5.Core.Http;
 using Posty5.Core.Models;
 using Posty5.QRCode.Models;
@@ -8,9 +10,15 @@ namespace Posty5.QRCode;
 /// <summary>
 /// Client for managing QR codes via Posty5 API
 /// </summary>
+/// <remarks>
+/// The typed create/update methods send <c>qrCodeTarget</c> only; the API builds
+/// and escapes the text the QR image encodes (<c>options.text</c>) from it, so a
+/// subject with <c>&amp;</c> or a Wi-Fi password with <c>;</c> encodes correctly.
+/// Free text still sends <c>options.text</c> equal to the text.
+/// </remarks>
 /// <example>
 /// <code>
-/// var httpClient = new Posty5HttpClient(new Posty5HttpClientOptions
+/// var httpClient = new Posty5HttpClient(new Posty5Options
 /// {
 ///     BaseUrl = "https://api.posty5.com",
 ///     ApiKey = "your-api-key"
@@ -23,7 +31,7 @@ namespace Posty5.QRCode;
 /// {
 ///     Name = "My Website",
 ///     TemplateId = "template_123",
-///     Url = new QRCodeUrlTarget { Url = "https://example.com" }
+///     Url = new QRCodeUrlTargetModel { Url = "https://example.com" }
 /// });
 /// </code>
 /// </example>
@@ -81,7 +89,7 @@ public class QRCodeClient
             data.CustomLandingId,
             data.RefId,
             data.Tag,
-            data.IsEnableMonetization,
+            data.IsEnableLandingPage,
             data.PageInfo,
             options = new
             {
@@ -107,7 +115,7 @@ public class QRCodeClient
     /// {
     ///     Name = "Contact Us",
     ///     TemplateId = "template_123",
-    ///     Email = new QRCodeEmailTarget
+    ///     Email = new QRCodeEmailTargetModel
     ///     {
     ///         Email = "contact@example.com",
     ///         Subject = "Inquiry from QR Code",
@@ -136,13 +144,9 @@ public class QRCodeClient
             data.CustomLandingId,
             data.RefId,
             data.Tag,
-            data.IsEnableMonetization,
+            data.IsEnableLandingPage,
             data.PageInfo,
             qrCodeTarget,
-            options = new
-            {
-                text = $"mailto:{qrCodeTarget.email.Email}?subject={qrCodeTarget.email.Subject}&body={qrCodeTarget.email.Body}"
-            },
             templateType = "user",
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
@@ -163,7 +167,7 @@ public class QRCodeClient
     /// {
     ///     Name = "Office WiFi",
     ///     TemplateId = "template_123",
-    ///     Wifi = new QRCodeWifiTarget
+    ///     Wifi = new QRCodeWifiTargetModel
     ///     {
     ///         Name = "OfficeNetwork",
     ///         AuthenticationType = "WPA",
@@ -192,13 +196,9 @@ public class QRCodeClient
             data.CustomLandingId,
             data.RefId,
             data.Tag,
-            data.IsEnableMonetization,
+            data.IsEnableLandingPage,
             data.PageInfo,
             qrCodeTarget,
-            options = new
-            {
-                text = $"WIFI:T:{qrCodeTarget.wifi.AuthenticationType};S:{qrCodeTarget.wifi.Name};P:{qrCodeTarget.wifi.Password};"
-            },
             templateType = "user",
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
@@ -219,7 +219,7 @@ public class QRCodeClient
     /// {
     ///     Name = "Call Support",
     ///     TemplateId = "template_123",
-    ///     Call = new QRCodeCallTarget
+    ///     Call = new QRCodeCallTargetModel
     ///     {
     ///         PhoneNumber = "+1234567890"
     ///     }
@@ -246,13 +246,9 @@ public class QRCodeClient
             data.CustomLandingId,
             data.RefId,
             data.Tag,
-            data.IsEnableMonetization,
+            data.IsEnableLandingPage,
             data.PageInfo,
             qrCodeTarget,
-            options = new
-            {
-                text = $"tel:{qrCodeTarget.call.PhoneNumber}"
-            },
             templateType = "user",
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
@@ -273,7 +269,7 @@ public class QRCodeClient
     /// {
     ///     Name = "Text Us",
     ///     TemplateId = "template_123",
-    ///     Sms = new QRCodeSmsTarget
+    ///     Sms = new QRCodeSmsTargetModel
     ///     {
     ///         PhoneNumber = "+1234567890",
     ///         Message = "I scanned your QR code!"
@@ -301,13 +297,9 @@ public class QRCodeClient
             data.CustomLandingId,
             data.RefId,
             data.Tag,
-            data.IsEnableMonetization,
+            data.IsEnableLandingPage,
             data.PageInfo,
             qrCodeTarget,
-            options = new
-            {
-                text = $"sms:{qrCodeTarget.sms.PhoneNumber}?body={qrCodeTarget.sms.Message}"
-            },
             templateType = "user",
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
@@ -328,7 +320,7 @@ public class QRCodeClient
     /// {
     ///     Name = "Website Link",
     ///     TemplateId = "template_123",
-    ///     Url = new QRCodeUrlTarget { Url = "https://example.com" },
+    ///     Url = new QRCodeUrlTargetModel { Url = "https://example.com" },
     ///     Tag = "marketing",
     ///     RefId = "CAMPAIGN-001"
     /// });
@@ -354,13 +346,9 @@ public class QRCodeClient
             data.CustomLandingId,
             data.RefId,
             data.Tag,
-            data.IsEnableMonetization,
+            data.IsEnableLandingPage,
             data.PageInfo,
             qrCodeTarget,
-            options = new
-            {
-                text = qrCodeTarget.url.Url
-            },
             templateType = "user",
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
@@ -381,7 +369,7 @@ public class QRCodeClient
     /// {
     ///     Name = "Our Office Location",
     ///     TemplateId = "template_123",
-    ///     Geolocation = new QRCodeGeolocationTarget
+    ///     Geolocation = new QRCodeGeolocationTargetModel
     ///     {
     ///         Latitude = "40.7128",
     ///         Longitude = "-74.0060"
@@ -409,13 +397,9 @@ public class QRCodeClient
             data.CustomLandingId,
             data.RefId,
             data.Tag,
-            data.IsEnableMonetization,
+            data.IsEnableLandingPage,
             data.PageInfo,
             qrCodeTarget,
-            options = new
-            {
-                text = $"geo:{qrCodeTarget.geolocation.Latitude},{qrCodeTarget.geolocation.Longitude}"
-            },
             templateType = "user",
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
@@ -467,7 +451,7 @@ public class QRCodeClient
             data.CustomLandingId,
             data.RefId,
             data.Tag,
-            data.IsEnableMonetization,
+            data.IsEnableLandingPage,
             data.PageInfo,
             options = new
             {
@@ -494,7 +478,7 @@ public class QRCodeClient
     /// {
     ///     Name = "Contact Us",
     ///     TemplateId = "template_123",
-    ///     Email = new QRCodeEmailTarget
+    ///     Email = new QRCodeEmailTargetModel
     ///     {
     ///         Email = "contact@example.com",
     ///         Subject = "Inquiry from QR Code",
@@ -524,13 +508,9 @@ public class QRCodeClient
             data.CustomLandingId,
             data.RefId,
             data.Tag,
-            data.IsEnableMonetization,
+            data.IsEnableLandingPage,
             data.PageInfo,
             qrCodeTarget,
-            options = new
-            {
-                text = $"mailto:{qrCodeTarget.email.Email}?subject={qrCodeTarget.email.Subject}&body={qrCodeTarget.email.Body}"
-            },
             templateType = "user",
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
@@ -552,7 +532,7 @@ public class QRCodeClient
     /// {
     ///     Name = "Office WiFi",
     ///     TemplateId = "template_123",
-    ///     Wifi = new QRCodeWifiTarget
+    ///     Wifi = new QRCodeWifiTargetModel
     ///     {
     ///         Name = "OfficeNetwork",
     ///         AuthenticationType = "WPA",
@@ -582,13 +562,9 @@ public class QRCodeClient
             data.CustomLandingId,
             data.RefId,
             data.Tag,
-            data.IsEnableMonetization,
+            data.IsEnableLandingPage,
             data.PageInfo,
             qrCodeTarget,
-            options = new
-            {
-                text = $"WIFI:T:{qrCodeTarget.wifi.AuthenticationType};S:{qrCodeTarget.wifi.Name};P:{qrCodeTarget.wifi.Password};"
-            },
             templateType = "user",
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
@@ -610,7 +586,7 @@ public class QRCodeClient
     /// {
     ///     Name = "Call Support",
     ///     TemplateId = "template_123",
-    ///     Call = new QRCodeCallTarget
+    ///     Call = new QRCodeCallTargetModel
     ///     {
     ///         PhoneNumber = "+1234567890"
     ///     }
@@ -638,13 +614,9 @@ public class QRCodeClient
             data.CustomLandingId,
             data.RefId,
             data.Tag,
-            data.IsEnableMonetization,
+            data.IsEnableLandingPage,
             data.PageInfo,
             qrCodeTarget,
-            options = new
-            {
-                text = $"tel:{qrCodeTarget.call.PhoneNumber}"
-            },
             templateType = "user",
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
@@ -666,7 +638,7 @@ public class QRCodeClient
     /// {
     ///     Name = "Text Us",
     ///     TemplateId = "template_123",
-    ///     Sms = new QRCodeSmsTarget
+    ///     Sms = new QRCodeSmsTargetModel
     ///     {
     ///         PhoneNumber = "+1234567890",
     ///         Message = "I scanned your QR code!"
@@ -695,13 +667,9 @@ public class QRCodeClient
             data.CustomLandingId,
             data.RefId,
             data.Tag,
-            data.IsEnableMonetization,
+            data.IsEnableLandingPage,
             data.PageInfo,
             qrCodeTarget,
-            options = new
-            {
-                text = $"sms:{qrCodeTarget.sms.PhoneNumber}?body={qrCodeTarget.sms.Message}"
-            },
             templateType = "user",
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
@@ -723,7 +691,7 @@ public class QRCodeClient
     /// {
     ///     Name = "Website Link",
     ///     TemplateId = "template_123",
-    ///     Url = new QRCodeUrlTarget { Url = "https://example.com" },
+    ///     Url = new QRCodeUrlTargetModel { Url = "https://example.com" },
     ///     Tag = "marketing",
     ///     RefId = "CAMPAIGN-001"
     /// });
@@ -750,13 +718,9 @@ public class QRCodeClient
             data.CustomLandingId,
             data.RefId,
             data.Tag,
-            data.IsEnableMonetization,
+            data.IsEnableLandingPage,
             data.PageInfo,
             qrCodeTarget,
-            options = new
-            {
-                text = qrCodeTarget.url.Url
-            },
             templateType = "user",
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
@@ -778,7 +742,7 @@ public class QRCodeClient
     /// {
     ///     Name = "Our Office Location",
     ///     TemplateId = "template_123",
-    ///     Geolocation = new QRCodeGeolocationTarget
+    ///     Geolocation = new QRCodeGeolocationTargetModel
     ///     {
     ///         Latitude = "40.7128",
     ///         Longitude = "-74.0060"
@@ -807,13 +771,9 @@ public class QRCodeClient
             data.CustomLandingId,
             data.RefId,
             data.Tag,
-            data.IsEnableMonetization,
+            data.IsEnableLandingPage,
             data.PageInfo,
             qrCodeTarget,
-            options = new
-            {
-                text = $"geo:{qrCodeTarget.geolocation.Latitude},{qrCodeTarget.geolocation.Longitude}"
-            },
             templateType = "user",
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
@@ -849,6 +809,107 @@ public class QRCodeClient
     }
 
     /// <summary>
+    /// Visit analytics of one QR code: totals, a series and breakdowns
+    /// (<c>GET /api/qr-code/{id}/analytics</c>). Reading analytics costs no credits.
+    /// </summary>
+    /// <remarks>
+    /// <para>Bots and link-preview crawlers are excluded from every <c>Visits</c>
+    /// and counted only in <see cref="LinkAnalyticsTotals.BotVisits"/>.</para>
+    /// <para><c>UniqueVisitors</c> over more than one day is the sum of daily
+    /// uniques (the visitor hash rotates daily).</para>
+    /// <para>Data starts on <see cref="LinkAnalyticsMeta.AnalyticsStartedAt"/>,
+    /// when Posty5 started recording visits; nothing earlier exists.</para>
+    /// <para>A static QR code (text, Wi-Fi, …) counts visits to its Posty5 page
+    /// only; a scan that never reaches Posty5 cannot be counted. The
+    /// <c>channel</c> breakdown tells scans from clicks.</para>
+    /// <para>Plan limits come from the API: unless you name breakdowns, you get
+    /// every breakdown your plan allows and the rest are listed in
+    /// <see cref="LinkAnalyticsMeta.Locked"/>; naming one
+    /// in <see cref="LinkAnalyticsQuery.Breakdown"/>, or a
+    /// <see cref="LinkAnalyticsQuery.From"/> older than your plan's history, throws
+    /// <see cref="Posty5Exception"/> with <see cref="Posty5Exception.StatusCode"/>
+    /// 403 and the API's message (<c>This feature is not available on your current plan.</c>,
+    /// or <c>You Have Not Permission</c>) in <see cref="Posty5Exception.ResponseBody"/>.</para>
+    /// </remarks>
+    /// <param name="id">QR code ID</param>
+    /// <param name="query">Range, interval, time zone and breakdowns; <c>null</c> for the API defaults (last 30 days, by day, every breakdown your plan allows).</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The analytics answer</returns>
+    /// <exception cref="ArgumentOutOfRangeException"><see cref="LinkAnalyticsQuery.Limit"/> is outside 1-50.</exception>
+    /// <exception cref="ArgumentException"><paramref name="id"/> is empty, or both <see cref="LinkAnalyticsQuery.AllBreakdowns"/> and <see cref="LinkAnalyticsQuery.Breakdown"/> are set.</exception>
+    /// <exception cref="Posty5ValidationException">
+    /// 400: the API refused the query (e.g. an unknown interval or time zone), or no
+    /// QR code with that ID is visible to this API key (<c>The QR Code Is Not Found</c>; the API answers
+    /// 400, not 404, for a missing record).
+    /// </exception>
+    /// <example>
+    /// <code>
+    /// var analytics = await qrCodeClient.GetAnalyticsAsync("qr123", new LinkAnalyticsQuery
+    /// {
+    ///     From = new DateTime(2026, 10, 1),
+    ///     To = new DateTime(2026, 10, 31),
+    ///     Interval = LinkAnalyticsInterval.Week,
+    ///     AllBreakdowns = true
+    /// });
+    /// Console.WriteLine(analytics.Totals.Visits);
+    /// foreach (var row in analytics.Breakdowns.GetValueOrDefault("device") ?? new())
+    ///     Console.WriteLine($"{row.Key}: {row.Visits}");
+    /// </code>
+    /// </example>
+    public async Task<LinkAnalyticsModel> GetAnalyticsAsync(
+        string id,
+        LinkAnalyticsQuery? query = null,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await _http.GetAsync<LinkAnalyticsModel>(
+            LinkAnalyticsQueryHelper.BuildPath(BasePath, id),
+            LinkAnalyticsQueryHelper.ToQueryParams(query),
+            cancellationToken);
+
+        return response.Result ?? throw new InvalidOperationException("QR code analytics were not returned");
+    }
+
+    /// <summary>
+    /// Account-wide statistics over all your QR codes (<c>GET /api/qr-code/statistics</c>):
+    /// lifetime totals, visit totals in the range, a <c>daily</c> list in UTC days
+    /// and the top ten QR codes by visits in the range.
+    /// </summary>
+    /// <remarks>
+    /// <para><c>VisitsInRange</c>, <c>UniqueVisitorsInRange</c>, <c>BotVisitsInRange</c>,
+    /// <c>Daily[].VisitorsSum</c> and <c>TopQRCodes[].VisitsInRange</c> come from visit
+    /// analytics: bots excluded, uniques summed per UTC day, nothing before
+    /// analytics launched. <c>TotalVisitors</c> is the lifetime counter and still
+    /// includes older visits.</para>
+    /// <para>Visits are visits to the codes' Posty5 pages; a scan of a static code
+    /// opens its content directly and is not seen by Posty5.</para>
+    /// <para>Days are UTC days whatever your account time zone; use
+    /// <see cref="GetAnalyticsAsync"/> for one QR code in your time zone.</para>
+    /// </remarks>
+    /// <param name="query">Preset period or custom <c>From</c>/<c>To</c>; <c>null</c> for the last 30 days.</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The resolved range and the statistics</returns>
+    /// <exception cref="ArgumentException"><c>From</c>/<c>To</c> set with a non-custom <c>Period</c>, or <c>From</c> after <c>To</c>.</exception>
+    /// <example>
+    /// <code>
+    /// var stats = await qrCodeClient.GetStatisticsAsync(new LinkStatisticsQuery { Period = LinkStatisticsPeriod.Last7Days });
+    /// Console.WriteLine($"{stats.Data.Totals.VisitsInRange} visits since {stats.Range.From:d}");
+    /// foreach (var day in stats.Data.Daily)
+    ///     Console.WriteLine($"{day.Day}: {day.VisitorsSum}");
+    /// </code>
+    /// </example>
+    public async Task<QRCodeStatisticsModel> GetStatisticsAsync(
+        LinkStatisticsQuery? query = null,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await _http.GetAsync<QRCodeStatisticsModel>(
+            LinkAnalyticsQueryHelper.BuildStatisticsPath(BasePath),
+            LinkAnalyticsQueryHelper.ToStatisticsQueryParams(query),
+            cancellationToken);
+
+        return response.Result ?? throw new InvalidOperationException("QR code statistics were not returned");
+    }
+
+    /// <summary>
     /// Delete a QR code
     /// </summary>
     /// <param name="id">QR code ID</param>
@@ -881,12 +942,12 @@ public class QRCodeClient
     /// 
     /// // List with filters and cursor pagination
     /// var filtered = await qrCodeClient.ListAsync(
-    ///     new QRCodeListParamsModel { Status = "approved", Tag = "marketing" },
+    ///     new QRCodeListParamsModel { Status = QRCodeStatusType.Approved, Tag = "marketing" },
     ///     new PaginationParams { Cursor = null, PageSize = 20 }
     /// );
     /// // Get next page using cursor from previous response
     /// var nextPage = await qrCodeClient.ListAsync(
-    ///     new QRCodeListParamsModel { Status = "approved" },
+    ///     new QRCodeListParamsModel { Status = QRCodeStatusType.Approved },
     ///     new PaginationParams { Cursor = filtered.Pagination.NextCursor, PageSize = 20 }
     /// );
     /// </code>
@@ -910,8 +971,6 @@ public class QRCodeClient
                 queryParams["tag"] = listParams.Tag;
             if (!string.IsNullOrEmpty(listParams.RefId))
                 queryParams["refId"] = listParams.RefId;
-            if (listParams.IsEnableMonetization.HasValue)
-                queryParams["isEnableMonetization"] = listParams.IsEnableMonetization.Value;
             if (listParams.Status.HasValue)
                 queryParams["status"] = listParams.Status.Value.ToString();
             if (!string.IsNullOrEmpty(listParams.CreatedFrom))

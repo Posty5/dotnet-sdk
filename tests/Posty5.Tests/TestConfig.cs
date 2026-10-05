@@ -95,6 +95,20 @@ public static class TestConfig
     /// <summary>An API key and a fixture store: the minimum for any live store fact.</summary>
     public static bool HasStoreFixture => Env(ApiKeyVar) is not null && StoreId.Length > 0;
 
+    // ─── Link + QR truth pass (LinkQrTruthPassFact) ──────────────────────────
+
+    /// <summary><c>true</c> when the API under test carries the link-qr truth pass (S13 deep links, TP filters).</summary>
+    public const string LinkQrTruthPassVar = "POSTY5_TEST_LINK_QR_TP";
+
+    public static bool ApiHasLinkQrTruthPass => string.Equals(Env(LinkQrTruthPassVar), "true", StringComparison.OrdinalIgnoreCase);
+
+    // ─── Link + QR visit analytics (LinkQrVisitAnalyticsFact) ────────────────
+
+    /// <summary><c>true</c> when the API under test serves <c>GET /api/short-link|qr-code/{id}/analytics</c> (VA).</summary>
+    public const string LinkQrVisitAnalyticsVar = "POSTY5_TEST_LINK_QR_VA";
+
+    public static bool ApiHasLinkQrVisitAnalytics => string.Equals(Env(LinkQrVisitAnalyticsVar), "true", StringComparison.OrdinalIgnoreCase);
+
     // Store created resource IDs for cleanup
     public static class CreatedResources
     {

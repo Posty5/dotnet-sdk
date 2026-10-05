@@ -57,3 +57,35 @@ silently. Variables are read from the User scope, then the process
 
 Never run by any fact: connect, replace credentials, disconnect, set enabled.
 
+## Short-link and QR payload tests (link-qr truth pass)
+
+`ShortLinkClientPayloadTests` and `QRCodeClientPayloadTests` (in
+`ShortLinkClientTests.cs` / `QRCodeClientTests.cs`) reuse the store tests'
+`RecordingServer` to pin what goes on the wire: no `isEnableMonetization` ever,
+every create field, omitted-when-null update keys, the `pageInfo.title` list key,
+no client-built `options.text` for structured QR types.
+
+Live facts that need the API's truth-pass release use `[LinkQrTruthPassFact]`
+(`tests/Posty5.Tests/LinkQrTruthPassFactAttribute.cs`): skipped unless
+`POSTY5_API_KEY` is set and `POSTY5_TEST_LINK_QR_TP=true` says the API under
+test carries the release (deep links, landing page kept on update, the
+`pageInfo.title` and QR `refId` filters).
+
+## Short-link and QR analytics tests (visit analytics, VA)
+
+`ShortLinkClientPayloadTests` pins `GetAnalyticsAsync` offline: the
+`/api/short-link/{id}/analytics` path, every query key (`from`/`to` as
+`yyyy-MM-dd` even under `ar-SA`, `breakdown` comma list or `all`, empty list
+omitted), `ArgumentException` before sending for `AllBreakdowns` + a list or an
+empty id and `ArgumentOutOfRangeException` for a `Limit` outside 1-50, the
+missing-record 400 (`Posty5ValidationException`), the full C2 answer (`AnalyticsSampleJson`), and the feature-lock 403
+as `Posty5Exception` with `StatusCode == 403`. `QRCodeClientPayloadTests` reuses
+the sample and checks the QR path. `GetStatisticsAsync` payload tests (both
+files) pin `/statistics`, `period`/`from`/`to`, the argument checks and the
+rebuilt answer (`_id` day rows, `...InRange` totals, top rows). `RecordingServer.Message` sets the envelope's
+`message` for error answers.
+
+Live facts use `[LinkQrVisitAnalyticsFact]`: skipped unless `POSTY5_API_KEY` is
+set and `POSTY5_TEST_LINK_QR_VA=true` (the API under test serves the analytics
+endpoints). They create a link / code, then check zeros + `Meta.AnalyticsStartedAt`,
+`AllBreakdowns`, an explicit list, and a 400 for an unknown interval.

@@ -64,38 +64,38 @@ Posty5.Tests/
 
 #### Response Models
 - [x] `QRCodeModel` - Main QR code response
-- [x] `PreviewReason` - Moderation scores
-- [x] `QRCodePageInfo` - Landing page configuration
+- [x] `QRCodePreviewReasonModel` - Moderation scores
+- [x] `QRCodePageInfoModel` - Landing page configuration
 
 #### Target Models
-- [x] `QRCodeTarget` - Target wrapper
-- [x] `QRCodeEmailTarget` - Email configuration
-- [x] `QRCodeWifiTarget` - WiFi configuration
-- [x] `QRCodeCallTarget` - Call configuration
-- [x] `QRCodeSmsTarget` - SMS configuration
-- [x] `QRCodeUrlTarget` - URL configuration
-- [x] `QRCodeGeolocationTarget` - Geolocation configuration
+- [x] `QRCodeTargetModel` - Target wrapper
+- [x] `QRCodeEmailTargetModel` - Email configuration
+- [x] `QRCodeWifiTargetModel` - WiFi configuration
+- [x] `QRCodeCallTargetModel` - Call configuration
+- [x] `QRCodeSmsTargetModel` - SMS configuration
+- [x] `QRCodeUrlTargetModel` - URL configuration
+- [x] `QRCodeGeolocationTargetModel` - Geolocation configuration
 
 #### Request Models (Create)
-- [x] `CreateFreeTextQRCodeRequest`
-- [x] `CreateEmailQRCodeRequest`
-- [x] `CreateWifiQRCodeRequest`
-- [x] `CreateCallQRCodeRequest`
-- [x] `CreateSMSQRCodeRequest`
-- [x] `CreateURLQRCodeRequest`
-- [x] `CreateGeolocationQRCodeRequest`
+- [x] `QRCodeCreateFreeTextRequestModel`
+- [x] `QRCodeCreateEmailRequestModel`
+- [x] `QRCodeCreateWifiRequestModel`
+- [x] `QRCodeCreateCallRequestModel`
+- [x] `QRCodeCreateSMSRequestModel`
+- [x] `QRCodeCreateURLRequestModel`
+- [x] `QRCodeCreateGeolocationRequestModel`
 
 #### Request Models (Update)
-- [x] `UpdateFreeTextQRCodeRequest`
-- [x] `UpdateEmailQRCodeRequest`
-- [x] `UpdateWifiQRCodeRequest`
-- [x] `UpdateCallQRCodeRequest`
-- [x] `UpdateSMSQRCodeRequest`
-- [x] `UpdateURLQRCodeRequest`
-- [x] `UpdateGeolocationQRCodeRequest`
+- [x] `QRCodeUpdateFreeTextRequestModel`
+- [x] `QRCodeUpdateEmailRequestModel`
+- [x] `QRCodeUpdateWifiRequestModel`
+- [x] `QRCodeUpdateCallRequestModel`
+- [x] `QRCodeUpdateSMSRequestModel`
+- [x] `QRCodeUpdateURLRequestModel`
+- [x] `QRCodeUpdateGeolocationRequestModel`
 
 #### Filter Models
-- [x] `ListQRCodesParams` - List/search parameters
+- [x] `QRCodeListParamsModel` - List/search parameters
 
 ---
 
@@ -145,7 +145,7 @@ Posty5.Tests/
 20. ✅ `DeleteQRCode_ShouldDeleteSuccessfully`
 
 #### Advanced Features Tests (1)
-21. ✅ `CreateQRCode_WithMonetization_ShouldIncludePageInfo`
+21. ✅ `CreateQRCode_WithLandingPage_ShouldIncludePageInfo` (was `..._WithMonetization_...` before 3.2.0)
 
 ---
 
@@ -155,7 +155,7 @@ Posty5.Tests/
 - Exact method name mapping (camelCase → PascalCase + Async)
 - Identical logic patterns (qrCodeTarget extraction and clearing)
 - Same API endpoint (`/api/qr-code`)
-- Matching options.text formats for all QR types
+- From 3.2.0 the typed methods send `qrCodeTarget` only; the API builds `options.text` (free text still sends it)
 
 ### 2. .NET Best Practices ✅
 - Async/await with `CancellationToken` support
@@ -175,11 +175,11 @@ All 7 QR code types fully supported:
 
 ### 4. Advanced Features ✅
 - ✅ Custom landing page IDs
-- ✅ Monetization support with page info
+- ✅ Landing page title/description (`IsEnableLandingPage` + `PageInfo`; monetization was never accepted by the API and is obsolete from 3.2.0)
 - ✅ Reference IDs and tags for tracking
 - ✅ Pagination and filtering
 - ✅ Status tracking
-- ✅ Visitor analytics
+- ✅ Visit counts (visits to the code's Posty5 page)
 
 ---
 
@@ -201,7 +201,7 @@ All 7 QR code types fully supported:
 
 ## 🔧 Technical Details
 
-### Options Text Formats (Matching TypeScript Exactly)
+### Options Text Formats (built by the API since 3.2.0; the SDK no longer sends them)
 ```csharp
 Free Text:      "{text}"
 Email:          "mailto:{email}?subject={subject}&body={body}"
@@ -232,7 +232,7 @@ var payload = new {
     request.TemplateId,
     // ... other fields
     qrCodeTarget,
-    options = new { text = "formatted text" },
+    // options.text: sent for free text only since 3.2.0
     templateType = "user",
     createdFrom = "dotnetPackage"
 };
@@ -250,7 +250,7 @@ return response.Result ?? throw new InvalidOperationException();
 - ✅ Installation instructions
 - ✅ Quick start guide
 - ✅ Examples for all 7 QR code types
-- ✅ Advanced features (monetization, custom landing pages)
+- ✅ Advanced features (landing page title/description, custom landing pages)
 - ✅ Error handling examples
 - ✅ Complete API reference
 
