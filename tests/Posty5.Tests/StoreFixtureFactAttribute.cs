@@ -21,20 +21,12 @@ public sealed class StoreFixtureFactAttribute : FactAttribute
         var missing = new[] { TestConfig.ApiKeyVar, TestConfig.StoreIdVar }
             .Concat(requiredVariables)
             .Distinct()
-            .Where(name => !IsSet(name))
+            .Where(name => !TestConfig.IsSet(name))
             .ToList();
 
         if (missing.Count > 0)
         {
             Skip = $"Live store fixture not set: {string.Join(", ", missing)}.";
         }
-    }
-
-    private static bool IsSet(string name)
-    {
-        var value = TestConfig.Env(name);
-        return name.Contains("_ALLOW_", StringComparison.Ordinal)
-            ? string.Equals(value, "true", StringComparison.OrdinalIgnoreCase)
-            : value is not null;
     }
 }

@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using Posty5.Core.Configuration;
 using Posty5.Core.Http;
 using Posty5.Core.Models;
 using Posty5.HtmlHosting.Models;
@@ -47,7 +48,7 @@ public class HtmlHostingClient
             data.AutoSaveInGoogleSheet,
             data.RefId,
             data.Tag,
-            createdFrom = "dotnetPackage"
+            createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
         var response = await _http.PostAsync<HtmlHostingCreatePageResponseModel>($"{BasePath}/file", payload, cancellationToken);
@@ -87,7 +88,7 @@ public class HtmlHostingClient
             data.AutoSaveInGoogleSheet,
             data.RefId,
             data.Tag,
-            createdFrom = "dotnetPackage"
+            createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
         var response = await _http.PostAsync<HtmlHostingCreatePageResponseModel>($"{BasePath}/github", payload, cancellationToken);

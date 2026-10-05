@@ -1,3 +1,4 @@
+using Posty5.Core.Configuration;
 using Posty5.Core.Http;
 using Posty5.Core.Models;
 using Posty5.Store.Models;
@@ -78,12 +79,17 @@ public class StoreOrdersClient : StoreClientBase
 
     /// <summary>
     /// Record an order received off-store. Runs the same pricing, stock,
-    /// numbering and tracking machinery as a real checkout, tagged
-    /// <c>createdFrom: "dotnet"</c>. Charges the deferred manualOrder op.
-    /// Shipping is resolved server-side from the destination — never send a fee.
+    /// numbering and tracking machinery as a real checkout, tagged with
+    /// <see cref="CreateOrderInput.CreatedFrom"/> — filled in here when null, from
+    /// <c>Posty5Options.CreatedFrom</c> or else <c>"dotnet"</c>. Charges the
+    /// deferred manualOrder op. Shipping is resolved server-side from the
+    /// destination — never send a fee.
     /// </summary>
     public async Task<StoreOrder?> CreateAsync(string storeId, CreateOrderInput order, CancellationToken cancellationToken = default)
     {
+        if (order == null) throw new ArgumentNullException(nameof(order));
+        order.CreatedFrom ??= Http.ResolveCreatedFrom(CreatedFromDefaults.StoreOrder);
+
         var response = await Http.PostAsync<StoreOrder>($"{Base}/{storeId}", order, cancellationToken);
         return response.Result;
     }

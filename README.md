@@ -11,6 +11,8 @@ The SDK is split into multiple packages for modularity:
 - **Posty5.ShortLink** - URL shortener functionality
 - **Posty5.HtmlHosting** - HTML page hosting
 - **Posty5.SocialPublisher** - Social media publishing tools
+- **Posty5.Store** - Online store: catalogue, orders, shipping, dropshipping
+- **Posty5.Account** - Who the API key belongs to, credits, credit history, live operation prices
 
 ## 🚀 Installation
 
@@ -22,6 +24,7 @@ dotnet add package Posty5.QRCode
 dotnet add package Posty5.ShortLink
 dotnet add package Posty5.HtmlHosting
 dotnet add package Posty5.SocialPublisher
+dotnet add package Posty5.Account
 ```
 
 Or via Package Manager Console:
@@ -205,15 +208,46 @@ var posts = await postClient.ListAsync(
 
 ## 🔧 Advanced Configuration
 
-### Custom Timeout and Retry Settings
+### Options
 
 ```csharp
 var options = new Posty5Options
 {
     ApiKey = "your-api-key",
-    Debug = true
+    Debug = true,
+
+    // Sent on every request. X-API-Key cannot be set here (the constructor
+    // throws); an X-Posty5-Client entry replaces the SDK's own label.
+    DefaultHeaders = new() { ["X-Correlation-Id"] = "abc-123" },
+
+    // The createdFrom label on everything this client creates. Null keeps the
+    // package defaults ("dotnetPackage"; "dotnet" for store orders).
+    CreatedFrom = "my-crm"
 };
 ```
+
+Every request carries `X-Posty5-Client: posty5-dotnet/<Posty5.Core version>`.
+The request timeout is 120 seconds, and there are **no automatic retries** — a
+failed request is reported, never repeated, so a create is not sent twice.
+
+### Agent essentials: who am I, what does it cost, which id
+
+| Package | Method | Route |
+| --- | --- | --- |
+| `Posty5.Account` | `AccountClient.GetCurrentAsync()` | `GET /api/api-key/current` |
+| `Posty5.Account` | `AccountClient.GetCreditsAsync()` | `GET /api/user/current/credits` |
+| `Posty5.Account` | `AccountClient.GetCreditUsageAsync(filters?, pagination?)` | `GET /api/user/current/credit-usage` |
+| `Posty5.Account` | `AccountClient.GetCreditUsageSummaryAsync(filters?)` | `GET /api/user/current/credit-usage/summary` |
+| `Posty5.Account` | `AccountClient.GetOperationCostsAsync(activeOnly = true)` | `GET /api/plans/operation-costs` |
+| `Posty5.Store` | `StoreClient.ListStoresAsync()`, `LookupStoresAsync(term?)` | `GET /api/store/lookup` |
+| `Posty5.SocialPublisherWorkspace` | `SocialPublisherAccountClient.ListAsync / LookupAsync / GetAsync` | `GET /api/social-publisher-account`, `/lookup`, `/{id}` |
+| `Posty5.QRCode` | `QRCodeTemplateClient.ListUserTemplatesAsync / ListPublicTemplatesAsync` | `GET /api/qr-code-template/user-lookup`, `/public-lookup` |
+| `Posty5.SocialPublisherPost` | `CreateTextPostToWorkspaceAsync / ToAccountAsync` | `POST /api/social-publisher-post/text/workspace\|account[/{id}]` |
+| `Posty5.SocialPublisherPost` | `CreateStoryPostToWorkspaceAsync / ToAccountAsync` (media by URL) | `POST /api/social-publisher-post/story/workspace\|account` |
+| `Posty5.SocialPublisherPost` | `RemovePostAsync(id)` | `POST /api/social-publisher-post/{id}/remove` |
+| `Posty5.SocialPublisherPost` | `GetStatusAsync(id)` (route fixed in 4.6.0) | `GET /api/social-publisher-post/{id}/status` |
+
+See [GETTING_STARTED.md](GETTING_STARTED.md#check-the-key-find-the-ids-then-act) for a walk-through.
 
 ### Error Handling
 
@@ -325,14 +359,16 @@ This SDK ecosystem contains the following tool packages:
 
 | Package                                                                    | Description                   | Version | NuGet                                                                       |
 | -------------------------------------------------------------------------- | ----------------------------- | ------- | --------------------------------------------------------------------------- |
-| [Posty5.Core](./src/Posty5.Core)                                           | Core HTTP client and models   | 1.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.Core)                      |
-| [Posty5.ShortLink](./src/Posty5.ShortLink)                                 | URL shortener client          | 1.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.ShortLink)                 |
-| [Posty5.QRCode](./src/Posty5.QRCode)                                       | QR code generator client      | 1.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.QRCode)                    |
-| [Posty5.HtmlHosting](./src/Posty5.HtmlHosting)                             | HTML hosting client           | 1.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHosting)               |
-| [Posty5.HtmlHostingVariables](./src/Posty5.HtmlHostingVariables)           | Variable management           | 1.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHostingVariables)      |
-| [Posty5.HtmlHostingFormSubmission](./src/Posty5.HtmlHostingFormSubmission) | Form submission management    | 1.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHostingFormSubmission) |
-| [Posty5.SocialPublisherWorkspace](./src/Posty5.SocialPublisherWorkspace)   | Social workspace management   | 1.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.SocialPublisherWorkspace)  |
-| [Posty5.SocialPublisherPost](./src/Posty5.SocialPublisherPost)             | Social publishing post client | 1.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.SocialPublisherPost)       |
+| [Posty5.Core](./src/Posty5.Core)                                           | Core HTTP client and models   | 3.1.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.Core)                      |
+| [Posty5.Account](./src/Posty5.Account)                                     | Key owner, credits, prices    | 3.1.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.Account)                   |
+| [Posty5.ShortLink](./src/Posty5.ShortLink)                                 | URL shortener client          | 3.1.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.ShortLink)                 |
+| [Posty5.QRCode](./src/Posty5.QRCode)                                       | QR code generator client      | 3.1.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.QRCode)                    |
+| [Posty5.HtmlHosting](./src/Posty5.HtmlHosting)                             | HTML hosting client           | 3.1.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHosting)               |
+| [Posty5.HtmlHostingVariables](./src/Posty5.HtmlHostingVariables)           | Variable management           | 3.1.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHostingVariables)      |
+| [Posty5.HtmlHostingFormSubmission](./src/Posty5.HtmlHostingFormSubmission) | Form submission management    | 3.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHostingFormSubmission) |
+| [Posty5.SocialPublisherWorkspace](./src/Posty5.SocialPublisherWorkspace)   | Social workspace management   | 3.1.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.SocialPublisherWorkspace)  |
+| [Posty5.SocialPublisherPost](./src/Posty5.SocialPublisherPost)             | Social publishing post client | 4.6.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.SocialPublisherPost)       |
+| [Posty5.Store](./src/Posty5.Store)                                         | Online store client           | 3.3.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.Store)                     |
 
 ---
 

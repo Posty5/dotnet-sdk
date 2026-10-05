@@ -1,3 +1,4 @@
+using Posty5.Core.Configuration;
 using Posty5.Core.Http;
 using Posty5.Core.Models;
 using Posty5.ShortLink.Models;
@@ -111,7 +112,7 @@ public class ShortLinkClient
             request.TemplateId,
             request.CustomLandingId,
             TemplateType = "user",
-            CreatedFrom = "dotnetPackage"
+            CreatedFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
         var response = await _http.PostAsync<ShortLinkModel>(BasePath, data, cancellationToken);

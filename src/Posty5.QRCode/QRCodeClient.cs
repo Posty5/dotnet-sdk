@@ -1,3 +1,4 @@
+using Posty5.Core.Configuration;
 using Posty5.Core.Http;
 using Posty5.Core.Models;
 using Posty5.QRCode.Models;
@@ -87,7 +88,7 @@ public class QRCodeClient
                 text = qrCodeTarget.freeText.text
             },
             templateType = "user",
-            createdFrom = "dotnetPackage"
+            createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
         var response = await _http.PostAsync<QRCodeModel>($"{BasePath}/freeText", payload, cancellationToken);
@@ -143,7 +144,7 @@ public class QRCodeClient
                 text = $"mailto:{qrCodeTarget.email.Email}?subject={qrCodeTarget.email.Subject}&body={qrCodeTarget.email.Body}"
             },
             templateType = "user",
-            createdFrom = "dotnetPackage"
+            createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
         var response = await _http.PostAsync<QRCodeModel>($"{BasePath}/email", payload, cancellationToken);
@@ -199,7 +200,7 @@ public class QRCodeClient
                 text = $"WIFI:T:{qrCodeTarget.wifi.AuthenticationType};S:{qrCodeTarget.wifi.Name};P:{qrCodeTarget.wifi.Password};"
             },
             templateType = "user",
-            createdFrom = "dotnetPackage"
+            createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
         var response = await _http.PostAsync<QRCodeModel>($"{BasePath}/wifi", payload, cancellationToken);
@@ -253,7 +254,7 @@ public class QRCodeClient
                 text = $"tel:{qrCodeTarget.call.PhoneNumber}"
             },
             templateType = "user",
-            createdFrom = "dotnetPackage"
+            createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
         var response = await _http.PostAsync<QRCodeModel>($"{BasePath}/call", payload, cancellationToken);
@@ -308,7 +309,7 @@ public class QRCodeClient
                 text = $"sms:{qrCodeTarget.sms.PhoneNumber}?body={qrCodeTarget.sms.Message}"
             },
             templateType = "user",
-            createdFrom = "dotnetPackage"
+            createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
         var response = await _http.PostAsync<QRCodeModel>($"{BasePath}/sms", payload, cancellationToken);
@@ -361,7 +362,7 @@ public class QRCodeClient
                 text = qrCodeTarget.url.Url
             },
             templateType = "user",
-            createdFrom = "dotnetPackage"
+            createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
         var response = await _http.PostAsync<QRCodeModel>($"{BasePath}/url", payload, cancellationToken);
@@ -416,7 +417,7 @@ public class QRCodeClient
                 text = $"geo:{qrCodeTarget.geolocation.Latitude},{qrCodeTarget.geolocation.Longitude}"
             },
             templateType = "user",
-            createdFrom = "dotnetPackage"
+            createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
         var response = await _http.PostAsync<QRCodeModel>($"{BasePath}/geolocation", payload, cancellationToken);
@@ -473,7 +474,7 @@ public class QRCodeClient
                 text = qrCodeTarget.freeText.text
             },
             templateType = "user",
-            createdFrom = "dotnetPackage"
+            createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
         var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/freeText/{id}", payload, cancellationToken);
@@ -531,7 +532,7 @@ public class QRCodeClient
                 text = $"mailto:{qrCodeTarget.email.Email}?subject={qrCodeTarget.email.Subject}&body={qrCodeTarget.email.Body}"
             },
             templateType = "user",
-            createdFrom = "dotnetPackage"
+            createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
         var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/email/{id}", payload, cancellationToken);
@@ -589,7 +590,7 @@ public class QRCodeClient
                 text = $"WIFI:T:{qrCodeTarget.wifi.AuthenticationType};S:{qrCodeTarget.wifi.Name};P:{qrCodeTarget.wifi.Password};"
             },
             templateType = "user",
-            createdFrom = "dotnetPackage"
+            createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
         var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/wifi/{id}", payload, cancellationToken);
@@ -645,7 +646,7 @@ public class QRCodeClient
                 text = $"tel:{qrCodeTarget.call.PhoneNumber}"
             },
             templateType = "user",
-            createdFrom = "dotnetPackage"
+            createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
         var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/call/{id}", payload, cancellationToken);
@@ -702,7 +703,7 @@ public class QRCodeClient
                 text = $"sms:{qrCodeTarget.sms.PhoneNumber}?body={qrCodeTarget.sms.Message}"
             },
             templateType = "user",
-            createdFrom = "dotnetPackage"
+            createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
         var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/sms/{id}", payload, cancellationToken);
@@ -757,7 +758,7 @@ public class QRCodeClient
                 text = qrCodeTarget.url.Url
             },
             templateType = "user",
-            createdFrom = "dotnetPackage"
+            createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
         var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/url/{id}", payload, cancellationToken);
@@ -814,7 +815,7 @@ public class QRCodeClient
                 text = $"geo:{qrCodeTarget.geolocation.Latitude},{qrCodeTarget.geolocation.Longitude}"
             },
             templateType = "user",
-            createdFrom = "dotnetPackage"
+            createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
         var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/geolocation/{id}", payload, cancellationToken);

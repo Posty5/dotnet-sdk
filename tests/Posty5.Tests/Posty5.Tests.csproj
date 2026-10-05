@@ -32,6 +32,7 @@
     <ProjectReference Include="..\..\src\Posty5.SocialPublisherPost\Posty5.SocialPublisherPost.csproj" />
     <ProjectReference Include="..\..\src\Posty5.HtmlHostingFormSubmission\Posty5.HtmlHostingFormSubmission.csproj" />
     <ProjectReference Include="..\..\src\Posty5.Store\Posty5.Store.csproj" />
+    <ProjectReference Include="..\..\src\Posty5.Account\Posty5.Account.csproj" />
   </ItemGroup>
 
   <ItemGroup>

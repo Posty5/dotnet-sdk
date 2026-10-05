@@ -1,6 +1,4 @@
 using System.Net;
-using System.Net.Sockets;
-using System.Text;
 using System.Text.Json;
 using Posty5.Core.Configuration;
 using Posty5.Core.Exceptions;
@@ -14,69 +12,17 @@ using Xunit;
 namespace Posty5.Tests.Store;
 
 /// <summary>
-/// A local HTTP server the real <see cref="Posty5HttpClient"/> is pointed at. It
-/// records each request and answers with the API's envelope, so routes, verbs,
-/// query strings and bodies are pinned without the network.
+/// Offline: the real <see cref="Posty5HttpClient"/> against a
+/// <see cref="RecordingServer"/>, so every supplier route is pinned.
 /// </summary>
-internal sealed class RecordingServer : IDisposable
-{
-    private readonly HttpListener _listener = new();
-    private readonly CancellationTokenSource _stop = new();
-
-    public List<(string Method, string PathAndQuery, string Body)> Requests { get; } = new();
-    public string ResultJson { get; set; } = "{}";
-    public HttpStatusCode Status { get; set; } = HttpStatusCode.OK;
-    public string BaseUrl { get; }
-
-    public RecordingServer()
-    {
-        var probe = new TcpListener(IPAddress.Loopback, 0);
-        probe.Start();
-        var port = ((IPEndPoint)probe.LocalEndpoint).Port;
-        probe.Stop();
-
-        BaseUrl = $"http://127.0.0.1:{port}";
-        _listener.Prefixes.Add($"{BaseUrl}/");
-        _listener.Start();
-        _ = Task.Run(LoopAsync);
-    }
-
-    private async Task LoopAsync()
-    {
-        while (!_stop.IsCancellationRequested)
-        {
-            HttpListenerContext context;
-            try { context = await _listener.GetContextAsync(); }
-            catch { return; }
-
-            using var reader = new StreamReader(context.Request.InputStream, Encoding.UTF8);
-            var body = await reader.ReadToEndAsync();
-            lock (Requests) Requests.Add((context.Request.HttpMethod, context.Request.RawUrl ?? "", body));
-
-            var payload = Encoding.UTF8.GetBytes($"{{\"message\":\"ok\",\"result\":{ResultJson}}}");
-            context.Response.StatusCode = (int)Status;
-            context.Response.ContentType = "application/json";
-            await context.Response.OutputStream.WriteAsync(payload);
-            context.Response.Close();
-        }
-    }
-
-    public StoreSuppliersClient Client() =>
-        new(new Posty5HttpClient(new Posty5Options { ApiKey = "test-key", BaseUrl = BaseUrl }));
-
-    public void Dispose()
-    {
-        _stop.Cancel();
-        _listener.Close();
-    }
-}
-
 public class StoreSuppliersRouteTests : IDisposable
 {
     private const string Base = "/api/store-suppliers/s1";
     private readonly RecordingServer _server = new();
 
     public void Dispose() => _server.Dispose();
+
+    private StoreSuppliersClient Client() => new(_server.Http());
 
     [Fact]
     public void StoreClient_ExposesSuppliers()
@@ -88,7 +34,7 @@ public class StoreSuppliersRouteTests : IDisposable
     [Fact]
     public async Task ConnectAsync_SendsCredentialKeysExactly_InTheBody()
     {
-        await _server.Client().ConnectAsync("s1", new ConnectSupplierInput
+        await Client().ConnectAsync("s1", new ConnectSupplierInput
         {
             SupplierKey = "cjdropshipping",
             Credentials = new Dictionary<string, string> { ["apiKey"] = "secret", ["AppSecret"] = "x" },
@@ -110,14 +56,14 @@ public class StoreSuppliersRouteTests : IDisposable
     public async Task ListAsync_UnwrapsItems()
     {
         _server.ResultJson = "{\"items\":[{\"_id\":\"i1\",\"supplierKey\":\"cjdropshipping\",\"hasCredentials\":true}]}";
-        var list = await _server.Client().ListAsync("s1");
+        var list = await Client().ListAsync("s1");
         Assert.Equal("i1", Assert.Single(list).Id);
     }
 
     [Fact]
     public async Task ConnectionRoutes_MapToTheApi()
     {
-        var client = _server.Client();
+        var client = Client();
         await client.GetCatalogueAsync("s1");
         await client.ReplaceCredentialsAsync("s1", "i1", new ReplaceSupplierCredentialsInput { Credentials = new() { ["apiKey"] = "k" } });
         await client.UpdateSettingsAsync("s1", "i1", new UpdateSupplierSettingsInput { Settings = new() { ["fromCountryCode"] = "US" } });
@@ -151,7 +97,7 @@ public class StoreSuppliersRouteTests : IDisposable
     public async Task ProductAndLinkRoutes_MapToTheApi()
     {
         _server.ResultJson = "{\"items\":[]}";
-        var client = _server.Client();
+        var client = Client();
         await client.BrowseProductsAsync("s1", "i1", new BrowseSupplierProductsParams { Q = "mug" }, page: 2);
         await client.GetProductAsync("s1", "i1", "p/1");
         await client.ResolveUrlAsync("s1", "i1", "https://cjdropshipping.com/product/x");
@@ -183,7 +129,7 @@ public class StoreSuppliersRouteTests : IDisposable
     [Fact]
     public async Task SupplierOrderRoutes_EncodeThePartKey()
     {
-        var client = _server.Client();
+        var client = Client();
         await client.ListSupplierOrdersAsync("s1", new SupplierOrderSearchParams { NeedsReview = true }, new PaginationParams { PageSize = 25 });
         await client.GetSupplierOrderAsync("s1", "so1");
         await client.SubmitGroupAsync("s1", "o1", "supplier:i1", payNow: true);
@@ -210,7 +156,7 @@ public class StoreSuppliersRouteTests : IDisposable
     public async Task ListSupplierOrders_PagesByCursor_AndReadsTheListEnvelope()
     {
         _server.ResultJson = "{\"items\":[{\"_id\":\"so2\"}],\"pagination\":{\"nextCursor\":\"c3\",\"previousCursor\":\"c1\",\"hasMore\":true,\"totalCount\":30,\"pageSize\":25}}";
-        var page = await _server.Client().ListSupplierOrdersAsync("s1",
+        var page = await Client().ListSupplierOrdersAsync("s1",
             new SupplierOrderSearchParams { Status = SupplierOrderStatuses.Failed },
             new PaginationParams { Cursor = "c2", PageSize = 25 });
 
@@ -230,11 +176,11 @@ public class StoreSuppliersRouteTests : IDisposable
     public async Task ImportResult_TellsQueuedFromInline()
     {
         _server.ResultJson = "{\"jobId\":\"j1\",\"rows\":null}";
-        var queued = await _server.Client().ImportProductsAsync("s1", "i1", new ImportSupplierProductsInput());
+        var queued = await Client().ImportProductsAsync("s1", "i1", new ImportSupplierProductsInput());
         Assert.True(queued!.IsQueued);
 
         _server.ResultJson = "{\"jobId\":null,\"rows\":[{\"supplierProductId\":\"p1\",\"state\":\"added\"}]}";
-        var inline = await _server.Client().ImportProductsAsync("s1", "i1", new ImportSupplierProductsInput());
+        var inline = await Client().ImportProductsAsync("s1", "i1", new ImportSupplierProductsInput());
         Assert.False(inline!.IsQueued);
         Assert.Equal("added", Assert.Single(inline.Rows!).State);
     }
@@ -243,7 +189,7 @@ public class StoreSuppliersRouteTests : IDisposable
     public async Task PausedOutcome_Throws()
     {
         _server.Status = HttpStatusCode.BadRequest;
-        await Assert.ThrowsAsync<Posty5ValidationException>(() => _server.Client().RetryAsync("s1", "so1"));
+        await Assert.ThrowsAsync<Posty5ValidationException>(() => Client().RetryAsync("s1", "so1"));
     }
 }
 

@@ -11,7 +11,9 @@ namespace Posty5.Store;
 /// </summary>
 /// <remarks>
 /// Authenticate with an API key on <see cref="Posty5HttpClient"/> (sent as the
-/// <c>X-API-Key</c> header). Every call is scoped to a store id and authorized
+/// <c>X-API-Key</c> header). <see cref="ListStoresAsync"/> and
+/// <see cref="LookupStoresAsync"/> find the store ids; every other call is
+/// scoped to a store id and authorized
 /// by the key owner's store permission: <c>products.manage</c> for the catalogue
 /// and tags, <c>orders.view</c> / <c>orders.create</c> /
 /// <c>orders.updateStatus</c> for orders and customers, <c>settings.manage</c>
@@ -53,18 +55,56 @@ public class StoreClient
     /// <summary>Dropshipping: supplier connections, imports, product links and supplier orders.</summary>
     public StoreSuppliersClient Suppliers { get; }
 
+    private readonly Posty5HttpClient _http;
+
     /// <summary>Creates a new Store client.</summary>
     /// <param name="httpClient">HTTP client instance from Posty5.Core.</param>
     public StoreClient(Posty5HttpClient httpClient)
     {
         if (httpClient == null) throw new ArgumentNullException(nameof(httpClient));
 
+        _http = httpClient;
         Products = new StoreProductsClient(httpClient);
         Orders = new StoreOrdersClient(httpClient);
         Tags = new StoreTagsClient(httpClient);
         Customers = new StoreCustomersClient(httpClient);
         Shipping = new StoreShippingClient(httpClient);
         Suppliers = new StoreSuppliersClient(httpClient);
+    }
+
+    // ─── Stores ─────────────────────────────────────────────────────────────
+    //
+    // The only calls that take no storeId: they are how a caller finds one.
+
+    /// <summary>
+    /// The stores you can manage — the ones you own and the ones you are staff
+    /// on — with the id every other method takes as <c>storeId</c>.
+    /// </summary>
+    /// <remarks>
+    /// Same as <see cref="LookupStoresAsync"/> with no search term. The API
+    /// answers one page (its default page size, normally 10); search by name
+    /// or slug with <see cref="LookupStoresAsync"/> when you have more stores
+    /// than that.
+    /// </remarks>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The stores, as id and <c>&lt;slug&gt; - &lt;name&gt;</c>.</returns>
+    public Task<List<StoreLookupItem>> ListStoresAsync(CancellationToken cancellationToken = default)
+        => LookupStoresAsync(null, cancellationToken);
+
+    /// <summary>
+    /// Find the stores you can manage whose name or slug contains
+    /// <paramref name="term"/> (case-insensitive).
+    /// </summary>
+    /// <param name="term">Part of a store name or slug; null or empty lists every store, as <see cref="ListStoresAsync"/> does.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The matching stores, as id and <c>&lt;slug&gt; - &lt;name&gt;</c>.</returns>
+    public async Task<List<StoreLookupItem>> LookupStoresAsync(string? term = null, CancellationToken cancellationToken = default)
+    {
+        var query = new Dictionary<string, object?>();
+        if (!string.IsNullOrWhiteSpace(term)) query["term"] = term;
+
+        var response = await _http.GetAsync<List<StoreLookupItem>>(StoreRoutes.Lookup, query, cancellationToken);
+        return response.Result ?? new List<StoreLookupItem>();
     }
 
     // ─── Shorthands ─────────────────────────────────────────────────────────

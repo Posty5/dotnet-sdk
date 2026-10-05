@@ -2,11 +2,13 @@
 
 ## Purpose
 
-Eight NuGet-ready .NET projects sharing Posty5.Core and typed clients/models for links, QR codes, hosting, variables, form submissions, and social publishing.
+Ten NuGet-ready .NET projects — Posty5.Core plus nine feature packages with typed clients/models for links, QR codes, hosting, variables, form submissions, social publishing, the online store, and the account (key owner, credits, prices).
 
 ## Capabilities
 
-- **Authenticated HTTP client** - owned by `core`.
+- **Authenticated HTTP client** - owned by `core`. Every request carries `X-Posty5-Client: posty5-dotnet/<version>`; `Posty5Options.DefaultHeaders` / `CreatedFrom` configure extra headers and the `createdFrom` label. No retries.
+- **Account: who am I, credits, credit history, operation costs** - owned by `account`.
+- **Online store** (incl. store lookup without a storeId) - owned by `store`.
 - **Short links** - owned by `short-link`.
 - **QR codes** - owned by `qr-code`.
 - **HTML hosting** - owned by `html-hosting`.

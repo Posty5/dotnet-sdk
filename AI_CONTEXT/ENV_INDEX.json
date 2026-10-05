@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-19",
+  "generated_at": "2026-10-05",
   "project": "dotnet-sdk",
   "note": "Names and purposes only; never values.",
   "config": [
@@ -34,6 +34,20 @@
     {
       "name": "Posty5Options.Debug",
       "purpose": "Debug behavior; avoid sensitive data.",
+      "source": "src/Posty5.Core/Configuration/Posty5Options.cs",
+      "category": "runtime",
+      "sensitive": false
+    },
+    {
+      "name": "Posty5Options.DefaultHeaders",
+      "purpose": "Headers sent on every request; X-API-Key refused (ArgumentException), X-Posty5-Client overridable, content headers refused.",
+      "source": "src/Posty5.Core/Configuration/Posty5Options.cs",
+      "category": "runtime",
+      "sensitive": false
+    },
+    {
+      "name": "Posty5Options.CreatedFrom",
+      "purpose": "createdFrom label on created records; null keeps package defaults (CreatedFromDefaults).",
       "source": "src/Posty5.Core/Configuration/Posty5Options.cs",
       "category": "runtime",
       "sensitive": false

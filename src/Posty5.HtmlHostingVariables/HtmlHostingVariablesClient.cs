@@ -1,3 +1,4 @@
+using Posty5.Core.Configuration;
 using Posty5.Core.Http;
 using Posty5.Core.Models;
 using Posty5.HtmlHostingVariables.Models;
@@ -56,7 +57,7 @@ public class HtmlHostingVariablesClient
             data.Value,
             data.Tag,
             data.RefId,
-            createdFrom = "dotnetPackage"
+            createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
         await _http.PostAsync<object>(BasePath, payload, cancellationToken);

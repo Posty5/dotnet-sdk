@@ -36,6 +36,7 @@ jobs:
           dotnet pack src/Posty5.SocialPublisherWorkspace/Posty5.SocialPublisherWorkspace.csproj --configuration Release --output ./nupkg --no-build
           dotnet pack src/Posty5.SocialPublisherPost/Posty5.SocialPublisherPost.csproj --configuration Release --output ./nupkg --no-build
           dotnet pack src/Posty5.Store/Posty5.Store.csproj --configuration Release --output ./nupkg --no-build
+          dotnet pack src/Posty5.Account/Posty5.Account.csproj --configuration Release --output ./nupkg --no-build
 
       - name: List created packages
         run: ls -lh ./nupkg/*.nupkg

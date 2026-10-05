@@ -1,4 +1,5 @@
 ﻿using Posty5.Core.Converts;
+using Posty5.Core.Models;
 using System.Text.Json.Serialization;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -275,6 +276,18 @@ public class CommentRequest
     /// support programmatic comments.
     /// </summary>
     public bool? PostToTiktok { get; set; }
+
+    /// <summary>
+    /// Post the comment as a Threads reply (text only, at most 500 characters).
+    /// Defaults to true.
+    /// </summary>
+    public bool? PostToThreads { get; set; }
+
+    /// <summary>
+    /// Post the comment as a reply on X (text only, at most 280 weighted
+    /// characters). Defaults to true.
+    /// </summary>
+    public bool? PostToTwitter { get; set; }
 }
 
 /// <summary>
@@ -1420,6 +1433,24 @@ public class PostStatusFullDetailsResponse
     /// Image-post metadata — only populated when <c>Type == "image"</c>.
     /// </summary>
     public ImageInfo? Image { get; set; }
+
+    /// <summary>
+    /// The <c>createdFrom</c> label the post was created with, e.g.
+    /// <c>dotnetPackage</c>, <c>mcp</c>, or your own <c>Posty5Options.CreatedFrom</c>.
+    /// </summary>
+    public string? CreatedFrom { get; set; }
+
+    /// <summary>
+    /// The AI assistant that created the post through an MCP connection, as it
+    /// reported itself. Null for posts created any other way.
+    /// </summary>
+    public AgentOrigin? AgentOrigin { get; set; }
+
+    /// <summary>
+    /// For a story (<c>Type == "story"</c>): when it disappears, 24 hours after
+    /// it went out. Null for every other post, and for a story not yet published.
+    /// </summary>
+    public DateTime? StoryExpiresAt { get; set; }
 }
 
 /// <summary>
@@ -1579,6 +1610,23 @@ public readonly record struct SocialPublisherPostStatusType (string Value)
     /// The post is being retried after an error.
     /// </summary>
     public static readonly SocialPublisherPostStatusType Retrying = new("retrying");
+
+    /// <summary>
+    /// The published media is being deleted from the platforms
+    /// (<c>SocialPublisherPostClient.RemovePostAsync</c>).
+    /// </summary>
+    public static readonly SocialPublisherPostStatusType Removing = new("removing");
+
+    /// <summary>
+    /// The published media was deleted from the platforms.
+    /// </summary>
+    public static readonly SocialPublisherPostStatusType Removed = new("removed");
+
+    /// <summary>
+    /// Deleting the published media failed on at least one platform; the
+    /// removal can be tried again.
+    /// </summary>
+    public static readonly SocialPublisherPostStatusType RemoveFailed = new("removeFailed");
 
     //private static readonly HashSet<string> Allowed = new()
     //{

@@ -1,7 +1,8 @@
 # 12 - Testing and Debugging
 
+- **Never run `dotnet test` without the user's approval** (workspace `AI_RULES.md` §0): ask in chat which suite and why; one yes covers one run. `dotnet build` is not a test suite.
 - The shared xUnit project references all SDK projects.
-- Several tests require POSTY5_API_KEY and optionally POSTY5_BASE_URL and exercise live endpoints/media.
+- Several tests require POSTY5_API_KEY and optionally POSTY5_BASE_URL and exercise live endpoints/media. The `Posty5.Tests.Integration` classes are **not** guarded: with a key set and no reachable API at `POSTY5_BASE_URL`, they fail (connection refused) rather than skip.
 - Run build even when live credentials are unavailable; report skipped integration verification explicitly.
 - Package versions are not fully uniform, so release work must audit every csproj.
 
@@ -13,12 +14,30 @@
 4. Run the narrow check, then the project build/typecheck.
 5. Record any check that could not run and why.
 
+## Offline route tests (RecordingServer)
+
+`tests/Posty5.Tests/RecordingServer.cs` points the real `Posty5HttpClient` at a
+local `HttpListener` that records each request — verb, path+query, body and
+headers — and answers with the API envelope (`ResultJson`, `Status`), so every
+route is pinned without the network. `_server.Http(options?)` builds a client
+on it. Used by `StoreSuppliersRouteTests`, `CoreHeadersAndOriginTests`
+(X-Posty5-Client, DefaultHeaders, createdFrom), `AccountClientRouteTests`,
+`SocialPublisherPostRouteTests` (status `/{id}/status`, remove, text, story,
+comments list), `SocialPublisherAccountClientRouteTests`,
+`QRCodeTemplateClientRouteTests` and `StoreLookupRouteTests`.
+
+Live read-only facts for those clients use `[ApiKeyFact]`
+(`tests/Posty5.Tests/ApiKeyFactAttribute.cs`): skipped, naming the variable,
+when `POSTY5_API_KEY` is not set. They need an API with the mcp-server wave-1
+routes (`/api/api-key/current`, `/api/store/lookup`, …).
+
+Run only the offline classes (after approval):
+`dotnet test tests/Posty5.Tests/Posty5.Tests.csproj --filter "FullyQualifiedName~RouteTests|FullyQualifiedName~CoreHeadersAndOriginTests"`.
+
 ## Store dropshipping tests
 
 `tests/Posty5.Tests/StoreSuppliersClientTests.cs` has an offline class
-(`StoreSuppliersRouteTests`): the real `Posty5HttpClient` is pointed at a local
-`HttpListener` that records each request and answers with the API envelope, so
-every route, verb, query and body is pinned without the network.
+(`StoreSuppliersRouteTests`) on the shared `RecordingServer` described above.
 
 The live class (`StoreSuppliersLiveTests`) uses `[StoreFixtureFact(...)]`
 (`tests/Posty5.Tests/StoreFixtureFactAttribute.cs`): a fact whose fixture is not

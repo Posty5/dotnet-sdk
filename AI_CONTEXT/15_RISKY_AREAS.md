@@ -8,5 +8,7 @@
 | Live tests | `tests/Posty5.Tests/TestConfig.cs` | Can mutate configured API data. |
 | Uploads | `src/Posty5.SocialPublisherPost/SocialPublisherPostClient.cs` | Large streams, signed URLs, and cancellation need care. |
 | Generated artifacts | `bin, obj, nupkg` | Never edit or index as source. |
+| Publish pack list | `.github/workflows/publish-nuget.yml` | A package missing from the list builds but never ships (Posty5.Store once did); add every new project. |
+| Status vocabularies | `src/Posty5.SocialPublisherPost/Models/SocialPublisherPostModels.cs` (`SocialPublisherPostStatusType`) | The `StringValueObjectConverter` throws on an unknown value, so a status added on the server breaks every read of a post carrying it until the SDK adds it. |
 
 Before editing: trace callers/consumers, identify compatibility and security impact, take the narrowest change, and run both focused and structural checks.

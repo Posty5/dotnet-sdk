@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-19",
+  "generated_at": "2026-10-05",
   "project": "dotnet-sdk",
   "patterns": [
     {
@@ -26,6 +26,31 @@
       "name": "Shared integration tests",
       "rule": "One xUnit project covers every package.",
       "example": "tests/Posty5.Tests/Posty5.Tests.csproj"
+    },
+    {
+      "name": "Offline route pinning",
+      "rule": "A new or changed route gets a test that drives the real Posty5HttpClient against RecordingServer and asserts verb, path+query, body (and headers where relevant).",
+      "example": "tests/Posty5.Tests/SocialPublisherPostRouteTests.cs"
+    },
+    {
+      "name": "Guarded live facts",
+      "rule": "Live tests use [ApiKeyFact] / [StoreFixtureFact] so a missing fixture reports skipped, never a silent pass.",
+      "example": "tests/Posty5.Tests/ApiKeyFactAttribute.cs"
+    },
+    {
+      "name": "Routes in a routes file (new clients)",
+      "rule": "Clients added from 2026-10 keep their route constants in an internal *Routes.cs beside the client (AI_RULES section 4); older clients keep their private BasePath const.",
+      "example": "src/Posty5.Account/AccountRoutes.cs"
+    },
+    {
+      "name": "createdFrom through ResolveCreatedFrom",
+      "rule": "A create stamps createdFrom = request value ?? Posty5HttpClient.ResolveCreatedFrom(CreatedFromDefaults.X); never a literal.",
+      "example": "src/Posty5.SocialPublisherPost/SocialPublisherPostClient.cs"
+    },
+    {
+      "name": "String vocabularies as constants",
+      "rule": "API vocabularies are string constants in a static class, not enums, so a new server value never breaks deserialization.",
+      "example": "src/Posty5.Account/Models/AccountConstants.cs"
     }
   ]
 }

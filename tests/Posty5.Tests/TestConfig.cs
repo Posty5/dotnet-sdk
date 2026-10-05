@@ -52,6 +52,18 @@ public static class TestConfig
 
     private static string? NullIfEmpty(string? value) => string.IsNullOrEmpty(value) ? null : value;
 
+    /// <summary>
+    /// Whether a fixture variable is set. A variable ending in <c>_ALLOW_…</c> is
+    /// a switch and must equal <c>true</c>; any other only has to be present.
+    /// </summary>
+    public static bool IsSet(string name)
+    {
+        var value = Env(name);
+        return name.Contains("_ALLOW_", StringComparison.Ordinal)
+            ? string.Equals(value, "true", StringComparison.OrdinalIgnoreCase)
+            : value is not null;
+    }
+
     // ─── Store dropshipping fixtures (StoreSuppliersClientTests) ─────────────
     // Names are constants so a [StoreFixtureFact] can name what it needs.
 
