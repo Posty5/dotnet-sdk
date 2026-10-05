@@ -35,7 +35,7 @@ namespace Posty5.QRCode;
 /// });
 /// </code>
 /// </example>
-public class QRCodeClient
+public partial class QRCodeClient
 {
     private readonly Posty5HttpClient _http;
     private const string BasePath = "/api/qr-code";
@@ -91,6 +91,7 @@ public class QRCodeClient
             data.Tag,
             data.IsEnableLandingPage,
             data.PageInfo,
+            data.Mode,
             options = new
             {
                 text = qrCodeTarget.freeText.text
@@ -146,6 +147,7 @@ public class QRCodeClient
             data.Tag,
             data.IsEnableLandingPage,
             data.PageInfo,
+            data.Mode,
             qrCodeTarget,
             templateType = "user",
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
@@ -180,6 +182,9 @@ public class QRCodeClient
         QRCodeCreateWifiRequestModel data,
         CancellationToken cancellationToken = default)
     {
+        if (data.Mode == QRCodeMode.Dynamic)
+            throw new ArgumentException(QRCodeConst.WifiDynamicNotSupported, nameof(data));
+
         var qrCodeTarget = new
         {
             wifi = data.Wifi,
@@ -198,6 +203,7 @@ public class QRCodeClient
             data.Tag,
             data.IsEnableLandingPage,
             data.PageInfo,
+            data.Mode,
             qrCodeTarget,
             templateType = "user",
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
@@ -248,6 +254,7 @@ public class QRCodeClient
             data.Tag,
             data.IsEnableLandingPage,
             data.PageInfo,
+            data.Mode,
             qrCodeTarget,
             templateType = "user",
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
@@ -299,6 +306,7 @@ public class QRCodeClient
             data.Tag,
             data.IsEnableLandingPage,
             data.PageInfo,
+            data.Mode,
             qrCodeTarget,
             templateType = "user",
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
@@ -348,6 +356,7 @@ public class QRCodeClient
             data.Tag,
             data.IsEnableLandingPage,
             data.PageInfo,
+            data.Mode,
             qrCodeTarget,
             templateType = "user",
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
@@ -399,6 +408,7 @@ public class QRCodeClient
             data.Tag,
             data.IsEnableLandingPage,
             data.PageInfo,
+            data.Mode,
             qrCodeTarget,
             templateType = "user",
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
@@ -453,6 +463,7 @@ public class QRCodeClient
             data.Tag,
             data.IsEnableLandingPage,
             data.PageInfo,
+            data.Mode,
             options = new
             {
                 text = qrCodeTarget.freeText.text
@@ -510,6 +521,7 @@ public class QRCodeClient
             data.Tag,
             data.IsEnableLandingPage,
             data.PageInfo,
+            data.Mode,
             qrCodeTarget,
             templateType = "user",
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
@@ -546,6 +558,9 @@ public class QRCodeClient
         QRCodeUpdateWifiRequestModel data,
         CancellationToken cancellationToken = default)
     {
+        if (data.Mode == QRCodeMode.Dynamic)
+            throw new ArgumentException(QRCodeConst.WifiDynamicNotSupported, nameof(data));
+
         var qrCodeTarget = new
         {
             wifi = data.Wifi,
@@ -564,6 +579,7 @@ public class QRCodeClient
             data.Tag,
             data.IsEnableLandingPage,
             data.PageInfo,
+            data.Mode,
             qrCodeTarget,
             templateType = "user",
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
@@ -616,6 +632,7 @@ public class QRCodeClient
             data.Tag,
             data.IsEnableLandingPage,
             data.PageInfo,
+            data.Mode,
             qrCodeTarget,
             templateType = "user",
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
@@ -669,6 +686,7 @@ public class QRCodeClient
             data.Tag,
             data.IsEnableLandingPage,
             data.PageInfo,
+            data.Mode,
             qrCodeTarget,
             templateType = "user",
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
@@ -720,6 +738,7 @@ public class QRCodeClient
             data.Tag,
             data.IsEnableLandingPage,
             data.PageInfo,
+            data.Mode,
             qrCodeTarget,
             templateType = "user",
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
@@ -773,6 +792,7 @@ public class QRCodeClient
             data.Tag,
             data.IsEnableLandingPage,
             data.PageInfo,
+            data.Mode,
             qrCodeTarget,
             templateType = "user",
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
@@ -973,6 +993,8 @@ public class QRCodeClient
                 queryParams["refId"] = listParams.RefId;
             if (listParams.Status.HasValue)
                 queryParams["status"] = listParams.Status.Value.ToString();
+            if (listParams.Mode.HasValue)
+                queryParams["mode"] = listParams.Mode.Value.ToString();
             if (!string.IsNullOrEmpty(listParams.CreatedFrom))
                 queryParams["createdFrom"] = listParams.CreatedFrom;
         }

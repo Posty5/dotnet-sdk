@@ -685,6 +685,58 @@ public class QRCodeClientTests : IDisposable
 
     #endregion
 
+    #region Dynamic QR (DQ)
+
+    [Fact]
+    public async Task CreateURL_Dynamic_TargetUpdateKeepsLandingPageUrl()
+    {
+        var created = await _client.CreateURLAsync(new QRCodeCreateURLRequestModel
+        {
+            Name = $"Dynamic QR - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
+            TemplateId = TestConfig.TemplateId,
+            Mode = QRCodeMode.Dynamic,
+            Url = new QRCodeUrlTargetModel { Url = "https://example.com/a" }
+        });
+        TestConfig.CreatedResources.QRCodes.Add(created.Id!);
+        Assert.Equal(QRCodeMode.Dynamic, created.Mode);
+        Assert.NotNull(created.DynamicSince);
+
+        var updated = await _client.UpdateURLAsync(created.Id!, new QRCodeUpdateURLRequestModel
+        {
+            Name = created.Name,
+            TemplateId = TestConfig.TemplateId,
+            Url = new QRCodeUrlTargetModel { Url = "https://example.com/b" }
+        });
+
+        Assert.Equal(created.QrCodeLandingPageURL, updated.QrCodeLandingPageURL);
+        Assert.Equal(QRCodeMode.Dynamic, updated.Mode);
+    }
+
+    [Fact]
+    public async Task CreateURL_WithoutMode_IsStatic()
+    {
+        var created = await _client.CreateURLAsync(new QRCodeCreateURLRequestModel
+        {
+            Name = $"Static QR - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
+            TemplateId = TestConfig.TemplateId,
+            Url = new QRCodeUrlTargetModel { Url = "https://example.com" }
+        });
+        TestConfig.CreatedResources.QRCodes.Add(created.Id!);
+
+        Assert.Equal(QRCodeMode.Static, created.Mode);
+        Assert.Null(created.DynamicSince);
+    }
+
+    [Fact]
+    public async Task List_ModeFilter_ReturnsOnlyThatMode()
+    {
+        var result = await _client.ListAsync(new QRCodeListParamsModel { Mode = QRCodeMode.Dynamic });
+
+        Assert.All(result.Items, item => Assert.Equal(QRCodeMode.Dynamic, item.Mode));
+    }
+
+    #endregion
+
     #region Visit analytics (VA)
 
     [LinkQrVisitAnalyticsFact]
@@ -883,6 +935,66 @@ public class QRCodeClientPayloadTests : IDisposable
         Assert.True(item.IsEnableLandingPage);
         Assert.Equal(QRCodeStatusType.Approved, item.Status);
         Assert.Equal("hi", item.QrCodeTarget?.Sms?.Message);
+    }
+
+    // ─── Dynamic QR (DQ) ─────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task WithoutMode_NoModeOnTheWire()
+    {
+        await _client.CreateURLAsync(new QRCodeCreateURLRequestModel { TemplateId = "tpl-1", Url = new() { Url = "https://example.com" } });
+        await _client.UpdateWifiAsync("q1", new QRCodeUpdateWifiRequestModel { TemplateId = "tpl-1", Wifi = new() { Name = "Net" } });
+
+        foreach (var r in _server.Requests)
+        {
+            using var json = JsonDocument.Parse(r.Body);
+            Assert.False(json.RootElement.TryGetProperty("mode", out _), $"{r.PathAndQuery}: mode sent without a value");
+        }
+    }
+
+    [Fact]
+    public async Task Mode_IsSentOnCreateAndUpdate()
+    {
+        await _client.CreateURLAsync(new QRCodeCreateURLRequestModel { TemplateId = "tpl-1", Mode = QRCodeMode.Dynamic, Url = new() { Url = "https://example.com" } });
+        await _client.UpdateFreeTextAsync("q1", new QRCodeUpdateFreeTextRequestModel { TemplateId = "tpl-1", Mode = QRCodeMode.Static, Text = "x" });
+        await _client.CreateWifiAsync(new QRCodeCreateWifiRequestModel { TemplateId = "tpl-1", Mode = QRCodeMode.Static, Wifi = new() { Name = "Net" } });
+
+        var modes = _server.Requests.Select(r =>
+        {
+            using var json = JsonDocument.Parse(r.Body);
+            return json.RootElement.GetProperty("mode").GetString();
+        }).ToList();
+        Assert.Equal(new[] { "dynamic", "static", "static" }, modes);
+    }
+
+    [Fact]
+    public async Task DynamicWifi_ThrowsBeforeAnyCall()
+    {
+        await Assert.ThrowsAsync<ArgumentException>(() => _client.CreateWifiAsync(new QRCodeCreateWifiRequestModel { TemplateId = "tpl-1", Mode = QRCodeMode.Dynamic, Wifi = new() { Name = "Net" } }));
+        await Assert.ThrowsAsync<ArgumentException>(() => _client.UpdateWifiAsync("q1", new QRCodeUpdateWifiRequestModel { TemplateId = "tpl-1", Mode = QRCodeMode.Dynamic, Wifi = new() { Name = "Net" } }));
+        Assert.Empty(_server.Requests);
+    }
+
+    [Fact]
+    public async Task ListAsync_SendsModeFilter()
+    {
+        await _client.ListAsync(new QRCodeListParamsModel { Mode = QRCodeMode.Dynamic });
+
+        Assert.Contains("mode=dynamic", _server.Requests.Single().PathAndQuery);
+    }
+
+    [Fact]
+    public async Task Responses_ReadModeAndDynamicSince_AndTolerateUnknownModes()
+    {
+        _server.ResultJson = "{\"items\":[{\"_id\":\"q1\",\"mode\":\"dynamic\",\"dynamicSince\":\"2026-10-01T10:00:00.000Z\"},{\"_id\":\"q2\",\"mode\":\"static\",\"dynamicSince\":null},{\"_id\":\"q3\",\"mode\":\"future\"}]}";
+
+        var items = (await _client.ListAsync()).Items;
+
+        Assert.Equal(QRCodeMode.Dynamic, items[0].Mode);
+        Assert.Equal(new DateTime(2026, 10, 1, 10, 0, 0, DateTimeKind.Utc), items[0].DynamicSince?.ToUniversalTime());
+        Assert.Equal(QRCodeMode.Static, items[1].Mode);
+        Assert.Null(items[1].DynamicSince);
+        Assert.Equal("future", items[2].Mode?.Value);
     }
 
     // ─── GetAnalyticsAsync (VA) ──────────────────────────────────────────────

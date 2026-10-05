@@ -354,6 +354,17 @@ public class QRCodeModel
     /// QR code target configuration
     /// </summary>
     public QRCodeTargetModel? QrCodeTarget { get; set; }
+
+    /// <summary>
+    /// <c>static</c>: the image encodes the content itself. <c>dynamic</c>: the image encodes
+    /// <see cref="QrCodeLandingPageURL"/>, which redirects to <see cref="QrCodeTarget"/>, so the
+    /// target can change later without reprinting. Codes stored before dynamic QR codes existed
+    /// come back as <c>static</c>.
+    /// </summary>
+    public QRCodeMode? Mode { get; set; }
+
+    /// <summary>When the code last became dynamic; <c>null</c> for a static code.</summary>
+    public DateTime? DynamicSince { get; set; }
     
     /// <summary>
     /// Preview reasons (moderation scores)
@@ -465,6 +476,13 @@ public class QRCodeRequestBaseModel
     [Obsolete(QRCodeConst.MonetizationObsolete)]
     [JsonIgnore]
     public bool? IsEnableMonetization { get; set; }
+
+    /// <summary>
+    /// <see cref="QRCodeMode.Static"/> or <see cref="QRCodeMode.Dynamic"/>. Omitted (<c>null</c>):
+    /// the API creates a static code, and an update keeps the stored mode. Wi-Fi codes cannot be
+    /// dynamic: the Wi-Fi methods throw <see cref="ArgumentException"/> before any call.
+    /// </summary>
+    public QRCodeMode? Mode { get; set; }
 }
 
 /// <summary>
@@ -697,6 +715,9 @@ public class QRCodeListParamsModel
     /// Filter by status (new, pending, approved, rejected)
     /// </summary>
     public QRCodeStatusType? Status { get; set; }
+
+    /// <summary>Filter by mode (static or dynamic)</summary>
+    public QRCodeMode? Mode { get; set; }
     
     /// <summary>
     /// Filter by created from source
@@ -723,6 +744,21 @@ public readonly record struct QRCodeTargetType (string Value)
 
 
 
+
+/// <summary>
+/// QR code mode. Serialised as <c>"static"</c> / <c>"dynamic"</c>; an unknown value from a newer
+/// API reads back as-is instead of failing.
+/// </summary>
+[JsonConverter(typeof(StringValueObjectConverter<QRCodeMode>))]
+public readonly record struct QRCodeMode (string Value)
+{
+    /// <summary>The image encodes the content itself (the default).</summary>
+    public static readonly QRCodeMode Static = new("static");
+    /// <summary>The image encodes a Posty5 link that redirects to the target.</summary>
+    public static readonly QRCodeMode Dynamic = new("dynamic");
+
+    public override string ToString ( ) => Value;
+}
 
 [JsonConverter(typeof(StringValueObjectConverter<QRCodeStatusType>))]
 public readonly record struct QRCodeStatusType (string Value)

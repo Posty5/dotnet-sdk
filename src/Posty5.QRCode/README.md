@@ -347,6 +347,38 @@ var mapQR = await qrCodes.CreateGeolocationAsync(new QRCodeCreateGeolocationRequ
 
 ---
 
+### Static and Dynamic QR Codes
+
+Every request model takes `Mode` (`QRCodeMode.Static` or `QRCodeMode.Dynamic`).
+A static code encodes its content in the image. A dynamic code encodes its
+`QrCodeLandingPageURL`, which redirects to the target, so you can change where
+it goes later without reprinting. Leave `Mode` unset to get the API default:
+static on create, unchanged on update. Responses carry `Mode` and
+`DynamicSince` (`null` for a static code).
+
+Wi-Fi codes cannot be dynamic: `CreateWifiAsync` and `UpdateWifiAsync` throw
+`ArgumentException` before any call when `Mode` is `Dynamic`.
+
+```csharp
+var qr = await qrCodes.CreateURLAsync(new QRCodeCreateURLRequestModel
+{
+    Name = "Menu",
+    TemplateId = "template_123",
+    Mode = QRCodeMode.Dynamic,
+    Url = new QRCodeUrlTargetModel { Url = "https://example.com/menu" }
+});
+
+// Later: same printed image, new destination.
+await qrCodes.UpdateURLAsync(qr.Id!, new QRCodeUpdateURLRequestModel
+{
+    Name = "Menu",
+    TemplateId = "template_123",
+    Url = new QRCodeUrlTargetModel { Url = "https://example.com/menu-autumn" }
+});
+```
+
+---
+
 ### Retrieving QR Codes
 
 #### GetAsync
@@ -371,6 +403,7 @@ Search and filter QR codes.
 - `listParams` (QRCodeListParamsModel?, optional): Filter criteria
   - `Name`, `QrCodeId`, `TemplateId`, `Tag`, `RefId`, `CreatedFrom` (string?)
   - `Status` (`QRCodeStatusType?`): `New`, `Pending`, `Approved`, `Rejected`
+  - `Mode` (`QRCodeMode?`): `Static`, `Dynamic`
   - `IsEnableMonetization` is obsolete and not sent
 - `pagination` (PaginationParams?, optional): `Cursor` and `PageSize`
 

@@ -4,6 +4,22 @@ All notable changes to the Posty5 .NET SDK will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Posty5.QRCode - unreleased (dynamic QR codes)
+
+Needs the API's dynamic QR release. Additive; no version bump in this change.
+
+### Added
+
+- `QRCodeMode` (`Static`, `Dynamic`; string value object, so an unknown mode
+  from a newer API reads back without failing).
+- `QRCodeRequestBaseModel.Mode`: sent as `mode` only when set, on all seven
+  create and seven update methods. Calls without `Mode` send the same JSON as
+  before.
+- `CreateWifiAsync` / `UpdateWifiAsync` throw `ArgumentException` before any
+  call when `Mode` is `Dynamic` (Wi-Fi cannot be dynamic; the API answers 400).
+- `QRCodeModel.Mode` and `QRCodeModel.DynamicSince` (also on
+  `QRCodeFullDetailsModel`), and the `QRCodeListParamsModel.Mode` filter.
+
 ## Posty5.ShortLink 3.2.0, Posty5.QRCode 3.2.0, Posty5.Core 3.2.0 - unreleased
 
 Link + QR visit analytics (VA), plus the link + QR truth pass (TP) below.
