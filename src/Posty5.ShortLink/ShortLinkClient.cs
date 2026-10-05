@@ -10,7 +10,6 @@ namespace Posty5.ShortLink;
 public class ShortLinkClient
 {
     private readonly Posty5HttpClient _http;
-    private const string BasePath = "/api/short-link";
 
     /// <summary>
     /// Creates a new Short Link client
@@ -42,7 +41,7 @@ public class ShortLinkClient
             if (!string.IsNullOrEmpty(listParams.Name))
                 queryParams["name"] = listParams.Name;
             if (!string.IsNullOrEmpty(listParams.PageInfoTitle))
-                queryParams["pageinfo.title"] = listParams.PageInfoTitle;
+                queryParams[ShortLinkConst.PageInfoTitleFilterKey] = listParams.PageInfoTitle;
             if (!string.IsNullOrEmpty(listParams.CreatedFrom))
                 queryParams["createdFrom"] = listParams.CreatedFrom;
             if (!string.IsNullOrEmpty(listParams.ShortLinkId))
@@ -57,14 +56,8 @@ public class ShortLinkClient
                 queryParams["status"] = listParams.Status.Value.ToString();
             if (listParams.IsForDeepLink.HasValue)
                 queryParams["isForDeepLink"] = listParams.IsForDeepLink.Value;
-            if (listParams.IsEnableMonetization.HasValue)
-                queryParams["isEnableMonetization"] = listParams.IsEnableMonetization.Value;
-            if (!string.IsNullOrEmpty(listParams.Search))
-                queryParams["search"] = listParams.Search;
-            if (listParams.FromDate.HasValue)
-                queryParams["fromDate"] = listParams.FromDate.Value.ToString("o");
-            if (listParams.ToDate.HasValue)
-                queryParams["toDate"] = listParams.ToDate.Value.ToString("o");
+            // IsEnableMonetization, Search, FromDate and ToDate are obsolete: the
+            // API has no such filters, so they are never sent.
         }
 
         if (pagination != null)
@@ -75,10 +68,10 @@ public class ShortLinkClient
         }
 
         var response = await _http.GetAsync<PaginationResponse<ShortLinkModel>>(
-            BasePath, 
-            queryParams, 
+            ShortLinkConst.BasePath,
+            queryParams,
             cancellationToken);
-        
+
         return response.Result ?? new PaginationResponse<ShortLinkModel>();
     }
 
@@ -90,7 +83,7 @@ public class ShortLinkClient
     /// <returns>Short link full details including populated template, user, API key, and metadata</returns>
     public async Task<ShortLinkFullDetailsModel> GetAsync(string id, CancellationToken cancellationToken = default)
     {
-        var response = await _http.GetAsync<ShortLinkFullDetailsModel>($"{BasePath}/{id}", cancellationToken: cancellationToken);
+        var response = await _http.GetAsync<ShortLinkFullDetailsModel>($"{ShortLinkConst.BasePath}/{id}", cancellationToken: cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Short link not found");
     }
 
@@ -104,33 +97,70 @@ public class ShortLinkClient
         ShortLinkCreateRequestModel request,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
+        // An explicit body: only fields the API accepts, so an obsolete model
+        // property can never reach it. Null values are omitted on the wire.
         var data = new
         {
             request.Name,
             request.BaseUrl,
             request.TemplateId,
             request.CustomLandingId,
-            TemplateType = "user",
-            CreatedFrom = "dotnetPackage"
+            request.RefId,
+            request.Tag,
+            request.IsEnableLandingPage,
+            request.PageInfo,
+            request.AndroidUrl,
+            request.IosUrl,
+            TemplateType = ShortLinkConst.TemplateType,
+            CreatedFrom = ShortLinkConst.CreatedFrom
         };
 
-        var response = await _http.PostAsync<ShortLinkModel>(BasePath, data, cancellationToken);
+        var response = await _http.PostAsync<ShortLinkModel>(ShortLinkConst.BasePath, data, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to create short link");
     }
 
     /// <summary>
     /// Update an existing short link
     /// </summary>
+    /// <remarks>
+    /// The API needs <see cref="ShortLinkUpdateRequestModel.BaseUrl"/> and
+    /// <see cref="ShortLinkUpdateRequestModel.TemplateId"/> on every update.
+    /// A property left <c>null</c> is not sent; see each property for what the
+    /// API does then.
+    /// </remarks>
     /// <param name="id">Short link ID</param>
     /// <param name="request">Update request data</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Updated short link details</returns>
+    /// <exception cref="ArgumentException"><see cref="ShortLinkUpdateRequestModel.BaseUrl"/> is empty.</exception>
     public async Task<ShortLinkModel> UpdateAsync(
         string id,
         ShortLinkUpdateRequestModel request,
         CancellationToken cancellationToken = default)
     {
-        var response = await _http.PutAsync<ShortLinkModel>($"{BasePath}/{id}", request, cancellationToken);
+        ArgumentNullException.ThrowIfNull(request);
+        ArgumentException.ThrowIfNullOrWhiteSpace(request.BaseUrl, $"{nameof(request)}.{nameof(request.BaseUrl)}");
+
+        // Explicit body: no IsEnableMonetization, and no CustomLandingId (the
+        // update schema rejects it; a link's id cannot change).
+        var data = new
+        {
+            request.Name,
+            request.BaseUrl,
+            request.TemplateId,
+            request.RefId,
+            request.Tag,
+            request.IsEnableLandingPage,
+            request.PageInfo,
+            request.AndroidUrl,
+            request.IosUrl,
+            TemplateType = ShortLinkConst.TemplateType,
+            CreatedFrom = ShortLinkConst.CreatedFrom
+        };
+
+        var response = await _http.PutAsync<ShortLinkModel>($"{ShortLinkConst.BasePath}/{id}", data, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to update short link");
     }
 
@@ -142,7 +172,7 @@ public class ShortLinkClient
     /// <returns>Deletion confirmation response</returns>
     public async Task<DeleteResponse> DeleteAsync(string id, CancellationToken cancellationToken = default)
     {
-        var response = await _http.DeleteAsync<DeleteResponse>($"{BasePath}/{id}", cancellationToken);
+        var response = await _http.DeleteAsync<DeleteResponse>($"{ShortLinkConst.BasePath}/{id}", cancellationToken);
         return response.Result ?? new DeleteResponse { Message = "Deleted" };
     }
 }

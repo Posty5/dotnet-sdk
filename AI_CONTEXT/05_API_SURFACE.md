@@ -5,8 +5,8 @@
 | `Posty5Options` | BaseUrl, ApiKey, Debug plus fixed timeout/retry settings. | `src/Posty5.Core/Configuration/Posty5Options.cs` |
 | `Posty5HttpClient` | GetAsync/PostAsync/PutAsync/PatchAsync/DeleteAsync, GetBytesAsync (file downloads) and SetApiKey. | `src/Posty5.Core/Http/HttpClient.cs` |
 | `StoreClient` | Six sub-clients — `Products`, `Orders`, `Tags`, `Customers`, `Shipping`, `Suppliers` (dropshipping, `/api/store-suppliers`) — plus four legacy shorthands. | `src/Posty5.Store/StoreClient.cs` |
-| `ShortLinkClient` | ListAsync/GetAsync/CreateAsync/UpdateAsync/DeleteAsync. | `src/Posty5.ShortLink/ShortLinkClient.cs` |
-| `QRCodeClient` | Create/update by type plus GetAsync/ListAsync/DeleteAsync. | `src/Posty5.QRCode/QRCodeClient.cs` |
+| `ShortLinkClient` | ListAsync/GetAsync/CreateAsync/UpdateAsync/DeleteAsync. Create and update send explicit bodies (every accepted field incl. `RefId`, `Tag`, `PageInfo`, `IsEnableLandingPage`, `AndroidUrl`, `IosUrl`; never `isEnableMonetization`); `TemplateId` and `BaseUrl` are `required`; list sends `pageInfo.title`. Fixed values in `ShortLinkConst.cs`. | `src/Posty5.ShortLink/ShortLinkClient.cs` |
+| `QRCodeClient` | Create/update by type plus GetAsync/ListAsync/DeleteAsync. Typed methods send `qrCodeTarget` only (the API builds `options.text`; free text still sends it); `TemplateId` is `required`; never `isEnableMonetization`. | `src/Posty5.QRCode/QRCodeClient.cs` |
 | `HtmlHostingClient` | File/GitHub create/update, get/list/lookups/cache/delete. | `src/Posty5.HtmlHosting/HtmlHostingClient.cs` |
 | `HtmlHostingVariablesClient` | CreateAsync/GetAsync/UpdateAsync/DeleteAsync/ListAsync. | `src/Posty5.HtmlHostingVariables/HtmlHostingVariablesClient.cs` |
 | `HtmlHostingFormSubmissionClient` | Get/list/navigation/status/delete. | `src/Posty5.HtmlHostingFormSubmission/HtmlHostingFormSubmissionClient.cs` |

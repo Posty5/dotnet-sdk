@@ -48,8 +48,16 @@
       "role": "Short-link client/models."
     },
     {
+      "path": "src/Posty5.ShortLink/ShortLinkConst.cs",
+      "role": "Short-link fixed values: base path, templateType/createdFrom, pageInfo.title filter key, [Obsolete] texts."
+    },
+    {
       "path": "src/Posty5.QRCode",
       "role": "QR client/models."
+    },
+    {
+      "path": "src/Posty5.QRCode/QRCodeConst.cs",
+      "role": "QR fixed values: the [Obsolete] text for IsEnableMonetization."
     },
     {
       "path": "src/Posty5.HtmlHosting",
@@ -134,6 +142,18 @@
     {
       "path": "tests/Posty5.Tests/StoreFixtureFactAttribute.cs",
       "role": "[StoreFixtureFact]: a live store fact reported as skipped when its POSTY5_TEST_* fixture is missing."
+    },
+    {
+      "path": "tests/Posty5.Tests/LinkQrTruthPassFactAttribute.cs",
+      "role": "[LinkQrTruthPassFact]: a live short-link/QR fact skipped unless POSTY5_TEST_LINK_QR_TP=true (API carries the link-qr truth pass)."
+    },
+    {
+      "path": "tests/Posty5.Tests/ShortLinkClientTests.cs",
+      "role": "Live short-link tests, TP-gated live facts, and ShortLinkClientPayloadTests (offline body/query capture via RecordingServer)."
+    },
+    {
+      "path": "tests/Posty5.Tests/QRCodeClientTests.cs",
+      "role": "Live QR tests, a TP-gated refId fact, and QRCodeClientPayloadTests (offline body/query capture via RecordingServer)."
     },
     {
       "path": "tests/Posty5.Tests/TestConfig.cs",

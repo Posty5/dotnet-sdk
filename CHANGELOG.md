@@ -4,6 +4,86 @@ All notable changes to the Posty5 .NET SDK will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Posty5.ShortLink 3.1.0 - unreleased
+
+Link + QR truth pass (TP): the client sends every field the API accepts and
+nothing it rejects. Several fields need the API's truth-pass release; they are
+marked "(API TP)" below and an older API answers 400 to a request that sets them.
+
+### Added
+
+- `AndroidUrl` / `IosUrl` on `ShortLinkCreateRequestModel` and
+  `ShortLinkUpdateRequestModel` (API TP, S13). Allowed schemes: `https:`,
+  `http:` or an app scheme (`myapp://…`), never `javascript:`/`data:`/
+  `vbscript:`/`file:`/`about:`/`blob:`. Create: a value wins, absent falls back
+  to the target page's `al:*` meta. Update: a value wins and `""` clears;
+  `null` is not sent, so the API re-derives the link when `BaseUrl` changed and
+  keeps it otherwise.
+- `IsEnableLandingPage` on `ShortLinkCreateRequestModel`.
+
+### Changed
+
+- **`CreateAsync` sends every field.** 3.0.0 sent only name, base URL, template
+  ID and custom landing ID: `RefId`, `Tag` and `PageInfo` never reached the API.
+  It now sends those plus `IsEnableLandingPage`, `AndroidUrl` and `IosUrl`.
+- **`UpdateAsync` sends an explicit body**: no `IsEnableMonetization` (a 400 in
+  3.0.0 when set), plus `templateType` and `createdFrom` like `CreateAsync`
+  (the API resets an omitted `createdFrom` to `"api"`). `IsEnableLandingPage`
+  left `null` is not sent, so the API keeps the stored value (API TP; an older
+  API turned the landing page off).
+- **`TemplateId` and `BaseUrl` are `required`** on the create and update
+  models. The API refuses an API-key call without a template ID, so code that
+  left it out never succeeded; code that sets it after construction (instead
+  of in an object initializer) has to move it into the initializer.
+- `UpdateAsync` throws `ArgumentException` for an empty `BaseUrl` instead of
+  sending a request the API rejects.
+- `ShortLinkListParamsModel.PageInfoTitle` is sent as `pageInfo.title`; 3.0.0
+  sent `pageinfo.title`, which matched no field.
+
+### Deprecated
+
+- `IsEnableMonetization` on every short-link model: `[Obsolete]`, `[JsonIgnore]`,
+  never sent and always `null` when read (the API never accepted or returned
+  it). Removed in 4.0.0. A `TreatWarningsAsErrors` build sees CS0618 for code
+  that still sets it.
+- `ShortLinkListParamsModel.Search`, `FromDate`, `ToDate`: the API's short-link
+  search has no such filters; `[Obsolete]` and no longer sent.
+
+### Documentation
+
+- README: real type names (`ShortLinkCreateRequestModel`, cursor
+  `PaginationParams`, `Items`), landing page and deep-link sections, an
+  "Upgrading to 3.1.0" note; monetization and analytics claims removed.
+
+## Posty5.QRCode 3.1.0 - unreleased
+
+### Added
+
+- `IsEnableLandingPage` on `QRCodeRequestBaseModel` (every create and update).
+
+### Changed
+
+- **The typed create/update methods no longer send `options.text`** for email,
+  WiFi, call, SMS, URL and geolocation codes; they send `qrCodeTarget` only and
+  the API builds the encoded text. 3.0.0 built it client-side without escaping,
+  so a subject with `&` or a WiFi password with `;` produced a code that opened
+  the wrong thing. Free text still sends `options.text` equal to the text.
+- **`TemplateId` is `required`** on every request model (it was a non-null
+  string defaulting to `""`, which the API refuses for API-key calls).
+
+### Deprecated
+
+- `IsEnableMonetization` on `QRCodeModel`, `QRCodeRequestBaseModel` and
+  `QRCodeListParamsModel`: `[Obsolete]`, `[JsonIgnore]`, never sent (every
+  payload carried it in 3.0.0). Removed in 4.0.0.
+
+### Documentation
+
+- README and QUICK_REFERENCE use the real type names; "dynamic QR", "scan
+  analytics", "short link" and monetization claims removed; `NumberOfVisitors`
+  documented as visits to the code's Posty5 page (scanning a downloaded image is
+  not counted). Package description no longer says "dynamic".
+
 ## Posty5.Store 3.2.0 - 2026-09-26
 
 The first version of `Posty5.Store` to reach NuGet: earlier versions (up to

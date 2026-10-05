@@ -54,39 +54,39 @@ var httpClient = new Posty5HttpClient(options);
 ### 2. QR Code Management
 
 ```csharp
+using Posty5.Core.Models;
 using Posty5.QRCode;
 using Posty5.QRCode.Models;
 
 var qrCodeClient = new QRCodeClient(httpClient);
 
-// Create a URL QR code
-var qrCode = await qrCodeClient.CreateUrlAsync(new CreateUrlQRCodeRequest
+// Create a URL QR code (TemplateId is required for API-key calls)
+var qrCode = await qrCodeClient.CreateURLAsync(new QRCodeCreateURLRequestModel
 {
     Name = "My Website",
-    QrCodeTarget = new UrlQRTarget
-    {
-        Url = "https://example.com"
-    }
+    TemplateId = "your-template-id",
+    Url = new QRCodeUrlTargetModel { Url = "https://example.com" }
 });
 
-Console.WriteLine($"QR Code URL: {qrCode.QrCodeLandingPageURL}");
+Console.WriteLine($"QR Code page: {qrCode.QrCodeLandingPageURL}");
 
-// Create a WiFi QR code
-var wifiQr = await qrCodeClient.CreateWifiAsync(new CreateWifiQRCodeRequest
+// Create a WiFi QR code (the API builds and escapes the encoded text)
+var wifiQr = await qrCodeClient.CreateWifiAsync(new QRCodeCreateWifiRequestModel
 {
     Name = "Office WiFi",
-    QrCodeTarget = new WifiQRTarget
+    TemplateId = "your-template-id",
+    Wifi = new QRCodeWifiTargetModel
     {
-        Ssid = "MyNetwork",
-        Password = "mypassword123",
-        SecurityType = "WPA"
+        Name = "MyNetwork",
+        AuthenticationType = "WPA",
+        Password = "mypassword123"
     }
 });
 
-// List QR codes with pagination
+// List QR codes (cursor pagination)
 var qrCodes = await qrCodeClient.ListAsync(
-    new ListQRCodesParams { Search = "website" },
-    new PaginationParams { PageNumber = 0, PageSize = 20 }
+    new QRCodeListParamsModel { Name = "website" },
+    new PaginationParams { PageSize = 20 }
 );
 
 // Get a specific QR code
@@ -99,31 +99,34 @@ await qrCodeClient.DeleteAsync("qr-code-id");
 ### 3. Short Link Management
 
 ```csharp
+using Posty5.Core.Models;
 using Posty5.ShortLink;
 using Posty5.ShortLink.Models;
 
 var shortLinkClient = new ShortLinkClient(httpClient);
 
-// Create a short link
-var shortLink = await shortLinkClient.CreateAsync(new CreateShortLinkRequest
+// Create a short link (BaseUrl and TemplateId are required)
+var shortLink = await shortLinkClient.CreateAsync(new ShortLinkCreateRequestModel
 {
     Name = "My Campaign Link",
-    TargetUrl = "https://example.com/long-url",
-    CustomSlug = "my-link" // Optional
+    BaseUrl = "https://example.com/long-url",
+    TemplateId = "your-template-id",
+    CustomLandingId = "my-link" // Optional, Starter plan and above
 });
 
-Console.WriteLine($"Short URL: {shortLink.ShortUrl}");
+Console.WriteLine($"Short URL: {shortLink.ShorterLink}");
 
 // List short links
 var shortLinks = await shortLinkClient.ListAsync(
-    new ListShortLinksParams { Search = "campaign" },
-    new PaginationParams { PageNumber = 0, PageSize = 20 }
+    new ShortLinkListParamsModel { Name = "campaign" },
+    new PaginationParams { PageSize = 20 }
 );
 
-// Update a short link
-var updated = await shortLinkClient.UpdateAsync("link-id", new UpdateShortLinkRequest
+// Update a short link (BaseUrl and TemplateId are required on every update)
+var updated = await shortLinkClient.UpdateAsync("link-id", new ShortLinkUpdateRequestModel
 {
-    TargetUrl = "https://example.com/new-url"
+    BaseUrl = "https://example.com/new-url",
+    TemplateId = "your-template-id"
 });
 
 // Delete a short link

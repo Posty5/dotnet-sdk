@@ -1,7 +1,11 @@
+using System.Text.Json;
 using Xunit;
 using Posty5.QRCode;
 using Posty5.QRCode.Models;
+using Posty5.Core.Configuration;
 using Posty5.Core.Exceptions;
+using Posty5.Core.Http;
+using Posty5.Tests.Store;
 
 namespace Posty5.Tests.Integration;
 
@@ -630,18 +634,18 @@ public class QRCodeClientTests : IDisposable
     #region Advanced Features Tests
 
     [Fact]
-    public async Task CreateQRCode_WithMonetization_ShouldIncludePageInfo()
+    public async Task CreateQRCode_WithLandingPage_ShouldIncludePageInfo()
     {
-        // Arrange
+        // Arrange (replaces the monetization test: the API never accepted IsEnableMonetization)
         var request = new QRCodeCreateURLRequestModel
         {
-            Name = $"Monetized QR - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
+            Name = $"Landing page QR - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
             TemplateId = TestConfig.TemplateId,
-            IsEnableMonetization = true,
+            IsEnableLandingPage = true,
             PageInfo = new QRCodePageInfoModel
             {
-                Title = "Please Wait",
-                Description = "You will be redirected shortly..."
+                Title = "Spring Menu",
+                Description = "New dishes every week"
             },
             Url = new QRCodeUrlTargetModel { Url = "https://posty5.com" }
         };
@@ -652,10 +656,29 @@ public class QRCodeClientTests : IDisposable
         // Assert
         Assert.NotNull(result);
         Assert.NotNull(result.Id);
-        Assert.True(result.IsEnableMonetization);
+        Assert.True(result.IsEnableLandingPage);
         Assert.NotNull(result.PageInfo);
 
         TestConfig.CreatedResources.QRCodes.Add(result.Id!);
+    }
+
+    [LinkQrTruthPassFact]
+    public async Task ListQRCodes_RefIdFilter_ReturnsOnlyThatRefId()
+    {
+        // Before the API's truth pass the filter key was misspelled server-side and every record came back.
+        var refId = $"TP-QR-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
+        var created = await _client.CreateURLAsync(new QRCodeCreateURLRequestModel
+        {
+            Name = "TP refId filter",
+            TemplateId = TestConfig.TemplateId,
+            RefId = refId,
+            Url = new QRCodeUrlTargetModel { Url = "https://posty5.com" }
+        });
+        TestConfig.CreatedResources.QRCodes.Add(created.Id!);
+
+        var result = await _client.ListAsync(new QRCodeListParamsModel { RefId = refId });
+
+        Assert.Equal(created.Id, Assert.Single(result.Items).Id);
     }
 
     #endregion
@@ -663,6 +686,145 @@ public class QRCodeClientTests : IDisposable
     public void Dispose()
     {
         // Cleanup is handled by collection fixture if needed
+    }
+}
+
+/// <summary>
+/// What <see cref="QRCodeClient"/> puts on the wire, pinned against a local
+/// <see cref="RecordingServer"/> - no network, no API key.
+/// </summary>
+public class QRCodeClientPayloadTests : IDisposable
+{
+    private readonly RecordingServer _server = new();
+    private readonly QRCodeClient _client;
+
+    public QRCodeClientPayloadTests()
+    {
+        _client = new QRCodeClient(new Posty5HttpClient(new Posty5Options { ApiKey = "test-key", BaseUrl = _server.BaseUrl }));
+    }
+
+    public void Dispose() => _server.Dispose();
+
+#pragma warning disable CS0618 // IsEnableMonetization is set on purpose below: it must never reach the wire
+    /// <summary>The six structured types, created and updated, each with the obsolete flag set.</summary>
+    private async Task SendEveryStructuredTypeAsync()
+    {
+        const string t = "tpl-1";
+        await _client.CreateEmailAsync(new QRCodeCreateEmailRequestModel { TemplateId = t, IsEnableMonetization = true, Email = new() { Email = "a@b.c", Subject = "Q&A", Body = "x" } });
+        await _client.CreateWifiAsync(new QRCodeCreateWifiRequestModel { TemplateId = t, IsEnableMonetization = true, Wifi = new() { Name = "Net", AuthenticationType = "WPA", Password = "p;w" } });
+        await _client.CreateCallAsync(new QRCodeCreateCallRequestModel { TemplateId = t, IsEnableMonetization = true, Call = new() { PhoneNumber = "+1" } });
+        await _client.CreateSMSAsync(new QRCodeCreateSMSRequestModel { TemplateId = t, IsEnableMonetization = true, Sms = new() { PhoneNumber = "+1" } });
+        await _client.CreateURLAsync(new QRCodeCreateURLRequestModel { TemplateId = t, IsEnableMonetization = true, Url = new() { Url = "https://example.com" } });
+        await _client.CreateGeolocationAsync(new QRCodeCreateGeolocationRequestModel { TemplateId = t, IsEnableMonetization = true, Geolocation = new() { Latitude = "1", Longitude = "2" } });
+        await _client.UpdateEmailAsync("q1", new QRCodeUpdateEmailRequestModel { TemplateId = t, IsEnableMonetization = true, Email = new() { Email = "a@b.c" } });
+        await _client.UpdateWifiAsync("q1", new QRCodeUpdateWifiRequestModel { TemplateId = t, IsEnableMonetization = true, Wifi = new() { Name = "Net", AuthenticationType = "nopass" } });
+        await _client.UpdateCallAsync("q1", new QRCodeUpdateCallRequestModel { TemplateId = t, IsEnableMonetization = true, Call = new() { PhoneNumber = "+1" } });
+        await _client.UpdateSMSAsync("q1", new QRCodeUpdateSMSRequestModel { TemplateId = t, IsEnableMonetization = true, Sms = new() { PhoneNumber = "+1", Message = "hi" } });
+        await _client.UpdateURLAsync("q1", new QRCodeUpdateURLRequestModel { TemplateId = t, IsEnableMonetization = true, Url = new() { Url = "https://example.com" } });
+        await _client.UpdateGeolocationAsync("q1", new QRCodeUpdateGeolocationRequestModel { TemplateId = t, IsEnableMonetization = true, Geolocation = new() { Latitude = "1", Longitude = "2" } });
+    }
+
+    [Fact]
+    public async Task StructuredTypes_SendQrCodeTargetOnly_NoOptionsText_NoMonetization()
+    {
+        await SendEveryStructuredTypeAsync();
+
+        var types = new[] { "email", "wifi", "call", "sms", "url", "geolocation" };
+        Assert.Equal(
+            types.Select(type => $"POST /api/qr-code/{type}").Concat(types.Select(type => $"PUT /api/qr-code/{type}/q1")),
+            _server.Requests.Select(r => $"{r.Method} {r.PathAndQuery}"));
+
+        foreach (var (_, path, body) in _server.Requests)
+        {
+            using var json = JsonDocument.Parse(body);
+            var root = json.RootElement;
+            var type = path.Split('/')[3];
+            Assert.False(root.TryGetProperty("options", out _), $"{path}: options.text is built by the API");
+            Assert.False(root.TryGetProperty("isEnableMonetization", out _), $"{path}: isEnableMonetization sent");
+            Assert.Equal("tpl-1", root.GetProperty("templateId").GetString());
+            var target = root.GetProperty("qrCodeTarget");
+            Assert.Equal(type, target.GetProperty("type").GetString());
+            Assert.True(target.TryGetProperty(type, out _), $"{path}: qrCodeTarget.{type} missing");
+        }
+    }
+
+    [Fact]
+    public async Task FreeText_KeepsOptionsText_AndDropsMonetization()
+    {
+        await _client.CreateFreeTextAsync(new QRCodeCreateFreeTextRequestModel { TemplateId = "tpl-1", Text = "hello", IsEnableMonetization = true });
+        await _client.UpdateFreeTextAsync("q1", new QRCodeUpdateFreeTextRequestModel { TemplateId = "tpl-1", Text = "bye", IsEnableMonetization = true });
+
+        var texts = _server.Requests.Select(r =>
+        {
+            using var json = JsonDocument.Parse(r.Body);
+            Assert.False(json.RootElement.TryGetProperty("isEnableMonetization", out _));
+            Assert.Equal("freeText", json.RootElement.GetProperty("qrCodeTarget").GetProperty("type").GetString());
+            return json.RootElement.GetProperty("options").GetProperty("text").GetString();
+        }).ToList();
+        Assert.Equal(new[] { "hello", "bye" }, texts);
+    }
+
+    [Fact]
+    public async Task ListAsync_DropsMonetizationFilter_AndSendsRefId()
+    {
+        await _client.ListAsync(new QRCodeListParamsModel { RefId = "REF-1", IsEnableMonetization = true });
+
+        var path = _server.Requests.Single().PathAndQuery;
+        Assert.Contains("refId=REF-1", path);
+        Assert.DoesNotContain("isEnableMonetization", path);
+    }
+#pragma warning restore CS0618
+
+    [Fact]
+    public async Task Create_SendsLandingPageRefIdTagAndPageInfo()
+    {
+        await _client.CreateURLAsync(new QRCodeCreateURLRequestModel
+        {
+            Name = "Menu",
+            TemplateId = "tpl-1",
+            RefId = "REF-1",
+            Tag = "menu",
+            CustomLandingId = "spring-menu",
+            IsEnableLandingPage = true,
+            PageInfo = new QRCodePageInfoModel { Title = "Spring Menu", Description = "New dishes" },
+            Url = new QRCodeUrlTargetModel { Url = "https://example.com/menu" }
+        });
+
+        using var json = JsonDocument.Parse(_server.Requests.Single().Body);
+        var root = json.RootElement;
+        Assert.Equal("Menu", root.GetProperty("name").GetString());
+        Assert.Equal("REF-1", root.GetProperty("refId").GetString());
+        Assert.Equal("menu", root.GetProperty("tag").GetString());
+        Assert.Equal("spring-menu", root.GetProperty("customLandingId").GetString());
+        Assert.True(root.GetProperty("isEnableLandingPage").GetBoolean());
+        Assert.Equal("Spring Menu", root.GetProperty("pageInfo").GetProperty("title").GetString());
+        Assert.Equal("https://example.com/menu", root.GetProperty("qrCodeTarget").GetProperty("url").GetProperty("url").GetString());
+        Assert.Equal("user", root.GetProperty("templateType").GetString());
+        Assert.Equal("dotnetPackage", root.GetProperty("createdFrom").GetString());
+    }
+
+    [Fact]
+    public async Task Update_WithoutIsEnableLandingPage_DoesNotSendIt()
+    {
+        await _client.UpdateURLAsync("q1", new QRCodeUpdateURLRequestModel { TemplateId = "tpl-1", Url = new() { Url = "https://example.com" } });
+
+        using var json = JsonDocument.Parse(_server.Requests.Single().Body);
+        Assert.False(json.RootElement.TryGetProperty("isEnableLandingPage", out _));
+    }
+
+    [Fact]
+    public async Task Responses_IgnoreIsEnableMonetization_AndReadListFields()
+    {
+        _server.ResultJson = "{\"items\":[{\"_id\":\"q1\",\"isEnableMonetization\":true,\"isEnableLandingPage\":true,\"status\":\"approved\",\"qrCodeTarget\":{\"type\":\"sms\",\"sms\":{\"phoneNumber\":\"+1\",\"message\":\"hi\"}}}]}";
+
+        var item = Assert.Single((await _client.ListAsync()).Items);
+
+#pragma warning disable CS0618
+        Assert.Null(item.IsEnableMonetization);
+#pragma warning restore CS0618
+        Assert.True(item.IsEnableLandingPage);
+        Assert.Equal(QRCodeStatusType.Approved, item.Status);
+        Assert.Equal("hi", item.QrCodeTarget?.Sms?.Message);
     }
 }
 

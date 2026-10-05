@@ -132,8 +132,8 @@ public class ShortLinkModel
     public string? Tag { get; set; }
     
     /// <summary>
-    /// Number of visitors/clicks
-    /// 
+    /// Number of visits to the short link. Also returned in API-key list
+    /// results from the API's link-qr truth pass on (earlier: get one link at a time).
     /// </summary>
     public int? NumberOfVisitors { get; set; }
     
@@ -160,15 +160,19 @@ public class ShortLinkModel
     public string? QrCodeTemplateName { get; set; }
     
     /// <summary>
-    /// Whether landing page is enabled
+    /// Whether visitors see an interstitial page with <see cref="PageInfo"/>'s
+    /// title and description instead of a direct redirect. Also returned in
+    /// API-key list results from the API's link-qr truth pass on.
     /// </summary>
     public bool? IsEnableLandingPage { get; set; }
-    
+
     /// <summary>
-    /// Whether monetization is enabled
+    /// Never returned by the API; always <c>null</c>.
     /// </summary>
+    [Obsolete(ShortLinkConst.MonetizationObsolete)]
+    [JsonIgnore]
     public bool? IsEnableMonetization { get; set; }
-    
+
  
  
     /// <summary>
@@ -204,6 +208,10 @@ public class ShortLinkModel
     /// </summary>
     public DateTime? UpdatedAt { get; set; }
 
+    /// <summary>
+    /// Review status. Also returned in API-key list results from the API's
+    /// link-qr truth pass on.
+    /// </summary>
     public ShortLinkStatusType? Status { get; set; }
 }
 
@@ -213,12 +221,14 @@ public class ShortLinkModel
 public class ShortLinkFullDetailsModel : ShortLinkModel
 {
     /// <summary>
-    /// Android deep link URL
+    /// Android deep link URL. Returned to the owner by <c>GetAsync</c> from the
+    /// API's link-qr truth pass on (earlier only the create response carried it).
     /// </summary>
     public string? AndroidUrl { get; set; }
-    
+
     /// <summary>
-    /// iOS deep link URL
+    /// iOS deep link URL. Returned to the owner by <c>GetAsync</c> from the
+    /// API's link-qr truth pass on (earlier only the create response carried it).
     /// </summary>
     public string? IosUrl { get; set; }
     
@@ -245,75 +255,166 @@ public class ShortLinkFullDetailsModel : ShortLinkModel
 /// </summary>
 public class ShortLinkCreateRequestModel
 {
-    public string Name { get; set; } = string.Empty;
     /// <summary>
-    /// Base URL (the target URL to redirect to)
+    /// Link name. Empty: the API names the link from the target page's title.
     /// </summary>
-    public string BaseUrl { get; set; } = string.Empty;
-    public string? TemplateId { get; set; }
-    
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Base URL (the target URL to redirect to). Required; must start with
+    /// <c>http://</c> or <c>https://</c> from the API's link-qr truth pass on.
+    /// </summary>
+    public required string BaseUrl { get; set; }
+
+    /// <summary>
+    /// QR code template ID. Required for API-key callers, which every SDK call
+    /// is: the API answers "Template Id Is Required" without it. Your template
+    /// IDs are on the dashboard's QR code templates page.
+    /// </summary>
+    public required string TemplateId { get; set; }
+
     /// <summary>
     /// External reference ID for filtering/tracking
     /// </summary>
     public string? RefId { get; set; }
-    
+
     /// <summary>
     /// Custom tag for filtering/categorization
     /// </summary>
     public string? Tag { get; set; }
-    
+
     /// <summary>
-    /// Custom landing page ID (max 32 characters, paid plans only)
+    /// Custom landing page ID: 4-32 lowercase letters, digits or hyphens.
+    /// Starter plan and above; a lower plan is refused by the API.
     /// </summary>
     public string? CustomLandingId { get; set; }
-    
+
     /// <summary>
-    /// Enable monetization for this short link
+    /// <c>true</c>: visitors see an interstitial page with
+    /// <see cref="PageInfo"/>'s title and description and a Continue button,
+    /// instead of being redirected straight away. Omitted (<c>null</c>): the
+    /// API stores <c>false</c>.
     /// </summary>
-    public bool? IsEnableMonetization { get; set; }
-    
+    public bool? IsEnableLandingPage { get; set; }
+
     /// <summary>
-    /// Landing page information
+    /// Landing page title and description. Both are required when
+    /// <see cref="IsEnableLandingPage"/> is <c>true</c>.
     /// </summary>
     public ShortLinkPageInfoModel? PageInfo { get; set; }
+
+    /// <summary>
+    /// Android deep link, opened instead of <see cref="BaseUrl"/> on Android.
+    /// </summary>
+    /// <remarks>
+    /// <para>Allowed schemes: <c>https:</c>, <c>http:</c> or an app scheme matching
+    /// <c>^[a-z][a-z0-9+.-]*:</c> (for example <c>myapp://item/1</c>) - never
+    /// <c>javascript:</c>, <c>data:</c>, <c>vbscript:</c>, <c>file:</c>,
+    /// <c>about:</c> or <c>blob:</c>; the API refuses those with
+    /// "The deep link URL is not allowed".</para>
+    /// <para>Create: a supplied value wins; an empty or absent value falls back
+    /// to the target page's <c>al:android:url</c> meta tag.
+    /// <see cref="ShortLinkModel.IsSupportAndroidDeepUrl"/> is true exactly when
+    /// the link has an Android URL.</para>
+    /// <para>Accepted from the API's link-qr truth pass (S13) on; an older API
+    /// answers 400 to a request that sets it.</para>
+    /// </remarks>
+    public string? AndroidUrl { get; set; }
+
+    /// <summary>
+    /// iOS deep link, opened instead of <see cref="BaseUrl"/> on iOS.
+    /// </summary>
+    /// <remarks>
+    /// Same scheme rule and create precedence as <see cref="AndroidUrl"/>; the
+    /// fallback is the target page's <c>al:ios:url</c> meta tag, and
+    /// <see cref="ShortLinkModel.IsSupportIOSDeepUrl"/> follows it.
+    /// </remarks>
+    public string? IosUrl { get; set; }
+
+    /// <summary>
+    /// Never accepted by the API; ignored and never sent.
+    /// </summary>
+    [Obsolete(ShortLinkConst.MonetizationObsolete)]
+    [JsonIgnore]
+    public bool? IsEnableMonetization { get; set; }
 }
 
 /// <summary>
 /// Update short link request
 /// </summary>
+/// <remarks>
+/// A property left <c>null</c> is not sent. <see cref="BaseUrl"/> and
+/// <see cref="TemplateId"/> are required on every update.
+/// </remarks>
 public class ShortLinkUpdateRequestModel
 {
-    public string? Name { get; set; }
     /// <summary>
-    /// Base URL (the target URL to redirect to)
+    /// Link name. <c>null</c> or empty: the API names the link from the target
+    /// page's title.
     /// </summary>
-    public string? BaseUrl { get; set; }
-    public string? TemplateId { get; set; }
-    
+    public string? Name { get; set; }
+
     /// <summary>
-    /// External reference ID for filtering/tracking
+    /// Base URL (the target URL to redirect to). Required on every update - send
+    /// the current one to keep it. Must start with <c>http://</c> or
+    /// <c>https://</c> from the API's link-qr truth pass on.
+    /// </summary>
+    public required string BaseUrl { get; set; }
+
+    /// <summary>
+    /// QR code template ID. Required for API-key callers, which every SDK call
+    /// is: the API answers "Template Id Is Required" without it.
+    /// </summary>
+    public required string TemplateId { get; set; }
+
+    /// <summary>
+    /// External reference ID for filtering/tracking. <c>null</c> keeps the stored value.
     /// </summary>
     public string? RefId { get; set; }
-    
+
     /// <summary>
-    /// Custom tag for filtering/categorization
+    /// Custom tag for filtering/categorization. <c>null</c> keeps the stored value.
     /// </summary>
     public string? Tag { get; set; }
-    
+
     /// <summary>
-    /// Enable landing page
+    /// Turn the landing page on or off. <c>null</c> (the default) is not sent,
+    /// and the API keeps the stored value - from the API's link-qr truth pass
+    /// on; an older API turned the landing page off when the key was omitted.
     /// </summary>
     public bool? IsEnableLandingPage { get; set; }
-    
+
     /// <summary>
-    /// Enable monetization for this short link
-    /// </summary>
-    public bool? IsEnableMonetization { get; set; }
-    
-    /// <summary>
-    /// Landing page information
+    /// Landing page title and description. Both are required when
+    /// <see cref="IsEnableLandingPage"/> is <c>true</c>.
     /// </summary>
     public ShortLinkPageInfoModel? PageInfo { get; set; }
+
+    /// <summary>
+    /// Android deep link. Scheme rule as on
+    /// <see cref="ShortLinkCreateRequestModel.AndroidUrl"/>.
+    /// </summary>
+    /// <remarks>
+    /// Precedence on update: a value is sent and wins, and <c>""</c> clears the
+    /// stored deep link. <c>null</c> (the default) omits the key: if
+    /// <see cref="BaseUrl"/> changed, the API re-derives the deep link from the
+    /// new target page's <c>al:android:url</c> meta tag; if it did not, the
+    /// stored value is kept. Accepted from the API's link-qr truth pass (S13) on.
+    /// </remarks>
+    public string? AndroidUrl { get; set; }
+
+    /// <summary>
+    /// iOS deep link. Same scheme rule and update precedence as
+    /// <see cref="AndroidUrl"/>, re-derived from <c>al:ios:url</c>.
+    /// </summary>
+    public string? IosUrl { get; set; }
+
+    /// <summary>
+    /// Never accepted by the API; ignored and never sent.
+    /// </summary>
+    [Obsolete(ShortLinkConst.MonetizationObsolete)]
+    [JsonIgnore]
+    public bool? IsEnableMonetization { get; set; }
 }
 
 /// <summary>
@@ -332,7 +433,7 @@ public class ShortLinkListParamsModel
     public string? Name { get; set; }
     
     /// <summary>
-    /// Search by page title
+    /// Search by landing page title (sent as <c>pageInfo.title</c>)
     /// </summary>
     public string? PageInfoTitle { get; set; }
     
@@ -372,23 +473,32 @@ public class ShortLinkListParamsModel
     public bool? IsForDeepLink { get; set; }
     
     /// <summary>
-    /// Filter by monetization flag
+    /// No such filter exists; ignored and never sent.
     /// </summary>
+    [Obsolete(ShortLinkConst.MonetizationObsolete)]
+    [JsonIgnore]
     public bool? IsEnableMonetization { get; set; }
-    
+
     /// <summary>
-    /// Generic search term
+    /// The API's short-link search has no generic search term; never sent.
+    /// Use <see cref="Name"/>, <see cref="BaseUrl"/> or <see cref="PageInfoTitle"/>.
     /// </summary>
+    [Obsolete(ShortLinkConst.IgnoredFilterObsolete)]
+    [JsonIgnore]
     public string? Search { get; set; }
-    
+
     /// <summary>
-    /// Filter from date
+    /// The API's short-link search has no date range; never sent.
     /// </summary>
+    [Obsolete(ShortLinkConst.IgnoredFilterObsolete)]
+    [JsonIgnore]
     public DateTime? FromDate { get; set; }
-    
+
     /// <summary>
-    /// Filter to date
+    /// The API's short-link search has no date range; never sent.
     /// </summary>
+    [Obsolete(ShortLinkConst.IgnoredFilterObsolete)]
+    [JsonIgnore]
     public DateTime? ToDate { get; set; }
 }
 

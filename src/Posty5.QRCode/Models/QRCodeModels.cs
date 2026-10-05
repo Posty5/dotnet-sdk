@@ -301,13 +301,16 @@ public class QRCodeModel
     
     
     /// <summary>
-    /// Number of visitors/scans
+    /// Number of visits to the code's Posty5 page (<see cref="QrCodeLandingPageURL"/>).
+    /// A downloaded QR image encodes its content directly, so scanning it is
+    /// not counted here.
     /// </summary>
     public int? NumberOfVisitors { get; set; }
-    
- 
+
+
     /// <summary>
-    /// Whether landing page is enabled
+    /// Whether the code's Posty5 page shows <see cref="PageInfo"/>. Also
+    /// returned in API-key list results from the API's link-qr truth pass on.
     /// </summary>
     public bool? IsEnableLandingPage { get; set; }
     
@@ -322,12 +325,15 @@ public class QRCodeModel
     public string? LastVisitorDate { get; set; }
     
     /// <summary>
-    /// Whether monetization is enabled
+    /// Never returned by the API; always <c>null</c>.
     /// </summary>
+    [Obsolete(QRCodeConst.MonetizationObsolete)]
+    [JsonIgnore]
     public bool? IsEnableMonetization { get; set; }
-    
+
     /// <summary>
-    /// QR code status (new, pending, approved, rejected)
+    /// QR code status (new, pending, approved, rejected). Also returned in
+    /// API-key list results from the API's link-qr truth pass on.
     /// </summary>
     public QRCodeStatusType Status { get; set; }
     
@@ -418,9 +424,11 @@ public class QRCodeRequestBaseModel
     public string? Name { get; set; }
     
     /// <summary>
-    /// Template ID
+    /// QR code template ID. Required on create and update for API-key callers,
+    /// which every SDK call is: the API answers "Template Id Is Required"
+    /// without it. Your template IDs are on the dashboard's QR code templates page.
     /// </summary>
-    public string TemplateId { get; set; } = string.Empty;
+    public required string TemplateId { get; set; }
     
     /// <summary>
     /// External reference ID for filtering/tracking
@@ -438,14 +446,24 @@ public class QRCodeRequestBaseModel
     public string? CustomLandingId { get; set; }
     
     /// <summary>
-    /// Enable monetization (default: false)
+    /// Whether the code's Posty5 page shows <see cref="PageInfo"/>. Omitted
+    /// (<c>null</c>): the API stores <c>false</c> on create and keeps the stored
+    /// value on update.
     /// </summary>
-    public bool? IsEnableMonetization { get; set; }
-    
+    public bool? IsEnableLandingPage { get; set; }
+
     /// <summary>
-    /// Page information (required when monetization is enabled)
+    /// Page information. <see cref="QRCodePageInfoModel.Title"/> is required
+    /// when <see cref="IsEnableLandingPage"/> is <c>true</c>.
     /// </summary>
     public QRCodePageInfoModel? PageInfo { get; set; }
+
+    /// <summary>
+    /// Never accepted by the API; ignored and never sent.
+    /// </summary>
+    [Obsolete(QRCodeConst.MonetizationObsolete)]
+    [JsonIgnore]
+    public bool? IsEnableMonetization { get; set; }
 }
 
 /// <summary>
@@ -668,8 +686,10 @@ public class QRCodeListParamsModel
     public string? RefId { get; set; }
     
     /// <summary>
-    /// Filter by monetization enabled
+    /// No such filter exists; ignored and never sent.
     /// </summary>
+    [Obsolete(QRCodeConst.MonetizationObsolete)]
+    [JsonIgnore]
     public bool? IsEnableMonetization { get; set; }
     
     /// <summary>

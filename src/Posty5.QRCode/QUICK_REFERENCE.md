@@ -9,11 +9,12 @@ dotnet add package Posty5.QRCode
 ## Basic Setup
 
 ```csharp
+using Posty5.Core.Configuration;
 using Posty5.Core.Http;
 using Posty5.QRCode;
 using Posty5.QRCode.Models;
 
-var httpClient = new Posty5HttpClient(new Posty5HttpClientOptions
+var httpClient = new Posty5HttpClient(new Posty5Options
 {
     BaseUrl = "https://api.posty5.com",
     ApiKey = "your-api-key"
@@ -26,7 +27,7 @@ var qrCodeClient = new QRCodeClient(httpClient);
 
 ### 1. Free Text QR Code
 ```csharp
-var qrCode = await qrCodeClient.CreateFreeTextAsync(new CreateFreeTextQRCodeRequest
+var qrCode = await qrCodeClient.CreateFreeTextAsync(new QRCodeCreateFreeTextRequestModel
 {
     Name = "My Text QR",
     TemplateId = "template_id",
@@ -36,11 +37,11 @@ var qrCode = await qrCodeClient.CreateFreeTextAsync(new CreateFreeTextQRCodeRequ
 
 ### 2. Email QR Code
 ```csharp
-var qrCode = await qrCodeClient.CreateEmailAsync(new CreateEmailQRCodeRequest
+var qrCode = await qrCodeClient.CreateEmailAsync(new QRCodeCreateEmailRequestModel
 {
     Name = "Contact Email",
     TemplateId = "template_id",
-    Email = new QRCodeEmailTarget
+    Email = new QRCodeEmailTargetModel
     {
         Email = "contact@example.com",
         Subject = "Hello",
@@ -51,11 +52,11 @@ var qrCode = await qrCodeClient.CreateEmailAsync(new CreateEmailQRCodeRequest
 
 ### 3. WiFi QR Code
 ```csharp
-var qrCode = await qrCodeClient.CreateWifiAsync(new CreateWifiQRCodeRequest
+var qrCode = await qrCodeClient.CreateWifiAsync(new QRCodeCreateWifiRequestModel
 {
     Name = "Office WiFi",
     TemplateId = "template_id",
-    Wifi = new QRCodeWifiTarget
+    Wifi = new QRCodeWifiTargetModel
     {
         Name = "NetworkName",
         AuthenticationType = "WPA",
@@ -66,11 +67,11 @@ var qrCode = await qrCodeClient.CreateWifiAsync(new CreateWifiQRCodeRequest
 
 ### 4. Phone Call QR Code
 ```csharp
-var qrCode = await qrCodeClient.CreateCallAsync(new CreateCallQRCodeRequest
+var qrCode = await qrCodeClient.CreateCallAsync(new QRCodeCreateCallRequestModel
 {
     Name = "Call Support",
     TemplateId = "template_id",
-    Call = new QRCodeCallTarget
+    Call = new QRCodeCallTargetModel
     {
         PhoneNumber = "+1234567890"
     }
@@ -79,11 +80,11 @@ var qrCode = await qrCodeClient.CreateCallAsync(new CreateCallQRCodeRequest
 
 ### 5. SMS QR Code
 ```csharp
-var qrCode = await qrCodeClient.CreateSMSAsync(new CreateSMSQRCodeRequest
+var qrCode = await qrCodeClient.CreateSMSAsync(new QRCodeCreateSMSRequestModel
 {
     Name = "Text Us",
     TemplateId = "template_id",
-    Sms = new QRCodeSmsTarget
+    Sms = new QRCodeSmsTargetModel
     {
         PhoneNumber = "+1234567890",
         Message = "Hello from QR!"
@@ -93,21 +94,21 @@ var qrCode = await qrCodeClient.CreateSMSAsync(new CreateSMSQRCodeRequest
 
 ### 6. URL QR Code
 ```csharp
-var qrCode = await qrCodeClient.CreateURLAsync(new CreateURLQRCodeRequest
+var qrCode = await qrCodeClient.CreateURLAsync(new QRCodeCreateURLRequestModel
 {
     Name = "Website",
     TemplateId = "template_id",
-    Url = new QRCodeUrlTarget { Url = "https://example.com" }
+    Url = new QRCodeUrlTargetModel { Url = "https://example.com" }
 });
 ```
 
 ### 7. Geolocation QR Code
 ```csharp
-var qrCode = await qrCodeClient.CreateGeolocationAsync(new CreateGeolocationQRCodeRequest
+var qrCode = await qrCodeClient.CreateGeolocationAsync(new QRCodeCreateGeolocationRequestModel
 {
     Name = "Our Location",
     TemplateId = "template_id",
-    Geolocation = new QRCodeGeolocationTarget
+    Geolocation = new QRCodeGeolocationTargetModel
     {
         Latitude = "40.7128",
         Longitude = "-74.0060"
@@ -125,11 +126,11 @@ Console.WriteLine($"Visitors: {qrCode.NumberOfVisitors}");
 
 ### Update QR Code
 ```csharp
-var updated = await qrCodeClient.UpdateURLAsync("qr_code_id", new UpdateURLQRCodeRequest
+var updated = await qrCodeClient.UpdateURLAsync("qr_code_id", new QRCodeUpdateURLRequestModel
 {
     Name = "New Name",
     TemplateId = "template_id",
-    Url = new QRCodeUrlTarget { Url = "https://newurl.com" }
+    Url = new QRCodeUrlTargetModel { Url = "https://newurl.com" }
 });
 ```
 
@@ -141,8 +142,8 @@ await qrCodeClient.DeleteAsync("qr_code_id");
 ### List QR Codes
 ```csharp
 var result = await qrCodeClient.ListAsync(
-    new ListQRCodesParams { Tag = "marketing" },
-    new PaginationParams { Page = 0, PageSize = 20 }
+    new QRCodeListParamsModel { Tag = "marketing" },
+    new PaginationParams { PageSize = 20 }
 );
 
 foreach (var qr in result.Items)
@@ -155,40 +156,40 @@ foreach (var qr in result.Items)
 
 ### Custom Landing Page ID
 ```csharp
-var qrCode = await qrCodeClient.CreateURLAsync(new CreateURLQRCodeRequest
+var qrCode = await qrCodeClient.CreateURLAsync(new QRCodeCreateURLRequestModel
 {
     Name = "Custom Slug",
     TemplateId = "template_id",
     CustomLandingId = "my-custom-slug",
-    Url = new QRCodeUrlTarget { Url = "https://example.com" }
+    Url = new QRCodeUrlTargetModel { Url = "https://example.com" }
 });
 ```
 
-### Monetization
+### Landing Page Title and Description
 ```csharp
-var qrCode = await qrCodeClient.CreateURLAsync(new CreateURLQRCodeRequest
+var qrCode = await qrCodeClient.CreateURLAsync(new QRCodeCreateURLRequestModel
 {
-    Name = "Monetized QR",
+    Name = "Spring Menu",
     TemplateId = "template_id",
-    IsEnableMonetization = true,
-    PageInfo = new QRCodePageInfo
+    IsEnableLandingPage = true,
+    PageInfo = new QRCodePageInfoModel
     {
-        Title = "Please Wait",
-        Description = "Redirecting..."
+        Title = "Spring Menu",          // required when IsEnableLandingPage is true
+        Description = "New dishes every week"
     },
-    Url = new QRCodeUrlTarget { Url = "https://example.com" }
+    Url = new QRCodeUrlTargetModel { Url = "https://example.com" }
 });
 ```
 
 ### Tracking with RefId and Tag
 ```csharp
-var qrCode = await qrCodeClient.CreateURLAsync(new CreateURLQRCodeRequest
+var qrCode = await qrCodeClient.CreateURLAsync(new QRCodeCreateURLRequestModel
 {
     Name = "Campaign QR",
     TemplateId = "template_id",
     RefId = "CAMPAIGN-2024",
     Tag = "marketing",
-    Url = new QRCodeUrlTarget { Url = "https://example.com" }
+    Url = new QRCodeUrlTargetModel { Url = "https://example.com" }
 });
 ```
 
@@ -208,21 +209,25 @@ var qrCode = await qrCodeClient.CreateURLAsync(new CreateURLQRCodeRequest
 
 All QR code requests support:
 - `Name` - QR code name
-- `TemplateId` - Template to use (required)
+- `TemplateId` - Template to use (`required`; the API refuses an API-key call without it)
 - `RefId` - External reference ID
 - `Tag` - Custom tag for filtering
-- `CustomLandingId` - Custom URL slug
-- `IsEnableMonetization` - Enable ads
-- `PageInfo` - Landing page configuration
+- `CustomLandingId` - Custom slug for the code's page (Starter plan and above)
+- `IsEnableLandingPage` - Show `PageInfo` on the code's Posty5 page
+- `PageInfo` - Landing page title (required when `IsEnableLandingPage` is true) and description
+
+`IsEnableMonetization` is obsolete: the API never accepted it, and the SDK does not send it.
+
+The typed methods send `qrCodeTarget` only; the API builds the text the image encodes.
 
 ## Response Fields
 
 All responses include:
 - `Id` - Database ID
 - `QrCodeId` - Unique QR code identifier
-- `QrCodeLandingPageURL` - Scannable URL
-- `ShorterLink` - Short URL
-- `NumberOfVisitors` - Scan count
+- `QrCodeLandingPageURL` - The code's Posty5 page
+- `QrCodeDownloadURL` - The QR image
+- `NumberOfVisitors` - Visits to the code's Posty5 page (scanning a downloaded image is not counted)
 - `Status` - Approval status
 - `CreatedAt` - Creation timestamp
 - `UpdatedAt` - Last update timestamp

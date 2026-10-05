@@ -38,3 +38,17 @@ silently. Variables are read from the User scope, then the process
 
 Never run by any fact: connect, replace credentials, disconnect, set enabled.
 
+## Short-link and QR payload tests (link-qr truth pass)
+
+`ShortLinkClientPayloadTests` and `QRCodeClientPayloadTests` (in
+`ShortLinkClientTests.cs` / `QRCodeClientTests.cs`) reuse the store tests'
+`RecordingServer` to pin what goes on the wire: no `isEnableMonetization` ever,
+every create field, omitted-when-null update keys, the `pageInfo.title` list key,
+no client-built `options.text` for structured QR types.
+
+Live facts that need the API's truth-pass release use `[LinkQrTruthPassFact]`
+(`tests/Posty5.Tests/LinkQrTruthPassFactAttribute.cs`): skipped unless
+`POSTY5_API_KEY` is set and `POSTY5_TEST_LINK_QR_TP=true` says the API under
+test carries the release (deep links, landing page kept on update, the
+`pageInfo.title` and QR `refId` filters).
+

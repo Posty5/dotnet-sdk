@@ -1,6 +1,6 @@
 # Posty5.ShortLink
 
-Create and manage branded short links with analytics tracking, custom slugs, and QR code generation using the .NET SDK. This package provides a client for building URL shortening solutions with editable destinations, comprehensive tracking, and monetization options.
+Create and manage short links with custom slugs, visit counts, optional landing pages, app deep links and a QR code for each link, using the .NET SDK.
 
 ---
 
@@ -9,7 +9,7 @@ Create and manage branded short links with analytics tracking, custom slugs, and
 **Posty5** is a comprehensive suite of free online tools designed to enhance your digital marketing and social media presence. With over 4+ powerful tools and counting, Posty5 provides everything you need to:
 
 - 🔗 **Shorten URLs** - Create memorable, trackable short links
-- 📱 **Generate QR Codes** - Transform URLs, WiFi credentials, contact cards, and more into scannable codes
+- 📱 **Generate QR Codes** - Turn URLs, text, email, WiFi, phone, SMS and map locations into scannable codes
 - 🌐 **Host HTML Pages** - Deploy static HTML pages with dynamic variables and form submission handling
 - 📢 **Automate Social Media** - Schedule and manage social media posts across multiple platforms
 - 📊 **Track Performance** - Monitor and analyze your digital marketing efforts
@@ -22,29 +22,35 @@ Posty5 empowers businesses, marketers, and developers to streamline their online
 
 ## 📦 About This Package
 
-`Posty5.ShortLink` is a **specialized tool package** for creating and managing URL shorteners on the Posty5 platform. It enables developers to build link management systems for marketing campaigns, social media, analytics tracking, and more.
+`Posty5.ShortLink` is a **specialized tool package** for creating and managing short links on the Posty5 platform.
 
 ### Key Capabilities
 
-- **🔗 URL Shortening** - Transform long URLs into short, memorable links
-- **🎨 Custom Slugs** - Create branded short links with custom aliases
-- **🔄 Editable URLs** - Update destination URLs without changing the short link
-- **📊 Analytics Tracking** - Monitor clicks, visitor counts, and last visitor dates
-- **📱 Free QR Codes** - Automatic QR code generation for each short link
+- **🔗 URL Shortening** - Turn long `http://` / `https://` URLs into short links
+- **🎨 Custom Slugs** - `CustomLandingId`: 4-32 lowercase letters, digits or hyphens (Starter plan and above)
+- **🔄 Editable URLs** - Update the destination without changing the short link
+- **📊 Visit Counts** - `NumberOfVisitors` and `LastVisitorDate` per link
+- **📱 QR Code per Link** - Every short link gets a QR code in the template you choose
 - **🏷️ Tag & Reference Support** - Organize links with custom tags and reference IDs
-- **🎯 Landing Pages** - Create custom landing pages with titles and descriptions
-- **💰 Monetization** - Enable partner earnings on short links
-- **🔍 Advanced Filtering** - Search by name, URL, status, tag, or reference ID
-- **🔐 API Key Filtering** - Scope resources by API key for multi-tenant applications
+- **🎯 Landing Pages** - Optionally show visitors a page with your title and description before they continue
+- **📲 App Deep Links** - Android and iOS URLs, set by you or read from the target page's `al:*` meta tags
+- **🔍 Filtering** - By name, URL, landing page title, status, tag, reference ID or template
 - **📝 CRUD Operations** - Complete create, read, update, delete operations
 
 ### Role in the Posty5 Ecosystem
 
-This package works seamlessly with other Posty5 SDK packages:
-
-- Combine with `Posty5.QRCode` for enhanced QR code customization
+- `Posty5.QRCode` creates standalone QR codes; templates are shared with short links
 - Use with `Posty5.HtmlHosting` to create short links for hosted pages
-- Build comprehensive marketing campaigns with full tracking and analytics
+
+---
+
+## ⬆️ Upgrading to 3.1.0
+
+- `TemplateId` and `BaseUrl` are now `required` on `ShortLinkCreateRequestModel` and `ShortLinkUpdateRequestModel`. The API refuses an API-key call without a template ID, so code that left it out never succeeded.
+- `IsEnableMonetization` is `[Obsolete]` everywhere and is never sent (the API never accepted it and answered 400).
+- `ShortLinkListParamsModel.Search`, `FromDate` and `ToDate` are `[Obsolete]` and no longer sent: the API ignores them.
+- `PageInfoTitle` is now sent as `pageInfo.title` (3.0.0 sent `pageinfo.title`, which matched nothing).
+- New: `IsEnableLandingPage` on create; `AndroidUrl` / `IosUrl` on create and update (need the API's link-qr truth pass).
 
 ---
 
@@ -85,40 +91,36 @@ var httpClient = new Posty5HttpClient(options);
 var shortLinks = new ShortLinkClient(httpClient);
 
 // Create a short link
-var shortLink = await shortLinks.CreateAsync(new CreateShortLinkRequest
+var shortLink = await shortLinks.CreateAsync(new ShortLinkCreateRequestModel
 {
     Name = "Campaign Landing Page",
     BaseUrl = "https://example.com/long-url-to-campaign-page",
-    CustomLandingId = "summer-sale", // Optional: Custom slug
-    TemplateId = "template-123", // Optional: QR code template ID
-    Tag = "marketing", // Optional: For organization
-    RefId = "CAMPAIGN-001" // Optional: External reference
+    TemplateId = "your-template-id",  // Required for API-key calls
+    CustomLandingId = "summer-sale",  // Optional: custom slug (Starter plan and above)
+    Tag = "marketing",                // Optional: for organization
+    RefId = "CAMPAIGN-001"            // Optional: external reference
 });
 
 Console.WriteLine($"Short Link: {shortLink.ShorterLink}");
 Console.WriteLine($"QR Code: {shortLink.QrCodeDownloadURL}");
-Console.WriteLine($"Landing Page: {shortLink.QrCodeLandingPageURL}");
 
-// List all short links
-var allLinks = await shortLinks.ListAsync(
-    null,
-    new PaginationParams { PageNumber = 1, PageSize = 20 }
+// List short links (cursor pagination)
+var page = await shortLinks.ListAsync(
+    new ShortLinkListParamsModel { Tag = "marketing" },
+    new PaginationParams { PageSize = 20 }
 );
 
-Console.WriteLine($"Total links: {allLinks.Pagination.TotalCount}");
-foreach (var link in allLinks.Data)
+foreach (var link in page.Items)
 {
-    Console.WriteLine($"{link.Name}: {link.NumberOfVisitors} clicks");
+    Console.WriteLine($"{link.Name}: {link.NumberOfVisitors} visits");
 }
 
-// Update destination URL (short link stays the same!)
-await shortLinks.UpdateAsync(shortLink.Id!, new UpdateShortLinkRequest
+// Update the destination (the short link stays the same)
+await shortLinks.UpdateAsync(shortLink.Id!, new ShortLinkUpdateRequestModel
 {
     BaseUrl = "https://example.com/updated-campaign-page",
-    TemplateId = "template-123"
+    TemplateId = "your-template-id"
 });
-
-Console.WriteLine("✓ Destination updated - same short link, new target!");
 ```
 
 ---
@@ -129,19 +131,20 @@ Console.WriteLine("✓ Destination updated - same short link, new target!");
 
 #### CreateAsync
 
-Create a new short link with optional custom slug, landing page, and tracking parameters.
+Create a new short link.
 
 **Parameters:**
 
-- `request` (CreateShortLinkRequest): Short link data
-  - `BaseUrl` (string, **required**): Destination URL to redirect to
-  - `Name` (string?, optional): Human-readable name for the link
-  - `CustomLandingId` (string?, optional): Custom slug for branded short links
-  - `TemplateId` (string?, optional): QR code template ID
+- `request` (`ShortLinkCreateRequestModel`): Short link data
+  - `BaseUrl` (string, **required**): Destination URL; must start with `http://` or `https://`
+  - `TemplateId` (string, **required**): QR code template ID. The API answers "Template Id Is Required" to an API-key call without one; your template IDs are on the dashboard's QR code templates page
+  - `Name` (string, optional): Name for the link; empty means the API names it from the target page's title
+  - `CustomLandingId` (string?, optional): Custom slug, 4-32 lowercase letters, digits or hyphens (Starter plan and above)
   - `Tag` (string?, optional): Custom tag for grouping/filtering
   - `RefId` (string?, optional): External reference ID from your system
-  - `IsEnableMonetization` (bool?, optional): Enable partner earnings
-  - `PageInfo` (object?, optional): Landing page metadata
+  - `IsEnableLandingPage` (bool?, optional): `true` shows visitors a page with your `PageInfo` title and description and a Continue button instead of redirecting straight away
+  - `PageInfo` (`ShortLinkPageInfoModel?`): `Title` and `Description`; both required when `IsEnableLandingPage` is `true`
+  - `AndroidUrl`, `IosUrl` (string?, optional): app deep links (see below)
 
 **Returns:** `Task<ShortLinkModel>` - Created short link details
 
@@ -149,9 +152,10 @@ Create a new short link with optional custom slug, landing page, and tracking pa
 
 ```csharp
 // Basic short link
-var shortLink = await shortLinks.CreateAsync(new CreateShortLinkRequest
+var shortLink = await shortLinks.CreateAsync(new ShortLinkCreateRequestModel
 {
     BaseUrl = "https://example.com/product/awesome-widget",
+    TemplateId = "your-template-id",
     Name = "Product Page - Awesome Widget"
 });
 
@@ -159,16 +163,37 @@ Console.WriteLine($"Share this: {shortLink.ShorterLink}");
 ```
 
 ```csharp
-// Branded link
-var brandedLink = await shortLinks.CreateAsync(new CreateShortLinkRequest
+// Landing page: visitors read your title and description, then continue
+var withLanding = await shortLinks.CreateAsync(new ShortLinkCreateRequestModel
 {
     BaseUrl = "https://example.com/summer-sale-2026",
-    Name = "Summer Sale 2026",
-    CustomLandingId = "summer-sale", // Creates: posty5.com/summer-sale
-    Tag = "seasonal-campaigns",
-    RefId = "SUMMER-2026"
+    TemplateId = "your-template-id",
+    IsEnableLandingPage = true,
+    PageInfo = new ShortLinkPageInfoModel
+    {
+        Title = "Summer Sale 2026",
+        Description = "Up to 40% off until August 31."
+    }
 });
 ```
+
+#### App deep links (`AndroidUrl`, `IosUrl`)
+
+```csharp
+var appLink = await shortLinks.CreateAsync(new ShortLinkCreateRequestModel
+{
+    BaseUrl = "https://example.com/item/1",
+    TemplateId = "your-template-id",
+    AndroidUrl = "myapp://item/1",
+    IosUrl = "myapp://item/1"
+});
+```
+
+- Allowed schemes: `https:`, `http:` or an app scheme matching `^[a-z][a-z0-9+.-]*:` - never `javascript:`, `data:`, `vbscript:`, `file:`, `about:` or `blob:` (the API answers "The deep link URL is not allowed").
+- **Create:** a supplied value wins; an empty or absent value falls back to the target page's `al:android:url` / `al:ios:url` meta tags.
+- **Update:** a value is sent and wins, and `""` clears the stored deep link. Left `null`, the key is not sent: if `BaseUrl` changed, the API re-derives the deep link from the new target page's meta tags; if not, the stored value is kept.
+- `IsSupportAndroidDeepUrl` / `IsSupportIOSDeepUrl` are true exactly when the link has that URL.
+- These fields need the API's link-qr truth pass (S13); an older API answers 400 to a request that sets them.
 
 ---
 
@@ -180,9 +205,9 @@ Retrieve complete details of a specific short link by ID.
 
 **Parameters:**
 
-- `id` (string): The unique short link ID
+- `id` (string): The short link's database ID (`Id`)
 
-**Returns:** `Task<ShortLinkModel>` - Short link details
+**Returns:** `Task<ShortLinkFullDetailsModel>` - Short link details, including `AndroidUrl` / `IosUrl` for the owner
 
 **Example:**
 
@@ -193,36 +218,39 @@ Console.WriteLine($"Short Link Details:");
 Console.WriteLine($"  Name: {link.Name}");
 Console.WriteLine($"  Short URL: {link.ShorterLink}");
 Console.WriteLine($"  Destination: {link.BaseUrl}");
-Console.WriteLine($"  Total Clicks: {link.NumberOfVisitors}");
+Console.WriteLine($"  Visits: {link.NumberOfVisitors}");
 ```
 
 ---
 
 #### ListAsync
 
-Search and filter short links with advanced pagination and filtering options.
+Search and filter short links with cursor pagination.
 
 **Parameters:**
 
-- `listParams` (ListShortLinksParams?, optional): Filter criteria
-  - `Name` (string?): Filter by link name
-  - `BaseUrl` (string?): Filter by destination URL
-  - `Tag` (string?): Filter by tag
-  - `RefId` (string?): Filter by reference ID
-  - `Status` (string?): Filter by status
-- `pagination` (PaginationParams?, optional): Pagination options
+- `listParams` (`ShortLinkListParamsModel?`, optional): Filter criteria
+  - `Name` (string?): Name contains
+  - `BaseUrl` (string?): Destination URL contains
+  - `PageInfoTitle` (string?): Landing page title contains (sent as `pageInfo.title`)
+  - `Tag`, `RefId`, `TemplateId`, `ShortLinkId`, `CreatedFrom` (string?): Exact match
+  - `Status` (`ShortLinkStatusType?`): `New`, `Pending`, `Approved`, `Rejected`
+  - `IsForDeepLink` (bool?)
+- `pagination` (`PaginationParams?`, optional): `Cursor` and `PageSize`
 
-**Returns:** `Task<PaginationResponse<ShortLinkModel>>`
+`Search`, `FromDate`, `ToDate` and `IsEnableMonetization` are obsolete: the API has no such filters, so they are not sent.
+
+**Returns:** `Task<PaginationResponse<ShortLinkModel>>` - `Items` plus `Pagination.NextCursor` / `HasMore`. List items carry `NumberOfVisitors`, `IsEnableLandingPage` and `Status` from the API's link-qr truth pass on; deep-link URLs are only returned by `GetAsync`.
 
 **Example:**
 
 ```csharp
-var marketingLinks = await shortLinks.ListAsync(new ListShortLinksParams
+var marketingLinks = await shortLinks.ListAsync(new ShortLinkListParamsModel
 {
     Tag = "marketing"
 });
 
-foreach (var link in marketingLinks.Data)
+foreach (var link in marketingLinks.Items)
 {
     Console.WriteLine($"{link.Name} - {link.ShorterLink}");
 }
@@ -234,15 +262,21 @@ foreach (var link in marketingLinks.Data)
 
 #### UpdateAsync
 
-Update an existing short link's destination URL or metadata. The short URL remains the same!
+Update an existing short link's destination URL or metadata. The short URL remains the same.
 
 **Parameters:**
 
 - `id` (string): Short link ID to update
-- `request` (UpdateShortLinkRequest): Updated data
-  - `BaseUrl` (string, **required**): New destination URL
-  - `Name` (string?, optional): Updated link name
-  - ... other optional fields
+- `request` (`ShortLinkUpdateRequestModel`): Updated data. A property left `null` is not sent.
+  - `BaseUrl` (string, **required**): Destination URL - send the current one to keep it
+  - `TemplateId` (string, **required**): QR code template ID
+  - `Name` (string?): `null` or empty means the API names the link from the target page's title
+  - `Tag`, `RefId` (string?): `null` keeps the stored value
+  - `IsEnableLandingPage` (bool?): `null` keeps the stored value (from the API's link-qr truth pass on; an older API turned the landing page off)
+  - `PageInfo` (`ShortLinkPageInfoModel?`): title and description, both required when the landing page is on
+  - `AndroidUrl`, `IosUrl` (string?): see *App deep links* above
+
+A custom slug cannot be changed after creation.
 
 **Returns:** `Task<ShortLinkModel>`
 
@@ -250,10 +284,10 @@ Update an existing short link's destination URL or metadata. The short URL remai
 
 ```csharp
 // Update destination URL (most common use case)
-await shortLinks.UpdateAsync("link-id-123", new UpdateShortLinkRequest
+await shortLinks.UpdateAsync("link-id-123", new ShortLinkUpdateRequestModel
 {
     BaseUrl = "https://example.com/new-destination",
-    TemplateId = "template-123"
+    TemplateId = "your-template-id"
 });
 ```
 
@@ -269,7 +303,7 @@ Permanently delete a short link. The short URL will no longer work.
 
 - `id` (string): Short link ID to delete
 
-**Returns:** `Task`
+**Returns:** `Task<DeleteResponse>`
 
 **Example:**
 
@@ -288,14 +322,15 @@ using Posty5.Core.Exceptions;
 
 try
 {
-    await shortLinks.CreateAsync(new CreateShortLinkRequest
+    await shortLinks.CreateAsync(new ShortLinkCreateRequestModel
     {
-        BaseUrl = "invalid-url"
+        BaseUrl = "https://example.com",
+        TemplateId = "" // missing template
     });
 }
 catch (Posty5ValidationException ex)
 {
-    Console.WriteLine($"Invalid URL: {ex.Message}");
+    Console.WriteLine($"Refused: {ex.Message}");
 }
 ```
 

@@ -47,39 +47,42 @@ public class Examples
         await SuppliersExample(httpClient);
     }
     
-    static async Post QRCodeExamples(Posty5HttpClient httpClient)
+    static async Task QRCodeExamples(Posty5HttpClient httpClient)
     {
         Console.WriteLine("\n=== QR Code Examples ===\n");
-        
+
         var qrCodeClient = new QRCodeClient(httpClient);
-        
+        const string templateId = "your-template-id"; // required for API-key calls
+
         // Create a URL QR code
-        var urlQr = await qrCodeClient.CreateUrlAsync(new CreateUrlQRCodeRequest
+        var urlQr = await qrCodeClient.CreateURLAsync(new QRCodeCreateURLRequestModel
         {
             Name = "Website QR Code",
-            QrCodeTarget = new UrlQRTarget { Url = "https://posty5.com" }
+            TemplateId = templateId,
+            Url = new QRCodeUrlTargetModel { Url = "https://posty5.com" }
         });
         Console.WriteLine($"Created URL QR Code: {urlQr.QrCodeLandingPageURL}");
-        
-        // Create a WiFi QR code
-        var wifiQr = await qrCodeClient.CreateWifiAsync(new CreateWifiQRCodeRequest
+
+        // Create a WiFi QR code (the API builds and escapes the encoded text)
+        var wifiQr = await qrCodeClient.CreateWifiAsync(new QRCodeCreateWifiRequestModel
         {
             Name = "Office WiFi",
-            QrCodeTarget = new WifiQRTarget
+            TemplateId = templateId,
+            Wifi = new QRCodeWifiTargetModel
             {
-                Ssid = "OfficeNetwork",
+                Name = "OfficeNetwork",
                 Password = "SecurePassword123",
-                SecurityType = "WPA",
-                Hidden = false
+                AuthenticationType = "WPA"
             }
         });
         Console.WriteLine($"Created WiFi QR Code: {wifiQr.QrCodeLandingPageURL}");
-        
+
         // Create an Email QR code
-        var emailQr = await qrCodeClient.CreateEmailAsync(new CreateEmailQRCodeRequest
+        var emailQr = await qrCodeClient.CreateEmailAsync(new QRCodeCreateEmailRequestModel
         {
             Name = "Contact Email",
-            QrCodeTarget = new EmailQRTarget
+            TemplateId = templateId,
+            Email = new QRCodeEmailTargetModel
             {
                 Email = "contact@example.com",
                 Subject = "Hello",
@@ -87,47 +90,53 @@ public class Examples
             }
         });
         Console.WriteLine($"Created Email QR Code: {emailQr.QrCodeLandingPageURL}");
-        
-        // List QR codes
+
+        // List QR codes (cursor pagination)
         var qrCodes = await qrCodeClient.ListAsync(
-            pagination: new PaginationParams { PageNumber = 0, PageSize = 10 }
+            pagination: new PaginationParams { PageSize = 10 }
         );
-        Console.WriteLine($"Found {qrCodes.TotalCount} QR codes");
+        Console.WriteLine($"Found {qrCodes.Items.Count} QR codes on this page");
     }
-    
-    static async Post ShortLinkExamples(Posty5HttpClient httpClient)
+
+    static async Task ShortLinkExamples(Posty5HttpClient httpClient)
     {
         Console.WriteLine("\n=== Short Link Examples ===\n");
-        
+
         var shortLinkClient = new ShortLinkClient(httpClient);
-        
+        const string templateId = "your-template-id"; // required for API-key calls
+
         // Create a short link
-        var shortLink = await shortLinkClient.CreateAsync(new CreateShortLinkRequest
+        var shortLink = await shortLinkClient.CreateAsync(new ShortLinkCreateRequestModel
         {
             Name = "Marketing Campaign",
-            TargetUrl = "https://example.com/very-long-url-with-parameters?utm_source=campaign",
-            CustomSlug = "summer-sale"
+            BaseUrl = "https://example.com/very-long-url-with-parameters?utm_source=campaign",
+            TemplateId = templateId,
+            CustomLandingId = "summer-sale", // Starter plan and above
+            RefId = "CAMPAIGN-001",
+            Tag = "campaign"
         });
-        Console.WriteLine($"Created Short Link: {shortLink.ShortUrl}");
-        
+        Console.WriteLine($"Created Short Link: {shortLink.ShorterLink}");
+
         // Get short link details
         var details = await shortLinkClient.GetAsync(shortLink.Id!);
-        Console.WriteLine($"Clicks: {details.ClickCount}");
-        
-        // Update short link
-        await shortLinkClient.UpdateAsync(shortLink.Id!, new UpdateShortLinkRequest
+        Console.WriteLine($"Visits: {details.NumberOfVisitors}");
+
+        // Update short link (BaseUrl and TemplateId are required on every update)
+        await shortLinkClient.UpdateAsync(shortLink.Id!, new ShortLinkUpdateRequestModel
         {
-            Name = "Updated Campaign Name"
+            Name = "Updated Campaign Name",
+            BaseUrl = details.BaseUrl!,
+            TemplateId = templateId
         });
         Console.WriteLine("Updated short link");
-        
-        // List short links
+
+        // List short links by reference ID
         var shortLinks = await shortLinkClient.ListAsync(
-            new ListShortLinksParams { Search = "campaign" }
+            new ShortLinkListParamsModel { RefId = "CAMPAIGN-001" }
         );
-        Console.WriteLine($"Found {shortLinks.TotalCount} short links");
+        Console.WriteLine($"Found {shortLinks.Items.Count} short links on this page");
     }
-    
+
     static async Post HtmlHostingExamples(Posty5HttpClient httpClient)
     {
         Console.WriteLine("\n=== HTML Hosting Examples ===\n");
