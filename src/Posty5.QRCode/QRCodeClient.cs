@@ -40,6 +40,20 @@ public partial class QRCodeClient
     private readonly Posty5HttpClient _http;
     private const string BasePath = "/api/qr-code";
 
+    /// <summary>A boxed JSON <c>null</c>: unlike a C# <c>null</c>, the client's WhenWritingNull option still writes it.</summary>
+    private static readonly object JsonNull = System.Text.Json.JsonDocument.Parse("null").RootElement.Clone();
+
+    /// <summary>
+    /// The <c>access</c> body value: <c>null</c> (omitted, the API keeps the stored rules) when
+    /// neither <see cref="QRCodeRequestBaseModel.Access"/> nor <see cref="QRCodeRequestBaseModel.ClearAccess"/>
+    /// is set; a JSON <c>null</c> for <c>ClearAccess</c>; otherwise the rules object, which replaces the stored one.
+    /// </summary>
+    private static object? AccessPayload(QRCodeRequestBaseModel data)
+    {
+        if (data.ClearAccess) return JsonNull;
+        return data.Access;
+    }
+
     /// <summary>
     /// Creates a new QR Code client
     /// </summary>
@@ -92,6 +106,7 @@ public partial class QRCodeClient
             data.IsEnableLandingPage,
             data.PageInfo,
             data.Mode,
+            access = AccessPayload(data),
             options = new
             {
                 text = qrCodeTarget.freeText.text
@@ -148,6 +163,7 @@ public partial class QRCodeClient
             data.IsEnableLandingPage,
             data.PageInfo,
             data.Mode,
+            access = AccessPayload(data),
             qrCodeTarget,
             templateType = "user",
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
@@ -204,6 +220,7 @@ public partial class QRCodeClient
             data.IsEnableLandingPage,
             data.PageInfo,
             data.Mode,
+            access = AccessPayload(data),
             qrCodeTarget,
             templateType = "user",
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
@@ -255,6 +272,7 @@ public partial class QRCodeClient
             data.IsEnableLandingPage,
             data.PageInfo,
             data.Mode,
+            access = AccessPayload(data),
             qrCodeTarget,
             templateType = "user",
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
@@ -307,6 +325,7 @@ public partial class QRCodeClient
             data.IsEnableLandingPage,
             data.PageInfo,
             data.Mode,
+            access = AccessPayload(data),
             qrCodeTarget,
             templateType = "user",
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
@@ -357,6 +376,7 @@ public partial class QRCodeClient
             data.IsEnableLandingPage,
             data.PageInfo,
             data.Mode,
+            access = AccessPayload(data),
             qrCodeTarget,
             templateType = "user",
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
@@ -409,6 +429,7 @@ public partial class QRCodeClient
             data.IsEnableLandingPage,
             data.PageInfo,
             data.Mode,
+            access = AccessPayload(data),
             qrCodeTarget,
             templateType = "user",
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
@@ -464,6 +485,7 @@ public partial class QRCodeClient
             data.IsEnableLandingPage,
             data.PageInfo,
             data.Mode,
+            access = AccessPayload(data),
             options = new
             {
                 text = qrCodeTarget.freeText.text
@@ -522,6 +544,7 @@ public partial class QRCodeClient
             data.IsEnableLandingPage,
             data.PageInfo,
             data.Mode,
+            access = AccessPayload(data),
             qrCodeTarget,
             templateType = "user",
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
@@ -580,6 +603,7 @@ public partial class QRCodeClient
             data.IsEnableLandingPage,
             data.PageInfo,
             data.Mode,
+            access = AccessPayload(data),
             qrCodeTarget,
             templateType = "user",
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
@@ -633,6 +657,7 @@ public partial class QRCodeClient
             data.IsEnableLandingPage,
             data.PageInfo,
             data.Mode,
+            access = AccessPayload(data),
             qrCodeTarget,
             templateType = "user",
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
@@ -687,6 +712,7 @@ public partial class QRCodeClient
             data.IsEnableLandingPage,
             data.PageInfo,
             data.Mode,
+            access = AccessPayload(data),
             qrCodeTarget,
             templateType = "user",
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
@@ -739,6 +765,7 @@ public partial class QRCodeClient
             data.IsEnableLandingPage,
             data.PageInfo,
             data.Mode,
+            access = AccessPayload(data),
             qrCodeTarget,
             templateType = "user",
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
@@ -793,6 +820,7 @@ public partial class QRCodeClient
             data.IsEnableLandingPage,
             data.PageInfo,
             data.Mode,
+            access = AccessPayload(data),
             qrCodeTarget,
             templateType = "user",
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)

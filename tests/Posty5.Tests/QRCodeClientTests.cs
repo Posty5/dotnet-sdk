@@ -735,6 +735,32 @@ public class QRCodeClientTests : IDisposable
         Assert.All(result.Items, item => Assert.Equal(QRCodeMode.Dynamic, item.Mode));
     }
 
+    /// <summary>Needs a Starter+ test account; on Free the create answers 403.</summary>
+    [Fact]
+    public async Task Dynamic_ScanRules_SetReadAndClear()
+    {
+        var created = await _client.CreateURLAsync(new QRCodeCreateURLRequestModel
+        {
+            Name = $"Scan rules QR - {DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
+            TemplateId = TestConfig.TemplateId,
+            Mode = QRCodeMode.Dynamic,
+            Url = new QRCodeUrlTargetModel { Url = "https://example.com" },
+            Access = new QRCodeAccessModel { MaxVisits = 10, FallbackUrl = "https://example.com/over" }
+        });
+        TestConfig.CreatedResources.QRCodes.Add(created.Id!);
+        Assert.Equal(10, created.Access?.MaxVisits);
+        Assert.Equal("https://example.com/over", created.Access?.FallbackUrl);
+
+        var cleared = await _client.UpdateURLAsync(created.Id!, new QRCodeUpdateURLRequestModel
+        {
+            Name = created.Name,
+            TemplateId = TestConfig.TemplateId,
+            Url = new QRCodeUrlTargetModel { Url = "https://example.com" },
+            ClearAccess = true
+        });
+        Assert.Null(cleared.Access);
+    }
+
     #endregion
 
     #region Visit analytics (VA)
@@ -995,6 +1021,75 @@ public class QRCodeClientPayloadTests : IDisposable
         Assert.Equal(QRCodeMode.Static, items[1].Mode);
         Assert.Null(items[1].DynamicSince);
         Assert.Equal("future", items[2].Mode?.Value);
+    }
+
+    // ─── Scan rules (DQ Part B) ──────────────────────────────────────────────
+
+    [Fact]
+    public async Task WithoutAccess_NoAccessOnTheWire()
+    {
+        await _client.CreateURLAsync(new QRCodeCreateURLRequestModel { TemplateId = "tpl-1", Url = new() { Url = "https://example.com" } });
+        await _client.UpdateURLAsync("q1", new QRCodeUpdateURLRequestModel { TemplateId = "tpl-1", Url = new() { Url = "https://example.com" } });
+
+        foreach (var r in _server.Requests)
+        {
+            using var json = JsonDocument.Parse(r.Body);
+            Assert.False(json.RootElement.TryGetProperty("access", out _), $"{r.PathAndQuery}: access sent without a value");
+        }
+    }
+
+    [Fact]
+    public async Task Access_IsSentAsObject()
+    {
+        await _client.CreateURLAsync(new QRCodeCreateURLRequestModel
+        {
+            TemplateId = "tpl-1",
+            Mode = QRCodeMode.Dynamic,
+            Url = new() { Url = "https://example.com" },
+            Access = new QRCodeAccessModel
+            {
+                ExpiresAt = new DateTime(2026, 12, 31, 0, 0, 0, DateTimeKind.Utc),
+                MaxVisits = 100,
+                FallbackUrl = "https://example.com/over"
+            }
+        });
+
+        using var json = JsonDocument.Parse(_server.Requests.Single().Body);
+        var access = json.RootElement.GetProperty("access");
+        Assert.Equal(JsonValueKind.Object, access.ValueKind);
+        Assert.Equal(100, access.GetProperty("maxVisits").GetInt32());
+        Assert.Equal("https://example.com/over", access.GetProperty("fallbackUrl").GetString());
+        Assert.StartsWith("2026-12-31T00:00:00", access.GetProperty("expiresAt").GetString());
+        Assert.False(access.TryGetProperty("activeFrom", out _));
+    }
+
+    [Fact]
+    public async Task ClearAccess_SendsJsonNull()
+    {
+        await _client.UpdateURLAsync("q1", new QRCodeUpdateURLRequestModel
+        {
+            TemplateId = "tpl-1",
+            Url = new() { Url = "https://example.com" },
+            Access = new QRCodeAccessModel { MaxVisits = 5 },
+            ClearAccess = true
+        });
+
+        using var json = JsonDocument.Parse(_server.Requests.Single().Body);
+        Assert.Equal(JsonValueKind.Null, json.RootElement.GetProperty("access").ValueKind);
+        Assert.False(json.RootElement.TryGetProperty("clearAccess", out _));
+    }
+
+    [Fact]
+    public async Task Responses_ReadAccess()
+    {
+        _server.ResultJson = "{\"items\":[{\"_id\":\"q1\",\"access\":{\"activeFrom\":null,\"expiresAt\":\"2026-12-31T00:00:00.000Z\",\"maxVisits\":3,\"fallbackUrl\":null}},{\"_id\":\"q2\",\"access\":null}]}";
+
+        var items = (await _client.ListAsync()).Items;
+
+        Assert.Equal(3, items[0].Access?.MaxVisits);
+        Assert.Null(items[0].Access?.ActiveFrom);
+        Assert.Equal(new DateTime(2026, 12, 31, 0, 0, 0, DateTimeKind.Utc), items[0].Access?.ExpiresAt?.ToUniversalTime());
+        Assert.Null(items[1].Access);
     }
 
     // ─── GetAnalyticsAsync (VA) ──────────────────────────────────────────────

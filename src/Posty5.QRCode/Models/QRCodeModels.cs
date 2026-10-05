@@ -365,6 +365,9 @@ public class QRCodeModel
 
     /// <summary>When the code last became dynamic; <c>null</c> for a static code.</summary>
     public DateTime? DynamicSince { get; set; }
+
+    /// <summary>The code's scan rules; <c>null</c> when it has none.</summary>
+    public QRCodeAccessModel? Access { get; set; }
     
     /// <summary>
     /// Preview reasons (moderation scores)
@@ -483,6 +486,38 @@ public class QRCodeRequestBaseModel
     /// dynamic: the Wi-Fi methods throw <see cref="ArgumentException"/> before any call.
     /// </summary>
     public QRCodeMode? Mode { get; set; }
+
+    /// <summary>
+    /// Scan rules (dynamic codes only, Starter plan and above). Omitted (<c>null</c>): an update
+    /// keeps the stored rules. A sent object replaces the stored rules as a whole, so a property
+    /// left <c>null</c> in it is cleared. The API answers 400 for a static code and 403 below Starter.
+    /// </summary>
+    public QRCodeAccessModel? Access { get; set; }
+
+    /// <summary>
+    /// <c>true</c> sends <c>access: null</c>, removing every scan rule. Needed because a
+    /// <c>null</c> <see cref="Access"/> means "keep". Takes precedence over <see cref="Access"/>.
+    /// </summary>
+    [JsonIgnore]
+    public bool ClearAccess { get; set; }
+}
+
+/// <summary>
+/// Scan rules of a dynamic QR code. Every property is optional; with none set the code is never gated.
+/// </summary>
+public class QRCodeAccessModel
+{
+    /// <summary>Scans before this moment (UTC) go to <see cref="FallbackUrl"/> or are refused.</summary>
+    public DateTime? ActiveFrom { get; set; }
+
+    /// <summary>Scans from this moment (UTC) go to <see cref="FallbackUrl"/> or are refused. Must be after <see cref="ActiveFrom"/>.</summary>
+    public DateTime? ExpiresAt { get; set; }
+
+    /// <summary>Number of scans allowed (1 or more); later scans go to <see cref="FallbackUrl"/> or are refused.</summary>
+    public int? MaxVisits { get; set; }
+
+    /// <summary>An http(s) URL (up to 2048 characters) that gated scans are sent to.</summary>
+    public string? FallbackUrl { get; set; }
 }
 
 /// <summary>

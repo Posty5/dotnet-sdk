@@ -46,6 +46,10 @@ Needs the API's dynamic QR release. Additive; no version bump in this change.
   call when `Mode` is `Dynamic` (Wi-Fi cannot be dynamic; the API answers 400).
 - `QRCodeModel.Mode` and `QRCodeModel.DynamicSince` (also on
   `QRCodeFullDetailsModel`), and the `QRCodeListParamsModel.Mode` filter.
+- Scan rules (dynamic codes, Starter+): `QRCodeAccessModel` (`ActiveFrom`,
+  `ExpiresAt`, `MaxVisits`, `FallbackUrl`); `QRCodeRequestBaseModel.Access`
+  (sent as `access` only when set; replaces the stored rules as a whole) and
+  `ClearAccess` (sends `access: null`); `QRCodeModel.Access` on responses.
 
 ## Posty5.ShortLink 3.2.0, Posty5.QRCode 3.2.0, Posty5.Core 3.2.0 - unreleased
 

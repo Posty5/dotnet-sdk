@@ -377,6 +377,28 @@ await qrCodes.UpdateURLAsync(qr.Id!, new QRCodeUpdateURLRequestModel
 });
 ```
 
+#### Scan rules (dynamic codes, Starter plan and above)
+
+`Access` limits when and how often a dynamic code works: `ActiveFrom`,
+`ExpiresAt` (UTC), `MaxVisits` (1 or more) and `FallbackUrl` (where gated scans
+go). Leave `Access` null on an update to keep the stored rules; a sent object
+replaces them as a whole. `ClearAccess = true` removes every rule. The API
+answers 400 on a static code and 403 below Starter.
+
+```csharp
+await qrCodes.UpdateURLAsync(qr.Id!, new QRCodeUpdateURLRequestModel
+{
+    Name = "Menu",
+    TemplateId = "template_123",
+    Url = new QRCodeUrlTargetModel { Url = "https://example.com/menu" },
+    Access = new QRCodeAccessModel
+    {
+        ExpiresAt = new DateTime(2026, 12, 31, 0, 0, 0, DateTimeKind.Utc),
+        FallbackUrl = "https://example.com/offer-ended"
+    }
+});
+```
+
 ---
 
 ### Retrieving QR Codes
