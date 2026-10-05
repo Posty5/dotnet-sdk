@@ -2,7 +2,7 @@
 
 > New feature? It ships with an article, a guide page, and SDK + MCP coverage when it has a public API — see [`../AI_RULES.md`](../AI_RULES.md) §14.
 
-This repository is the .NET 8 multi-project SDK solution. Eight NuGet-ready .NET projects sharing Posty5.Core and typed clients/models for links, QR codes, hosting, variables, form submissions, and social publishing.
+This repository is the .NET 8 multi-project SDK solution. Ten NuGet-ready .NET projects — Posty5.Core plus nine feature packages with typed clients/models for links, QR codes, hosting, variables, form submissions, social publishing, the online store, and the account (key owner, credits, prices).
 
 ## Required reading order
 

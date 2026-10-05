@@ -413,6 +413,28 @@ await qrCodes.DeleteAsync("qr-code-id-123");
 
 ---
 
+### Templates — QRCodeTemplateClient (3.1.0+)
+
+The template ids every create method takes as `TemplateId`. Read-only; a
+template is designed in the dashboard.
+
+```csharp
+var templates = new QRCodeTemplateClient(httpClient);
+
+var mine = await templates.ListUserTemplatesAsync();              // your own
+var shared = await templates.ListPublicTemplatesAsync("classic"); // Posty5's public ones (no API key needed)
+var templateId = mine.Items.FirstOrDefault()?.Id ?? shared.Items.First().Id;
+```
+
+| Method | Route |
+| --- | --- |
+| `ListUserTemplatesAsync(term?, pagination?)` | `GET /api/qr-code-template/user-lookup` |
+| `ListPublicTemplatesAsync(term?, schemeType?, pagination?)` | `GET /api/qr-code-template/public-lookup` |
+
+Both page by cursor (`PaginationParams`, `Pagination.NextCursor`).
+
+---
+
 ## 🔒 Error Handling
 
 Methods throw exceptions from `Posty5.Core.Exceptions`.

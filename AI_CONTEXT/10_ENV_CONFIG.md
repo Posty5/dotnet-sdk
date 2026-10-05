@@ -9,6 +9,8 @@
 | `Posty5Options.BaseUrl` | Per-client API base URL. | `src/Posty5.Core/Configuration/Posty5Options.cs` | runtime |
 | `Posty5Options.ApiKey` | Per-client X-API-Key credential; secret. | `src/Posty5.Core/Configuration/Posty5Options.cs` | runtime |
 | `Posty5Options.Debug` | Debug behavior; avoid sensitive data. | `src/Posty5.Core/Configuration/Posty5Options.cs` | runtime |
+| `Posty5Options.DefaultHeaders` | Headers on every request; `X-API-Key` refused (constructor throws), `X-Posty5-Client` overridable, content headers refused. | `src/Posty5.Core/Configuration/Posty5Options.cs` | runtime |
+| `Posty5Options.CreatedFrom` | `createdFrom` label on created records; null keeps `CreatedFromDefaults` (`dotnetPackage`, `dotnet` for store orders). | `src/Posty5.Core/Configuration/Posty5Options.cs` | runtime |
 
 ## Rules
 

@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using Posty5.Core.Configuration;
 using Posty5.Core.Http;
 using Posty5.Core.Models;
 using Posty5.SocialPublisherWorkspace.Models;
@@ -156,7 +157,7 @@ public class SocialPublisherWorkspaceClient
             data.Tag,
             data.RefId,
             hasImage = logoStream != null,
-            createdFrom = "dotnetPackage"
+            createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
         var response = await _http.PostAsync<SocialPublisherWorkspaceCreateResponseModel>(BasePath, payload, cancellationToken);

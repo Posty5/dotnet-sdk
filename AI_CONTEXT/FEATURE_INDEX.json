@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-19",
+  "generated_at": "2026-10-05",
   "project": "dotnet-sdk",
   "features": [
     {
@@ -76,6 +76,46 @@
       "name": "File downloads (.xlsx exports and templates)",
       "owner": "core",
       "source": "src/Posty5.Core/Http/HttpClient.cs"
+    },
+    {
+      "name": "Client identification header and default headers (X-Posty5-Client, Posty5Options.DefaultHeaders)",
+      "owner": "core",
+      "source": "src/Posty5.Core/Http/HttpClient.cs"
+    },
+    {
+      "name": "Configurable createdFrom label (Posty5Options.CreatedFrom)",
+      "owner": "core",
+      "source": "src/Posty5.Core/Configuration/CreatedFromDefaults.cs"
+    },
+    {
+      "name": "Account: who am I, credits, credit usage, operation costs",
+      "owner": "account",
+      "source": "src/Posty5.Account/AccountClient.cs"
+    },
+    {
+      "name": "Store lookup (stores the key owner can manage)",
+      "owner": "store",
+      "source": "src/Posty5.Store/StoreClient.cs"
+    },
+    {
+      "name": "Connected social accounts (read-only)",
+      "owner": "social-publisher-workspace",
+      "source": "src/Posty5.SocialPublisherWorkspace/SocialPublisherAccountClient.cs"
+    },
+    {
+      "name": "QR code templates (user and public)",
+      "owner": "qr-code",
+      "source": "src/Posty5.QRCode/QRCodeTemplateClient.cs"
+    },
+    {
+      "name": "Text posts and stories (URL media)",
+      "owner": "social-publisher-post",
+      "source": "src/Posty5.SocialPublisherPost/SocialPublisherPostClient.cs"
+    },
+    {
+      "name": "Remove a published post from the platforms",
+      "owner": "social-publisher-post",
+      "source": "src/Posty5.SocialPublisherPost/SocialPublisherPostClient.cs"
     }
   ]
 }

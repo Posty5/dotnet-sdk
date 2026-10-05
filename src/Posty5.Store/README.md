@@ -36,6 +36,16 @@ var store = new StoreClient(http);
 The client is split into six areas: `store.Products`, `store.Orders`,
 `store.Tags`, `store.Customers`, `store.Shipping` and `store.Suppliers`.
 
+Don't know the store id? List the stores the key's owner owns or is staff on:
+
+```csharp
+var stores = await store.ListStoresAsync();             // [{ Id, Name = "<slug> - <name>" }]
+var storeId = (await store.LookupStoresAsync("my-shop")).First().Id;
+```
+
+The API answers one page (normally 10 stores); search by name or slug when
+there are more.
+
 ## Products
 
 ```csharp
@@ -115,7 +125,7 @@ var page = await store.Orders.SearchAsync(storeId,
     new OrderSearchParams { Status = "pending", OrderSource = "facebook", FromDate = "2026-07-01" },
     new PaginationParams { PageSize = 50 });
 
-// Record an order received off-store (tagged createdFrom: "dotnet").
+// Record an order received off-store (tagged createdFrom: Posty5Options.CreatedFrom, else "dotnet").
 var order = await store.Orders.CreateAsync(storeId, new CreateOrderInput
 {
     Items = new() { new OrderItemInput { ProductId = productId, Qty = 2 } },
@@ -315,6 +325,13 @@ foreach (var supplierOrder in paused.Where(o => o.ReviewReason == SupplierReview
   (`page`, `pageSize`).
 
 ## API
+
+### `StoreClient` — `/api/store`
+
+| Method | Endpoint |
+| --- | --- |
+| `ListStoresAsync()` | `GET /lookup` |
+| `LookupStoresAsync(term?)` | `GET /lookup?term=` |
 
 ### `store.Products` — `/api/store-products`
 

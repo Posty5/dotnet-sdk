@@ -45,6 +45,9 @@ public class Examples
         
         // Store dropshipping (suppliers) Examples
         await SuppliersExample(httpClient);
+
+        // Account, discovery, text post and story Examples
+        await AccountAndDiscoveryExample(httpClient);
     }
     
     static async Post QRCodeExamples(Posty5HttpClient httpClient)
@@ -296,5 +299,72 @@ public class Examples
                 Console.WriteLine($"  {part.Label}: {part.Status} {part.Shipment?.TrackingNumber}");
             }
         }
+    }
+
+    /// <summary>
+    /// Who the key is, what it can spend and what things cost; then find the ids
+    /// the other calls take — stores, connected accounts, QR templates — and
+    /// publish a text post and a story by URL. Reads are free; the two posts
+    /// are charged at the price GetOperationCostsAsync reports.
+    /// </summary>
+    static async Task AccountAndDiscoveryExample(Posty5HttpClient httpClient)
+    {
+        Console.WriteLine("\n=== Account, discovery, text post and story ===\n");
+
+        // Who am I, and what can I spend? (an unknown or revoked key throws Posty5AuthenticationException)
+        var account = new Posty5.Account.AccountClient(httpClient);
+        var me = await account.GetCurrentAsync();
+        Console.WriteLine($"{me.User.UserName} on {me.Plan?.Name ?? "no plan"}: {me.Credits.Spendable} credits spendable");
+
+        // Prices change — read them rather than hard-coding them
+        var costs = await account.GetOperationCostsAsync();
+        var textPostCost = costs.Modules.SelectMany(m => m.Operations)
+            .FirstOrDefault(o => o.FeaturePath == "socialMediaPublisher.textPost");
+        Console.WriteLine($"A text post costs {textPostCost?.Cost} {costs.Currency}");
+
+        // The ids the other calls take
+        var stores = await new StoreClient(httpClient).ListStoresAsync();
+        Console.WriteLine($"Stores: {string.Join(", ", stores.Select(s => $"{s.Name} ({s.Id})"))}");
+
+        var templates = await new QRCodeTemplateClient(httpClient).ListPublicTemplatesAsync();
+        Console.WriteLine($"First public QR template: {templates.Items.FirstOrDefault()?.Name}");
+
+        var accounts = await new Posty5.SocialPublisherWorkspace.SocialPublisherAccountClient(httpClient)
+            .ListAsync(new Posty5.SocialPublisherWorkspace.Models.SocialPublisherAccountListParamsModel { Platform = "facebook", Status = "active" });
+        var page = accounts.Items.FirstOrDefault();
+        if (page == null)
+        {
+            Console.WriteLine("No active Facebook Page connected — connect one in the dashboard first.");
+            return;
+        }
+
+        // A text post, then a story, to that Page
+        var posts = new Posty5.SocialPublisherPost.SocialPublisherPostClient(httpClient);
+        var text = await posts.CreateTextPostToAccountAsync(new Posty5.SocialPublisherPost.Models.CreateTextPostToAccountRequest
+        {
+            AccountId = page.Id,
+            Caption = "Our autumn menu is out.",
+            Facebook = new Posty5.SocialPublisherPost.Models.TextPostFacebookConfig
+            {
+                Description = "Our autumn menu is out. Take a look:",
+                Link = "https://example.com/menu"
+            }
+        });
+        Console.WriteLine($"Text post {text.Id} queued");
+
+        var story = await posts.CreateStoryPostToAccountAsync(new Posty5.SocialPublisherPost.Models.CreateStoryPostToAccountRequest
+        {
+            AccountId = page.Id,
+            Kind = Posty5.SocialPublisherPost.Models.StoryKinds.Image,
+            Image = new Posty5.SocialPublisherPost.Models.ImageRequest
+            {
+                Source = Posty5.SocialPublisherPost.Models.ImageSource.ImageUrl,
+                ExternalUrl = "https://example.com/menu-story.jpg"
+            }
+        });
+
+        // Status lives at /{id}/status (fixed in Posty5.SocialPublisherPost 4.6.0)
+        var status = await posts.GetStatusAsync(story.Id);
+        Console.WriteLine($"Story {story.Id}: {status.CurrentStatus}, expires {status.StoryExpiresAt}");
     }
 }

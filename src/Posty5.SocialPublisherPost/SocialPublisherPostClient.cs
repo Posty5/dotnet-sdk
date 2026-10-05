@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Headers;
+using Posty5.Core.Configuration;
 using Posty5.Core.Http;
 using Posty5.Core.Models;
 using Posty5.SocialPublisherPost.Models;
@@ -89,12 +90,23 @@ public class SocialPublisherPostClient
     /// <summary>
     /// Get post status by ID with full details including platform configurations
     /// </summary>
+    /// <remarks>
+    /// Calls <c>GET /api/social-publisher-post/{id}/status</c>. Before 4.6.0 this
+    /// called <c>GET /api/social-publisher-post/{id}</c>, a route the API does
+    /// not have, so every call failed with <c>Posty5NotFoundException</c>.
+    /// </remarks>
+    /// <param name="id">The post id.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The post with its per-platform status.</returns>
     public async Task<PostStatusFullDetailsResponse> GetStatusAsync(
         string id,
         CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrWhiteSpace(id))
+            throw new ArgumentException("id is required", nameof(id));
+
         var response = await _http.GetAsync<PostStatusFullDetailsResponse>(
-            $"{BasePath}/{id}",
+            $"{BasePath}/{id}/status",
             cancellationToken: cancellationToken);
 
         return response.Result ?? throw new InvalidOperationException("Post not found");
@@ -463,7 +475,7 @@ public class SocialPublisherPostClient
         {
             request.WorkspaceId, request.Source, request.Youtube, request.Tiktok,
             request.Facebook, request.Instagram, request.VideoURL, request.ThumbURL,
-            request.Schedule, request.Comment, request.Tag, request.RefId, createdFrom = "dotnetPackage"
+            request.Schedule, request.Comment, request.Comments, request.Tag, request.RefId, createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
         var response = await _http.PostAsync<Dictionary<string, object>>(path, payload, cancellationToken);
@@ -481,7 +493,7 @@ public class SocialPublisherPostClient
         {
             request.WorkspaceId, request.Source, request.Youtube, request.Tiktok,
             request.Facebook, request.Instagram, request.VideoURL, request.ThumbURL,
-            request.Schedule, request.Comment, request.Tag, request.RefId, createdFrom = "dotnetPackage"
+            request.Schedule, request.Comment, request.Comments, request.Tag, request.RefId, createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
         var response = await _http.PostAsync<Dictionary<string, object>>(path, payload, cancellationToken);
@@ -499,7 +511,7 @@ public class SocialPublisherPostClient
         {
             request.AccountId, request.Source, request.Youtube, request.Tiktok,
             request.Facebook, request.Instagram, request.VideoURL, request.ThumbURL,
-            request.Schedule, request.Comment, request.Tag, request.RefId, createdFrom = "dotnetPackage"
+            request.Schedule, request.Comment, request.Comments, request.Tag, request.RefId, createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
         var response = await _http.PostAsync<Dictionary<string, object>>(path, payload, cancellationToken);
@@ -517,7 +529,7 @@ public class SocialPublisherPostClient
         {
             request.AccountId, request.Source, request.Youtube, request.Tiktok,
             request.Facebook, request.Instagram, request.VideoURL, request.ThumbURL,
-            request.Schedule, request.Comment, request.Tag, request.RefId, createdFrom = "dotnetPackage"
+            request.Schedule, request.Comment, request.Comments, request.Tag, request.RefId, createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
         var response = await _http.PostAsync<Dictionary<string, object>>(path, payload, cancellationToken);
@@ -793,6 +805,62 @@ public class SocialPublisherPostClient
     }
 
     /// <summary>
+    /// Delete a post that has not published yet, releasing its uploaded media in
+    /// the same request.
+    /// </summary>
+    /// <remarks>
+    /// Free, and nothing is refunded — nothing was charged for a post that never
+    /// went out. A post that HAS published is refused; use
+    /// <see cref="RemovePostAsync"/> to take down media that is already live.
+    /// </remarks>
+    /// <param name="id">The post id.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    public async Task DeletePostAsync(string id, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+            throw new ArgumentException("id is required", nameof(id));
+
+        await _http.DeleteAsync<object>($"{BasePath}/{id}", cancellationToken: cancellationToken);
+    }
+
+    /// <summary>
+    /// Take a published post down: delete its media from every platform it was
+    /// published to (<c>POST /api/social-publisher-post/{id}/remove</c>).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Only a post that has published (<c>done</c>), or whose earlier removal
+    /// failed (<c>removeFailed</c>), can be removed; a post that has not
+    /// published yet is deleted with <see cref="DeletePostAsync"/> instead.
+    /// </para>
+    /// <para>
+    /// Runs synchronously. Facebook, YouTube, Threads and X can delete a post
+    /// through their APIs; Instagram and TikTok cannot, and report
+    /// <see cref="PlatformRemovalResult.NotSupported"/>. The operation is charged
+    /// only when the removal succeeds — read its current price with
+    /// <c>Posty5.Account</c>'s <c>GetOperationCostsAsync</c>. When nothing could
+    /// be removed, or a platform that can delete failed, the API answers 400 and
+    /// this throws <c>Posty5ValidationException</c> naming each failure; nothing
+    /// is charged then.
+    /// </para>
+    /// </remarks>
+    /// <param name="id">The post id.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The outcome on each platform.</returns>
+    public async Task<RemovePostResult> RemovePostAsync(string id, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+            throw new ArgumentException("id is required", nameof(id));
+
+        var response = await _http.PostAsync<RemovePostResult>(
+            $"{BasePath}/{id}/remove",
+            new { },
+            cancellationToken);
+
+        return response.Result ?? new RemovePostResult { Id = id };
+    }
+
+    /// <summary>
     /// Re-schedule a post that has not published yet, or send it out now.
     /// Costs no credits.
     /// </summary>
@@ -805,23 +873,10 @@ public class SocialPublisherPostClient
     /// string "now"; <c>caption</c> optionally replaces the caption too.
     /// </para>
     /// </remarks>
-    /// <summary>
-    /// Delete a post that has not published yet, releasing its uploaded media in
-    /// the same request.
-    /// </summary>
-    /// <remarks>
-    /// Free, and nothing is refunded — nothing was charged for a post that never
-    /// went out. A post that HAS published is refused; use the remove flow to
-    /// take down media that is already live.
-    /// </remarks>
-    public async Task DeletePostAsync(string id, CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrWhiteSpace(id))
-            throw new ArgumentException("id is required", nameof(id));
-
-        await _http.DeleteAsync<object>($"{BasePath}/{id}", cancellationToken: cancellationToken);
-    }
-
+    /// <param name="id">The post id.</param>
+    /// <param name="schedule">A <see cref="DateTime"/>, or the string "now".</param>
+    /// <param name="caption">A replacement caption, or null to keep it.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     public async Task ReschedulePostAsync(
         string id,
         object schedule,
@@ -1003,9 +1058,10 @@ public class SocialPublisherPostClient
             request.Instagram,
             request.Schedule,
             request.Comment,
+            request.Comments,
             request.Tag,
             request.RefId,
-            createdFrom = "dotnetPackage",
+            createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package),
         };
 
         var response = await _http.PostAsync<Dictionary<string, object>>(path, payload, cancellationToken);
@@ -1041,9 +1097,10 @@ public class SocialPublisherPostClient
             request.Instagram,
             request.Schedule,
             request.Comment,
+            request.Comments,
             request.Tag,
             request.RefId,
-            createdFrom = "dotnetPackage",
+            createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package),
         };
 
         var response = await _http.PostAsync<Dictionary<string, object>>(path, payload, cancellationToken);
@@ -1051,5 +1108,238 @@ public class SocialPublisherPostClient
             return postIdObj?.ToString() ?? throw new InvalidOperationException("Post ID not returned");
 
         throw new InvalidOperationException("Failed to create image post");
+    }
+
+    // ========================================================================
+    // TEXT POST (4.6.0+)
+    // ========================================================================
+
+    /// <summary>
+    /// Publish a text post — a status update with no media — to every
+    /// text-capable account connected to a workspace
+    /// (<c>POST /api/social-publisher-post/text/workspace</c>).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Goes to Facebook Pages, Threads and X. YouTube, Instagram and TikTok
+    /// have no text surface: they are left out and listed in
+    /// <see cref="CreatePostResult.SkippedPlatforms"/>; a workspace with no
+    /// text-capable account is refused. X needs the Pro plan or higher — below
+    /// it, X is dropped and listed in <see cref="CreatePostResult.RefusedTargets"/>.
+    /// </para>
+    /// <para>
+    /// Charged per post (and per comment that posts); scheduling for a future
+    /// time needs the Pro plan or higher. Read current prices with
+    /// <c>Posty5.Account</c>'s <c>GetOperationCostsAsync</c>.
+    /// </para>
+    /// </remarks>
+    /// <param name="request">The post.</param>
+    /// <param name="id">
+    /// A post id reserved earlier through <see cref="GenerateUploadUrlsAsync"/>, to
+    /// create the post under it; null for a new id.
+    /// </param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The new post's id and what the API left out.</returns>
+    public async Task<CreatePostResult> CreateTextPostToWorkspaceAsync(
+        CreateTextPostToWorkspaceRequest request,
+        string? id = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (request == null) throw new ArgumentNullException(nameof(request));
+        if (string.IsNullOrWhiteSpace(request.WorkspaceId))
+            throw new ArgumentException("WorkspaceId is required", nameof(request));
+        if (string.IsNullOrWhiteSpace(request.Caption))
+            throw new ArgumentException("Caption is required", nameof(request));
+
+        var path = string.IsNullOrEmpty(id)
+            ? $"{BasePath}/text/workspace"
+            : $"{BasePath}/text/workspace/{id}";
+
+        var payload = new
+        {
+            request.WorkspaceId,
+            request.Caption,
+            request.Facebook,
+            request.Threads,
+            request.Twitter,
+            request.Schedule,
+            request.Comments,
+            request.HashtagGroupIds,
+            request.Hashtags,
+            request.TrackLinks,
+            request.Utm,
+            request.Tag,
+            request.RefId,
+            createdFrom = request.CreatedFrom ?? _http.ResolveCreatedFrom(CreatedFromDefaults.Package),
+        };
+
+        var response = await _http.PostAsync<CreatePostResult>(path, payload, cancellationToken);
+        return response.Result ?? throw new InvalidOperationException("Failed to create text post");
+    }
+
+    /// <summary>
+    /// Publish a text post to one connected account
+    /// (<c>POST /api/social-publisher-post/text/account</c>).
+    /// </summary>
+    /// <remarks>
+    /// The platform is the account's own. An account on a platform that takes
+    /// no text (YouTube, Instagram, TikTok) is refused, and an X account below
+    /// the Pro plan is refused. See <see cref="CreateTextPostToWorkspaceAsync"/>
+    /// for charging and scheduling.
+    /// </remarks>
+    /// <param name="request">The post.</param>
+    /// <param name="id">A post id reserved earlier through <see cref="GenerateUploadUrlsAsync"/>; null for a new id.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The new post's id.</returns>
+    public async Task<CreatePostResult> CreateTextPostToAccountAsync(
+        CreateTextPostToAccountRequest request,
+        string? id = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (request == null) throw new ArgumentNullException(nameof(request));
+        if (string.IsNullOrWhiteSpace(request.AccountId))
+            throw new ArgumentException("AccountId is required", nameof(request));
+        if (string.IsNullOrWhiteSpace(request.Caption))
+            throw new ArgumentException("Caption is required", nameof(request));
+
+        var path = string.IsNullOrEmpty(id)
+            ? $"{BasePath}/text/account"
+            : $"{BasePath}/text/account/{id}";
+
+        var payload = new
+        {
+            request.AccountId,
+            request.Caption,
+            request.Facebook,
+            request.Threads,
+            request.Twitter,
+            request.Schedule,
+            request.Comments,
+            request.HashtagGroupIds,
+            request.Hashtags,
+            request.TrackLinks,
+            request.Utm,
+            request.Tag,
+            request.RefId,
+            createdFrom = request.CreatedFrom ?? _http.ResolveCreatedFrom(CreatedFromDefaults.Package),
+        };
+
+        var response = await _http.PostAsync<CreatePostResult>(path, payload, cancellationToken);
+        return response.Result ?? throw new InvalidOperationException("Failed to create text post");
+    }
+
+    // ========================================================================
+    // STORY (4.6.0+, media by URL)
+    // ========================================================================
+
+    /// <summary>
+    /// Publish one image or one video as a story to every story-capable
+    /// account connected to a workspace
+    /// (<c>POST /api/social-publisher-post/story/workspace</c>).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Goes to Facebook Pages and Instagram; YouTube and TikTok have no stories
+    /// through their APIs and are listed in
+    /// <see cref="CreatePostResult.SkippedPlatforms"/>. A story has no caption,
+    /// comments, hashtags or link, and disappears 24 hours after it goes out
+    /// (<see cref="PostStatusFullDetailsResponse.StoryExpiresAt"/>).
+    /// </para>
+    /// <para>
+    /// Media by URL only in this release: an image as
+    /// <see cref="ImageSource.ImageUrl"/> with <see cref="ImageRequest.ExternalUrl"/>,
+    /// or a video as <see cref="CreateStoryPostRequestBase.VideoURL"/>. Stories
+    /// are plan-gated (a plan without them is refused) and charged per story —
+    /// read the current price with <c>Posty5.Account</c>'s
+    /// <c>GetOperationCostsAsync</c>.
+    /// </para>
+    /// </remarks>
+    /// <param name="request">The story.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The new post's id and the platforms left out.</returns>
+    public async Task<CreatePostResult> CreateStoryPostToWorkspaceAsync(
+        CreateStoryPostToWorkspaceRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (request == null) throw new ArgumentNullException(nameof(request));
+        if (string.IsNullOrWhiteSpace(request.WorkspaceId))
+            throw new ArgumentException("WorkspaceId is required", nameof(request));
+        var isVideo = IsVideoStory(request);
+
+        // A story's schema refuses unknown keys, so only the fields of its kind travel.
+        var payload = new
+        {
+            request.WorkspaceId,
+            request.Kind,
+            Image = isVideo ? null : request.Image,
+            source = isVideo ? StoryKinds.VideoUrlSource : null,
+            VideoURL = isVideo ? request.VideoURL : null,
+            request.Schedule,
+            request.Tag,
+            request.RefId,
+            createdFrom = request.CreatedFrom ?? _http.ResolveCreatedFrom(CreatedFromDefaults.Package),
+        };
+
+        var response = await _http.PostAsync<CreatePostResult>($"{BasePath}/story/workspace", payload, cancellationToken);
+        return response.Result ?? throw new InvalidOperationException("Failed to create story");
+    }
+
+    /// <summary>
+    /// Publish one image or one video as a story to one connected account
+    /// (<c>POST /api/social-publisher-post/story/account</c>).
+    /// </summary>
+    /// <remarks>
+    /// The account must be a Facebook Page or an Instagram account; any other
+    /// platform is refused. See <see cref="CreateStoryPostToWorkspaceAsync"/>
+    /// for media, plan and charging.
+    /// </remarks>
+    /// <param name="request">The story.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The new post's id.</returns>
+    public async Task<CreatePostResult> CreateStoryPostToAccountAsync(
+        CreateStoryPostToAccountRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (request == null) throw new ArgumentNullException(nameof(request));
+        if (string.IsNullOrWhiteSpace(request.AccountId))
+            throw new ArgumentException("AccountId is required", nameof(request));
+        var isVideo = IsVideoStory(request);
+
+        var payload = new
+        {
+            request.AccountId,
+            request.Kind,
+            Image = isVideo ? null : request.Image,
+            source = isVideo ? StoryKinds.VideoUrlSource : null,
+            VideoURL = isVideo ? request.VideoURL : null,
+            request.Schedule,
+            request.Tag,
+            request.RefId,
+            createdFrom = request.CreatedFrom ?? _http.ResolveCreatedFrom(CreatedFromDefaults.Package),
+        };
+
+        var response = await _http.PostAsync<CreatePostResult>($"{BasePath}/story/account", payload, cancellationToken);
+        return response.Result ?? throw new InvalidOperationException("Failed to create story");
+    }
+
+    /// <summary>
+    /// Check a story names its kind and carries that kind's media, and say
+    /// whether it is a video. Fails before any request is made.
+    /// </summary>
+    private static bool IsVideoStory(CreateStoryPostRequestBase request)
+    {
+        switch (request.Kind)
+        {
+            case StoryKinds.Video:
+                if (string.IsNullOrWhiteSpace(request.VideoURL))
+                    throw new ArgumentException("A video story needs VideoURL", nameof(request));
+                return true;
+            case StoryKinds.Image:
+                if (request.Image == null)
+                    throw new ArgumentException("An image story needs Image", nameof(request));
+                return false;
+            default:
+                throw new ArgumentException($"Kind must be \"{StoryKinds.Image}\" or \"{StoryKinds.Video}\"", nameof(request));
+        }
     }
 }

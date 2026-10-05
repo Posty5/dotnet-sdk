@@ -269,6 +269,31 @@ Console.WriteLine("Workspace deleted successfully");
 
 ---
 
+### Connected accounts — SocialPublisherAccountClient (3.1.0+)
+
+Read the social accounts connected to Posty5 — the `AccountId` the post
+client's `...ToAccountAsync` methods take. Read-only: connecting an account is an
+OAuth sign-in done in the dashboard. A key with record scope `key` (the default)
+sees the accounts connected with that key; `account` sees all of its owner's.
+
+```csharp
+var accounts = new SocialPublisherAccountClient(httpClient);
+
+var page = await accounts.ListAsync(new SocialPublisherAccountListParamsModel { Platform = "instagram", Status = "active" });
+var matches = await accounts.LookupAsync("shop", platform: "facebook");   // id, name, picture — for a picker
+var details = await accounts.GetAsync(page.Items[0].Id);                  // + platform profile, default settings and comments
+
+// "authenticationExpired" means: reconnect it in the dashboard before publishing.
+```
+
+| Method | Route |
+| --- | --- |
+| `ListAsync(params?, pagination?)` | `GET /api/social-publisher-account` |
+| `LookupAsync(term?, platform?)` | `GET /api/social-publisher-account/lookup` |
+| `GetAsync(id)` | `GET /api/social-publisher-account/{id}` |
+
+---
+
 ## 🔒 Error Handling
 
 Methods throw exceptions from `Posty5.Core.Exceptions`.

@@ -4,6 +4,142 @@ All notable changes to the Posty5 .NET SDK will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Posty5.SocialPublisherPost 4.6.0 - 2026-10-05
+
+### Fixed
+
+- **`GetStatusAsync` called a route that does not exist.** It sent
+  `GET /api/social-publisher-post/{id}`, which the API has never served (only
+  `PUT` and `DELETE` live there), so every call failed with
+  `Posty5NotFoundException`. It now calls `GET /api/social-publisher-post/{id}/status`,
+  as the npm SDK always has. An empty id is refused before any request.
+- **The comment list never reached the API on short videos and image posts.**
+  `Comments` (added in 4.5.0) was accepted by `PublishShortVideoToWorkspaceAsync`,
+  `PublishShortVideoToAccountAsync`, `CreateImagePostToWorkspaceAsync` and
+  `CreateImagePostToAccountAsync`, but their request bodies only carried the
+  deprecated singular `Comment`, so the list was silently dropped. It is sent now.
+  (The long-video methods were not affected.)
+- `SocialPublisherPostStatusType` gains `Removing`, `Removed` and `RemoveFailed`.
+  Without them, reading a post that had been removed from the platforms threw
+  while deserializing.
+
+### Added
+
+- **`RemovePostAsync(id)`** — `POST /api/social-publisher-post/{id}/remove`: take a
+  *published* post down from every platform it went to, and read the outcome per
+  platform (`RemovePostResult.Results`). Instagram and TikTok cannot delete through
+  their APIs and report `NotSupported`. A removal that fails anywhere it could
+  have succeeded throws `Posty5ValidationException` and charges nothing.
+  `DeletePostAsync` remains the call for a post that has not published yet.
+- **Text posts** — `CreateTextPostToWorkspaceAsync` / `CreateTextPostToAccountAsync`
+  (`POST /text/workspace|account[/{id}]`): a status update with no media for
+  Facebook Pages, Threads and X, with per-platform blocks (`TextPostFacebookConfig`
+  with a link preview, `ThreadsTextConfig`, `TwitterConfig` with an optional
+  poll), comments, hashtags and tracked links. Returns `CreatePostResult`, which
+  lists the platforms skipped (no text surface), refused (X below Pro) and
+  truncated (X).
+- **Stories** — `CreateStoryPostToWorkspaceAsync` / `CreateStoryPostToAccountAsync`
+  (`POST /story/workspace|account`): one image or one video for Facebook Pages and
+  Instagram, **media by URL** in this release. Only the fields of the story's
+  `Kind` are sent, because the API refuses anything else on a story.
+- `CommentRequest.PostToThreads` and `PostToTwitter`.
+- `PostStatusFullDetailsResponse.CreatedFrom`, `AgentOrigin` (the AI assistant
+  that created the post through MCP, when one did) and `StoryExpiresAt`.
+- `createdFrom` follows `Posty5Options.CreatedFrom` (see Posty5.Core 3.1.0); a
+  text post or story may also set its own `CreatedFrom`.
+
+### Documentation
+
+- `ReschedulePostAsync` had lost its XML documentation to `DeletePostAsync`; both
+  are documented again.
+
+## Posty5.Account 3.1.0 - 2026-10-05
+
+New package. `AccountClient` describes the owner of the API key — useful to
+validate a key and to check the balance before a paid call:
+
+| Method | Route |
+| --- | --- |
+| `GetCurrentAsync()` | `GET /api/api-key/current` — key (with its record scope), owner, plan, credits, MCP settings |
+| `GetCreditsAsync()` | `GET /api/user/current/credits` |
+| `GetCreditUsageAsync(filters?, pagination?)` | `GET /api/user/current/credit-usage` (cursor-paged) |
+| `GetCreditUsageSummaryAsync(filters?)` | `GET /api/user/current/credit-usage/summary` |
+| `GetOperationCostsAsync(activeOnly = true)` | `GET /api/plans/operation-costs` (public) |
+
+Versioned with the `Posty5.Core` it requires, as `Posty5.Store` was. Packed by
+the publish workflow.
+
+## Posty5.Core 3.1.0 - 2026-10-05
+
+### Added
+
+- **`X-Posty5-Client: posty5-dotnet/<version>`** on every request, the version
+  read from the `Posty5.Core` assembly (`Posty5ClientIdentity`). The API logs it
+  and trusts nothing because of it.
+- **`Posty5Options.DefaultHeaders`** — headers sent on every request. `X-API-Key`
+  is refused (the constructor throws `ArgumentException`) rather than let a header
+  silently decide which key is used; an `X-Posty5-Client` entry replaces the SDK's
+  own label; content headers are refused.
+- **`Posty5Options.CreatedFrom`** — the `createdFrom` label stamped on every
+  record the clients create. When null, each package keeps the label it has
+  always sent (`CreatedFromDefaults.Package` = `dotnetPackage`,
+  `CreatedFromDefaults.StoreOrder` = `dotnet`). `Posty5HttpClient.ResolveCreatedFrom`
+  is how the clients read it.
+- `AgentOrigin` — the shape the API uses to say which AI assistant created a record.
+
+### Unchanged on purpose
+
+- No retries were added. `Posty5HttpClient` has never retried, so a create cannot
+  be sent twice; `MaxRetries` and `RetryDelayMilliseconds` remain unused.
+
+## Posty5.Store 3.3.0 - 2026-10-05
+
+### Added
+
+- `StoreClient.ListStoresAsync()` / `LookupStoresAsync(term?)` —
+  `GET /api/store/lookup`: the stores the key's owner owns or is staff on, as
+  `StoreLookupItem` (`Id`, and `Name` as `<slug> - <name>`). The only store calls
+  that take no `storeId`. The API returns one page (its default size, normally 10).
+
+### Changed
+
+- `CreateOrderInput.CreatedFrom` is now `string?` and defaults to null; the
+  client fills it in from `Posty5Options.CreatedFrom`, else `"dotnet"` as before.
+
+## Posty5.SocialPublisherWorkspace 3.1.0 - 2026-10-05
+
+### Added
+
+- `SocialPublisherAccountClient` — read the connected social accounts:
+  `ListAsync(params?, pagination?)` (`GET /api/social-publisher-account`),
+  `LookupAsync(term?, platform?)` (`/lookup`) and `GetAsync(id)` (`/{id}`, with the
+  platform profile and the account's default post settings and comments).
+  Read-only: connecting an account is an OAuth sign-in in the dashboard.
+
+### Changed
+
+- `createdFrom` on `CreateAsync` follows `Posty5Options.CreatedFrom`.
+
+## Posty5.QRCode 3.1.0 - 2026-10-05
+
+### Added
+
+- `QRCodeTemplateClient` — `ListUserTemplatesAsync(term?, pagination?)`
+  (`GET /api/qr-code-template/user-lookup`) and
+  `ListPublicTemplatesAsync(term?, schemeType?, pagination?)` (`/public-lookup`):
+  the template ids the create methods take as `TemplateId`.
+
+### Changed
+
+- `createdFrom` on every create follows `Posty5Options.CreatedFrom`.
+
+## Posty5.ShortLink 3.1.0, Posty5.HtmlHosting 3.1.0, Posty5.HtmlHostingVariables 3.1.0 - 2026-10-05
+
+### Changed
+
+- `createdFrom` on create follows `Posty5Options.CreatedFrom` (default unchanged:
+  `dotnetPackage`). Requires `Posty5.Core` 3.1.0.
+
 ## Posty5.Store 3.2.0 - 2026-09-26
 
 The first version of `Posty5.Store` to reach NuGet: earlier versions (up to

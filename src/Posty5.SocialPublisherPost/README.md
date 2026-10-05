@@ -337,13 +337,19 @@ foreach (var post in posts.Data)
 
 ### GetStatusAsync
 
-Retrieve detailed status information for a specific publishing post.
+Retrieve detailed status information for a specific publishing post
+(`GET /api/social-publisher-post/{id}/status`).
+
+> **Fixed in 4.6.0.** Earlier versions called `GET /api/social-publisher-post/{id}`,
+> a route the API does not serve, so every call threw `Posty5NotFoundException`.
 
 **Parameters:**
 
 - `id` (string): Post ID
 
-**Returns:** `Task<PostStatusResponse>`
+**Returns:** `Task<PostStatusFullDetailsResponse>` — including `CreatedFrom`,
+`AgentOrigin` (the AI assistant that created the post through MCP, if one did)
+and, for a story, `StoryExpiresAt`.
 
 **Example:**
 
@@ -398,6 +404,86 @@ Retrieve default configuration settings for social media publishing.
 var settings = await client.GetDefaultSettingsAsync();
 Console.WriteLine($"Max Video Size: {SocialPublisherPostClient.MaxVideoUploadSizeBytes}");
 ```
+
+---
+
+### Text posts — CreateTextPostToWorkspaceAsync / CreateTextPostToAccountAsync
+
+A status update with no media, for Facebook Pages, Threads and X
+(`POST /api/social-publisher-post/text/workspace|account[/{id}]`). YouTube,
+Instagram and TikTok have no text surface and come back in
+`CreatePostResult.SkippedPlatforms`; X below the Pro plan comes back in
+`RefusedTargets`.
+
+```csharp
+var result = await client.CreateTextPostToWorkspaceAsync(new CreateTextPostToWorkspaceRequest
+{
+    WorkspaceId = "workspace_123",
+    Caption = "Our autumn menu is out.",
+    Facebook = new TextPostFacebookConfig { Description = "Our autumn menu is out:", Link = "https://example.com/menu" },
+    Threads = new ThreadsTextConfig { Text = "Autumn menu is out", TopicTag = "food" },
+    Twitter = new TwitterConfig
+    {
+        Text = "Which one first?",
+        Poll = new TwitterPollConfig { Options = new() { "Soup", "Pie" }, DurationMinutes = 1440 }
+    }
+});
+
+Console.WriteLine($"Post {result.Id}; skipped: {string.Join(", ", result.SkippedPlatforms ?? new())}");
+```
+
+### Stories — CreateStoryPostToWorkspaceAsync / CreateStoryPostToAccountAsync
+
+One image or one video for Facebook Pages and Instagram
+(`POST /api/social-publisher-post/story/workspace|account`). **Media by URL** in
+this release. A story has no caption, comments, hashtags or link, and disappears
+24 hours after it goes out.
+
+```csharp
+var story = await client.CreateStoryPostToAccountAsync(new CreateStoryPostToAccountRequest
+{
+    AccountId = "account_123",
+    Kind = StoryKinds.Image,
+    Image = new ImageRequest { Source = ImageSource.ImageUrl, ExternalUrl = "https://example.com/story.jpg" }
+});
+```
+
+### RemovePostAsync
+
+Take a **published** post down: delete its media from every platform it went to
+(`POST /api/social-publisher-post/{id}/remove`). Instagram and TikTok cannot
+delete through their APIs and report `NotSupported`; a removal that fails where
+it could have succeeded throws `Posty5ValidationException` and charges nothing.
+Use `DeletePostAsync` for a post that has not published yet.
+
+```csharp
+var removed = await client.RemovePostAsync("post_123");
+foreach (var (platform, outcome) in removed.Results)
+    Console.WriteLine($"{platform}: {(outcome.Success ? "removed" : outcome.Error)}");
+```
+
+### Method table
+
+| Method | Route |
+| --- | --- |
+| `ListAsync(params?, pagination?)` | `GET /api/social-publisher-post` |
+| `GetStatusAsync(id)` | `GET /api/social-publisher-post/{id}/status` |
+| `GetNextAndPreviousAsync(id)` | `GET /api/social-publisher-post/{id}/next-previous` |
+| `GetDefaultSettingsAsync()` | `GET /api/social-publisher-post/default-settings` |
+| `GenerateUploadUrlsAsync(request)` | `POST /api/social-publisher-post/generate-upload-urls` |
+| `PublishShortVideoToWorkspaceAsync / ToAccountAsync` | `POST /short-video/workspace\|account/by-file\|by-url[/{id}]` |
+| `GetLongVideoQuoteAsync(videoUrl)` | `POST /long-video/quote` |
+| `PublishLongVideoToWorkspaceAsync / ToAccountAsync` | `POST /long-video/workspace\|account/by-file\|by-url[/{id}]` |
+| `CreateImagePostToWorkspaceAsync / ToAccountAsync` | `POST /image/workspace\|account[/{id}]` |
+| `CreateTextPostToWorkspaceAsync / ToAccountAsync` | `POST /text/workspace\|account[/{id}]` |
+| `CreateStoryPostToWorkspaceAsync / ToAccountAsync` | `POST /story/workspace\|account` |
+| `ReschedulePostAsync(id, schedule, caption?)` | `PUT /api/social-publisher-post/{id}` |
+| `DeletePostAsync(id)` | `DELETE /api/social-publisher-post/{id}` (not yet published) |
+| `RemovePostAsync(id)` | `POST /api/social-publisher-post/{id}/remove` (published) |
+
+Every create stamps `createdFrom` from `Posty5Options.CreatedFrom`, or
+`dotnetPackage` when it is not set. Prices are not listed here because they
+change: read them with `Posty5.Account`'s `GetOperationCostsAsync`.
 
 ---
 

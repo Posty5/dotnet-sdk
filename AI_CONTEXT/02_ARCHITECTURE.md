@@ -2,7 +2,7 @@
 
 ## Topology
 
-Eight NuGet-ready .NET projects sharing Posty5.Core and typed clients/models for links, QR codes, hosting, variables, form submissions, and social publishing.
+Ten NuGet-ready .NET projects — Posty5.Core plus nine feature packages with typed clients/models for links, QR codes, hosting, variables, form submissions, social publishing, the online store, and the account (key owner, credits, prices).
 
 ### Client call
 

@@ -43,13 +43,42 @@ public class Posty5HttpClient : IDisposable
         };
 
         // Set default headers
-        _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
-        
+        _httpClient.DefaultRequestHeaders.Add("Accept", Posty5HttpDefaults.AcceptJson);
+        _httpClient.DefaultRequestHeaders.Add(Posty5HttpDefaults.ClientHeader, Posty5ClientIdentity.HeaderValue);
+
+        // The caller's own headers go on after the SDK's, so a caller-supplied
+        // X-Posty5-Client replaces the default label; X-API-Key is refused.
+        try
+        {
+            ApplyDefaultHeaders(_options.DefaultHeaders);
+        }
+        catch
+        {
+            _httpClient.Dispose();
+            throw;
+        }
+
         if (!string.IsNullOrEmpty(_options.ApiKey))
         {
-            _httpClient.DefaultRequestHeaders.Add("X-API-Key", _options.ApiKey);
+            _httpClient.DefaultRequestHeaders.Add(Posty5HttpDefaults.ApiKeyHeader, _options.ApiKey);
         }
     }
+
+    /// <summary>
+    /// The <c>createdFrom</c> label configured on <see cref="Posty5Options.CreatedFrom"/>,
+    /// or null when none was set. Clients stamp
+    /// <see cref="ResolveCreatedFrom"/>, which applies their own default.
+    /// </summary>
+    public string? CreatedFrom => string.IsNullOrWhiteSpace(_options.CreatedFrom) ? null : _options.CreatedFrom;
+
+    /// <summary>
+    /// The <c>createdFrom</c> label a client should stamp on a record it creates:
+    /// <see cref="Posty5Options.CreatedFrom"/> when set, otherwise
+    /// <paramref name="packageDefault"/> — the label that package has always sent.
+    /// </summary>
+    /// <param name="packageDefault">The calling package's own label, from <see cref="CreatedFromDefaults"/>.</param>
+    /// <returns>The label to send.</returns>
+    public string ResolveCreatedFrom(string packageDefault) => CreatedFrom ?? packageDefault;
 
     /// <summary>
     /// Set or update the API key
@@ -58,8 +87,37 @@ public class Posty5HttpClient : IDisposable
     public void SetApiKey(string apiKey)
     {
         _options.ApiKey = apiKey;
-        _httpClient.DefaultRequestHeaders.Remove("X-API-Key");
-        _httpClient.DefaultRequestHeaders.Add("X-API-Key", apiKey);
+        _httpClient.DefaultRequestHeaders.Remove(Posty5HttpDefaults.ApiKeyHeader);
+        _httpClient.DefaultRequestHeaders.Add(Posty5HttpDefaults.ApiKeyHeader, apiKey);
+    }
+
+    /// <summary>
+    /// Add <see cref="Posty5Options.DefaultHeaders"/> to every request, refusing
+    /// the API-key header and anything that is not a request header.
+    /// </summary>
+    private void ApplyDefaultHeaders(Dictionary<string, string>? headers)
+    {
+        if (headers == null) return;
+
+        foreach (var (name, value) in headers)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentException("A default header needs a name.", nameof(Posty5Options.DefaultHeaders));
+
+            if (string.Equals(name.Trim(), Posty5HttpDefaults.ApiKeyHeader, StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException(
+                    $"{Posty5HttpDefaults.ApiKeyHeader} cannot be set through DefaultHeaders. Use Posty5Options.ApiKey or SetApiKey.",
+                    nameof(Posty5Options.DefaultHeaders));
+
+            // Contains() answers false for a name that is not a request header,
+            // where Remove() would throw — the TryAdd below reports that case.
+            if (_httpClient.DefaultRequestHeaders.Contains(name))
+                _httpClient.DefaultRequestHeaders.Remove(name);
+            if (!_httpClient.DefaultRequestHeaders.TryAddWithoutValidation(name, value))
+                throw new ArgumentException(
+                    $"'{name}' cannot be sent as a default request header.",
+                    nameof(Posty5Options.DefaultHeaders));
+        }
     }
 
     /// <summary>
