@@ -222,7 +222,8 @@ public sealed class LinkBulkOperations
             fileName = request.FileName,
             defaults = request.Defaults,
             options = request.Options,
-            dryRun = dryRun ? true : (bool?)null
+            dryRun = dryRun ? true : (bool?)null,
+            createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
     }
 
