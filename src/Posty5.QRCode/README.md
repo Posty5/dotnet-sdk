@@ -347,7 +347,7 @@ var mapQR = await qrCodes.CreateGeolocationAsync(new QRCodeCreateGeolocationRequ
 
 ---
 
-### Static and Dynamic QR Codes
+### Static and Dynamic QR Codes (3.3.0)
 
 Every request model takes `Mode` (`QRCodeMode.Static` or `QRCodeMode.Dynamic`).
 A static code encodes its content in the image. A dynamic code encodes its

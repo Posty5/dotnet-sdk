@@ -979,6 +979,25 @@ public class QRCodeClientPayloadTests : IDisposable
     }
 
     [Fact]
+    public async Task OldStyleCall_SerialisesTheSameTopLevelJsonAsBeforeDq()
+    {
+        // A pre-DQ call (no Mode, no Access, no ClearAccess) must serialise exactly the pre-DQ keys, in order.
+        await _client.CreateURLAsync(new QRCodeCreateURLRequestModel { Name = "N", TemplateId = "tpl-1", Url = new() { Url = "https://example.com" } });
+        await _client.CreateFreeTextAsync(new QRCodeCreateFreeTextRequestModel { Name = "N", TemplateId = "tpl-1", Text = "T" });
+
+        var keys = _server.Requests.Select(r =>
+        {
+            using var json = JsonDocument.Parse(r.Body);
+            return string.Join(",", json.RootElement.EnumerateObject().Select(p => p.Name));
+        }).ToList();
+        Assert.Equal(new[]
+        {
+            "name,templateId,qrCodeTarget,templateType,createdFrom",
+            "qrCodeTarget,name,templateId,options,templateType,createdFrom",
+        }, keys);
+    }
+
+    [Fact]
     public async Task Mode_IsSentOnCreateAndUpdate()
     {
         await _client.CreateURLAsync(new QRCodeCreateURLRequestModel { TemplateId = "tpl-1", Mode = QRCodeMode.Dynamic, Url = new() { Url = "https://example.com" } });

@@ -31,9 +31,9 @@ starts at 3.2.0 (lockstep).
   rotation, 5-minute tolerance) returning a typed `WebhookEvent`;
   `WebhookSignatureException.Reason`.
 
-## Posty5.QRCode - unreleased (dynamic QR codes)
+## Posty5.QRCode 3.3.0 (dynamic QR codes)
 
-Needs the API's dynamic QR release. Additive; no version bump in this change.
+Needs the API's dynamic QR release and `Posty5.Core` 3.2.0. Additive minor.
 
 ### Added
 

@@ -784,7 +784,7 @@ public readonly record struct QRCodeTargetType (string Value)
 /// QR code mode. Serialised as <c>"static"</c> / <c>"dynamic"</c>; an unknown value from a newer
 /// API reads back as-is instead of failing.
 /// </summary>
-[JsonConverter(typeof(StringValueObjectConverter<QRCodeMode>))]
+[JsonConverter(typeof(QRCodeModeConverter))]
 public readonly record struct QRCodeMode (string Value)
 {
     /// <summary>The image encodes the content itself (the default).</summary>
@@ -792,6 +792,7 @@ public readonly record struct QRCodeMode (string Value)
     /// <summary>The image encodes a Posty5 link that redirects to the target.</summary>
     public static readonly QRCodeMode Dynamic = new("dynamic");
 
+    /// <summary>The wire value, <c>"static"</c> or <c>"dynamic"</c>.</summary>
     public override string ToString ( ) => Value;
 }
 
@@ -867,4 +868,25 @@ public class QRCodeStatisticsTopQRCodeModel
 
     /// <summary>Visits by people in the range (bots excluded).</summary>
     public long VisitsInRange { get; set; }
+}
+
+/// <summary>
+/// Reads and writes <see cref="QRCodeMode"/> as its string value. Unlike the shared
+/// <c>StringValueObjectConverter</c>, an unknown value is kept as-is instead of failing, so a
+/// mode added by a newer API does not break deserialising a whole response.
+/// </summary>
+public sealed class QRCodeModeConverter : JsonConverter<QRCodeMode>
+{
+    /// <inheritdoc />
+    public override QRCodeMode Read(ref System.Text.Json.Utf8JsonReader reader, Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
+    {
+        var value = reader.GetString() ?? string.Empty;
+        if (string.Equals(value, QRCodeMode.Static.Value, StringComparison.OrdinalIgnoreCase)) return QRCodeMode.Static;
+        if (string.Equals(value, QRCodeMode.Dynamic.Value, StringComparison.OrdinalIgnoreCase)) return QRCodeMode.Dynamic;
+        return new QRCodeMode(value);
+    }
+
+    /// <inheritdoc />
+    public override void Write(System.Text.Json.Utf8JsonWriter writer, QRCodeMode value, System.Text.Json.JsonSerializerOptions options)
+        => writer.WriteStringValue(value.Value);
 }

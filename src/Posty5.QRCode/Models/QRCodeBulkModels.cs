@@ -36,7 +36,7 @@ public class QRCodeBulkRow
     /// <summary>The type's target model (e.g. <see cref="QRCodeUrlTargetModel"/>).</summary>
     public object Target { get; set; } = new();
 
-    /// <summary><c>static</c> (default) or <c>dynamic</c> — refused until dynamic QR codes are available.</summary>
+    /// <summary><c>static</c> (default) or <c>dynamic</c>. Wi-Fi rows cannot be dynamic.</summary>
     public string? Mode { get; set; }
 
     /// <summary>Name.</summary>
