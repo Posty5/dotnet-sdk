@@ -108,6 +108,22 @@
       "role": "QRCodeTemplateClient: ListUserTemplatesAsync, ListPublicTemplatesAsync (/api/qr-code-template/*-lookup); routes in QRCodeTemplateRoutes.cs."
     },
     {
+      "path": "src/Posty5.QRCode/QRCodeClient.ContentTypes.cs",
+      "role": "QR content types (vcard/event/whatsapp/review/social/appStore/file): Create*/Update*Async through SendContentTypeAsync; qrCodeTarget only; file upload flow UploadQRCodeFileAsync."
+    },
+    {
+      "path": "src/Posty5.QRCode/QRCodeFileUploadExpiredException.cs",
+      "role": "Thrown when the 60 s signed upload URL of a file code expired before the PUT finished."
+    },
+    {
+      "path": "src/Posty5.Core/Http/R2UploadHelper.cs",
+      "role": "Shared public signed-URL PUT (UploadAsync) used by QRCode, HtmlHosting and SocialPublisherPost."
+    },
+    {
+      "path": "src/Posty5.QRCode/Models/QRCodeContentTypeModels.cs",
+      "role": "Content-type target/request models and platform/phone-kind constant classes."
+    },
+    {
       "path": "src/Posty5.QRCode/QRCodeConst.cs",
       "role": "QR fixed values: the [Obsolete] text for IsEnableMonetization."
     },

@@ -116,6 +116,26 @@ var qrCode = await qrCodeClient.CreateGeolocationAsync(new QRCodeCreateGeolocati
 });
 ```
 
+### 8. vCard / Event / WhatsApp / Review / Social (3.4.0)
+```csharp
+await qrCodeClient.CreateVCardAsync(new QRCodeCreateVCardRequestModel { Name = "Card", TemplateId = "template_id", VCard = new() { FirstName = "Ada" } });
+await qrCodeClient.CreateEventAsync(new QRCodeCreateEventRequestModel { Name = "Event", TemplateId = "template_id", Event = new() { Title = "Launch", StartsAt = DateTimeOffset.UtcNow.AddDays(7) } });
+await qrCodeClient.CreateWhatsAppAsync(new QRCodeCreateWhatsAppRequestModel { Name = "Chat", TemplateId = "template_id", WhatsApp = new() { PhoneNumber = "+201000000000" } });
+await qrCodeClient.CreateReviewAsync(new QRCodeCreateReviewRequestModel { Name = "Review", TemplateId = "template_id", Review = new() { Platform = QRCodeReviewPlatforms.Google, PlaceId = "ChIJ..." } });
+await qrCodeClient.CreateSocialAsync(new QRCodeCreateSocialRequestModel { Name = "Social", TemplateId = "template_id", Social = new() { Profiles = new() { new() { Platform = QRCodeSocialPlatforms.Instagram, Handle = "posty5" } } } });
+// Update*Async(id, request) twins: UpdateVCardAsync, UpdateEventAsync, UpdateWhatsAppAsync, UpdateReviewAsync, UpdateSocialAsync
+```
+
+### 9. App store / File (3.4.0, dynamic-only)
+```csharp
+await qrCodeClient.CreateAppStoreAsync(new QRCodeCreateAppStoreRequestModel { Name = "App", TemplateId = "template_id", AppStore = new() { AndroidUrl = "https://play.google.com/...", IosUrl = "https://apps.apple.com/...", FallbackUrl = "https://example.com/app" } });
+
+await using var pdf = File.OpenRead("menu.pdf");
+var qr = await qrCodeClient.CreateFileAsync(new QRCodeCreateFileRequestModel { Name = "Menu", TemplateId = "template_id", File = new() { FileName = "menu.pdf" } }, pdf, QRCodeFileMimeTypes.Pdf);
+// Rename only, keeps the stored file:
+await qrCodeClient.UpdateFileAsync(qr.Id, new QRCodeUpdateFileRequestModel { Name = "Menu", TemplateId = "template_id", File = new() { FileName = "menu-2026.pdf" } });
+```
+
 ## CRUD Operations
 
 ### Get QR Code

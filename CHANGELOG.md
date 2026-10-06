@@ -31,6 +31,37 @@ starts at 3.2.0 (lockstep).
   rotation, 5-minute tolerance) returning a typed `WebhookEvent`;
   `WebhookSignatureException.Reason`.
 
+## Posty5.QRCode 3.4.0 - unreleased (QR content types)
+
+Needs the API's QR content-types release. Additive minor. Pass 2 also needs the new
+`Posty5.Core` `R2UploadHelper` (Core version bump pending at release).
+
+### Added
+
+- Pass 2: `CreateAppStoreAsync` / `UpdateAppStoreAsync` (`/api/qr-code/appStore`) and
+  `CreateFileAsync(request, Stream, contentType)` / `UpdateFileAsync(id, request, Stream?, contentType?)`:
+  `POST /api/qr-code/file/upload-url` -> PUT to the signed URL (retried once on a network error)
+  -> `POST`/`PUT /api/qr-code/file` with `qrCodeTarget.file.bucketFilePath`. Update without a
+  stream keeps the stored file. Both types are dynamic-only: `Mode = Static` throws
+  `ArgumentException` before any call. An expired URL throws `QRCodeFileUploadExpiredException`.
+  Models `QRCodeAppStoreTargetModel`, `QRCodeFileTargetModel`, `QRCodeFileInputModel`,
+  `QRCodeFileUploadTicketModel`, `QRCodeFileMimeTypes`; `QRCodeTargetModel.AppStore` / `.File`;
+  social codes take up to 12 profiles.
+- `Posty5.Core`: public `R2UploadHelper.UploadAsync` (signed PUT); the private copies in
+  `HtmlHostingClient` and `SocialPublisherPostClient` now call it (behaviour unchanged).
+
+- `CreateVCardAsync`, `CreateEventAsync`, `CreateWhatsAppAsync`, `CreateReviewAsync`,
+  `CreateSocialAsync` and `Update*Async(id, …)` twins (`/api/qr-code/{type}`), through one
+  private builder; they send `qrCodeTarget` only, never `options.text`. `Mode` and `Access`
+  pass through as on the other types.
+- Models: `QRCodeVCardTargetModel` (+ `QRCodeVCardPhoneModel`, `QRCodeVCardAddressModel`),
+  `QRCodeEventTargetModel` (`DateTimeOffset` times, sent as ISO 8601),
+  `QRCodeWhatsAppTargetModel`, `QRCodeReviewTargetModel`, `QRCodeSocialTargetModel`
+  (+ `QRCodeSocialProfileModel`), `QRCodeCreate*/QRCodeUpdate*RequestModel`; string constant
+  classes `QRCodeVCardPhoneKinds`, `QRCodeReviewPlatforms`, `QRCodeSocialPlatforms`.
+- `QRCodeTargetModel` gains `VCard`, `Event`, `WhatsApp`, `Review`, `Social`;
+  `QRCodeTargetType` gains the five values.
+
 ## Posty5.QRCode 3.3.0 (dynamic QR codes)
 
 Needs the API's dynamic QR release and `Posty5.Core` 3.2.0. Additive minor.

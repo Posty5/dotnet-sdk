@@ -168,6 +168,27 @@ public class QRCodeTargetModel
     /// Geolocation configuration (when type is 'geolocation')
     /// </summary>
     public QRCodeGeolocationTargetModel? Geolocation { get; set; }
+
+    /// <summary>vCard configuration (when type is 'vcard')</summary>
+    [JsonPropertyName("vcard")] public QRCodeVCardTargetModel? VCard { get; set; }
+
+    /// <summary>Event configuration (when type is 'event')</summary>
+    public QRCodeEventTargetModel? Event { get; set; }
+
+    /// <summary>WhatsApp configuration (when type is 'whatsapp')</summary>
+    [JsonPropertyName("whatsapp")] public QRCodeWhatsAppTargetModel? WhatsApp { get; set; }
+
+    /// <summary>Review configuration (when type is 'review')</summary>
+    public QRCodeReviewTargetModel? Review { get; set; }
+
+    /// <summary>Social profiles configuration (when type is 'social')</summary>
+    public QRCodeSocialTargetModel? Social { get; set; }
+
+    /// <summary>App store configuration (when type is 'appStore')</summary>
+    public QRCodeAppStoreTargetModel? AppStore { get; set; }
+
+    /// <summary>File configuration (when type is 'file')</summary>
+    public QRCodeFileTargetModel? File { get; set; }
     
     /// <summary>
     /// Free text content (when type is 'freeText')
@@ -773,6 +794,13 @@ public readonly record struct QRCodeTargetType (string Value)
     public static readonly QRCodeTargetType Sms = new("sms");
     public static readonly QRCodeTargetType Url = new("url");
     public static readonly QRCodeTargetType Geolocation = new("geolocation");
+    public static readonly QRCodeTargetType VCard = new("vcard");
+    public static readonly QRCodeTargetType Event = new("event");
+    public static readonly QRCodeTargetType WhatsApp = new("whatsapp");
+    public static readonly QRCodeTargetType Review = new("review");
+    public static readonly QRCodeTargetType Social = new("social");
+    public static readonly QRCodeTargetType AppStore = new("appStore");
+    public static readonly QRCodeTargetType File = new("file");
 
     public override string ToString ( ) => Value;
 }

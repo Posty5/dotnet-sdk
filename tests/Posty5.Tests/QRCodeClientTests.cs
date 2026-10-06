@@ -1238,3 +1238,296 @@ public class QRCodeClientPayloadTests : IDisposable
         Assert.Equal(3, top.VisitsInRange);
     }
 }
+
+/// <summary>
+/// Content types (QC): vCard, event, WhatsApp, review, social (pass 1) and app store, file
+/// (pass 2). Routes, verbs and body shape against the local <see cref="RecordingServer"/>.
+/// </summary>
+public class QRCodeClientContentTypeTests : IDisposable
+{
+    private const string Tpl = "tpl-1";
+    private readonly RecordingServer _server = new();
+    private readonly QRCodeClient _client;
+
+    public QRCodeClientContentTypeTests()
+    {
+        _client = new QRCodeClient(_server.Http());
+    }
+
+    public void Dispose() => _server.Dispose();
+
+    private static JsonElement Target(string body, string type)
+    {
+        var root = JsonDocument.Parse(body).RootElement;
+        Assert.False(root.TryGetProperty("options", out _), "options.text is built by the API");
+        var target = root.GetProperty("qrCodeTarget");
+        Assert.Equal(type, target.GetProperty("type").GetString());
+        return target.GetProperty(type);
+    }
+
+    /// <summary>A result that reads both as an upload ticket and as a QR code.</summary>
+    private void AnswerWithTicket(string uploadUrl, int expiresInSeconds = 60)
+        => _server.ResultJson = JsonSerializer.Serialize(new Dictionary<string, object>
+        {
+            ["uploadFileURL"] = uploadUrl,
+            ["bucketFilePath"] = "qr-code-files/u1/menu.pdf",
+            ["expiresInSeconds"] = expiresInSeconds,
+            ["_id"] = "q1"
+        });
+
+    // ─── Pass 1 ──────────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task Pass1Types_CreateAndUpdate_HitTheirRoutes_WithTheTargetOnly()
+    {
+        var vcard = new QRCodeVCardTargetModel { FirstName = "Ada", Phones = new() { new QRCodeVCardPhoneModel { Kind = QRCodeVCardPhoneKinds.Mobile, Number = "+201000000000" } } };
+        var ev = new QRCodeEventTargetModel { Title = "Launch", StartsAt = DateTimeOffset.Parse("2026-11-01T18:00:00Z") };
+        var wa = new QRCodeWhatsAppTargetModel { PhoneNumber = "+201000000000", Message = "Hi" };
+        var review = new QRCodeReviewTargetModel { Platform = QRCodeReviewPlatforms.Google, PlaceId = "ChIJ123" };
+        var social = new QRCodeSocialTargetModel { Profiles = new() { new QRCodeSocialProfileModel { Platform = QRCodeSocialPlatforms.Instagram, Handle = "posty5" } } };
+
+        await _client.CreateVCardAsync(new QRCodeCreateVCardRequestModel { TemplateId = Tpl, VCard = vcard });
+        await _client.CreateEventAsync(new QRCodeCreateEventRequestModel { TemplateId = Tpl, Event = ev });
+        await _client.CreateWhatsAppAsync(new QRCodeCreateWhatsAppRequestModel { TemplateId = Tpl, WhatsApp = wa });
+        await _client.CreateReviewAsync(new QRCodeCreateReviewRequestModel { TemplateId = Tpl, Review = review });
+        await _client.CreateSocialAsync(new QRCodeCreateSocialRequestModel { TemplateId = Tpl, Social = social });
+        await _client.UpdateVCardAsync("q1", new QRCodeUpdateVCardRequestModel { Name = "n", TemplateId = Tpl, VCard = vcard });
+        await _client.UpdateEventAsync("q1", new QRCodeUpdateEventRequestModel { Name = "n", TemplateId = Tpl, Event = ev });
+        await _client.UpdateWhatsAppAsync("q1", new QRCodeUpdateWhatsAppRequestModel { Name = "n", TemplateId = Tpl, WhatsApp = wa });
+        await _client.UpdateReviewAsync("q1", new QRCodeUpdateReviewRequestModel { Name = "n", TemplateId = Tpl, Review = review });
+        await _client.UpdateSocialAsync("q1", new QRCodeUpdateSocialRequestModel { Name = "n", TemplateId = Tpl, Social = social });
+
+        var types = new[] { "vcard", "event", "whatsapp", "review", "social" };
+        Assert.Equal(
+            types.Select(t => $"POST /api/qr-code/{t}").Concat(types.Select(t => $"PUT /api/qr-code/{t}/q1")),
+            _server.Requests.Select(r => $"{r.Method} {r.PathAndQuery}"));
+
+        foreach (var (_, path, body) in _server.Requests)
+        {
+            Assert.Equal(Tpl, JsonDocument.Parse(body).RootElement.GetProperty("templateId").GetString());
+            Target(body, path.Split('/')[3]);
+        }
+        Assert.Equal("posty5", Target(_server.Requests[4].Body, "social").GetProperty("profiles")[0].GetProperty("handle").GetString());
+        Assert.Equal("ChIJ123", Target(_server.Requests[3].Body, "review").GetProperty("placeId").GetString());
+        Assert.Equal("+201000000000", Target(_server.Requests[0].Body, "vcard").GetProperty("phones")[0].GetProperty("number").GetString());
+    }
+
+    [Fact]
+    public async Task Event_SendsIso8601Times()
+    {
+        await _client.CreateEventAsync(new QRCodeCreateEventRequestModel
+        {
+            TemplateId = Tpl,
+            Event = new() { Title = "Launch", StartsAt = DateTimeOffset.Parse("2026-11-01T18:00:00Z"), EndsAt = DateTimeOffset.Parse("2026-11-01T20:00:00Z") }
+        });
+
+        var ev = Target(_server.Requests.Single().Body, "event");
+        Assert.Equal(DateTimeOffset.Parse("2026-11-01T18:00:00Z"), DateTimeOffset.Parse(ev.GetProperty("startsAt").GetString()!));
+        Assert.Equal(DateTimeOffset.Parse("2026-11-01T20:00:00Z"), DateTimeOffset.Parse(ev.GetProperty("endsAt").GetString()!));
+    }
+
+    [Fact]
+    public async Task Pass1Types_ModeIsPassedThroughOnlyWhenSet()
+    {
+        await _client.CreateWhatsAppAsync(new QRCodeCreateWhatsAppRequestModel { TemplateId = Tpl, Mode = QRCodeMode.Dynamic, WhatsApp = new() { PhoneNumber = "+1" } });
+        await _client.CreateWhatsAppAsync(new QRCodeCreateWhatsAppRequestModel { TemplateId = Tpl, WhatsApp = new() { PhoneNumber = "+1" } });
+
+        Assert.Equal("dynamic", JsonDocument.Parse(_server.Requests[0].Body).RootElement.GetProperty("mode").GetString());
+        Assert.False(JsonDocument.Parse(_server.Requests[1].Body).RootElement.TryGetProperty("mode", out _));
+    }
+
+    [Fact]
+    public async Task Update_WithoutId_ThrowsBeforeAnyCall()
+    {
+        await Assert.ThrowsAsync<ArgumentException>(() => _client.UpdateVCardAsync("", new QRCodeUpdateVCardRequestModel { Name = "n", TemplateId = Tpl }));
+        await Assert.ThrowsAsync<ArgumentException>(() => _client.UpdateAppStoreAsync(" ", new QRCodeUpdateAppStoreRequestModel { Name = "n", TemplateId = Tpl }));
+        await Assert.ThrowsAsync<ArgumentException>(() => _client.UpdateFileAsync("", new QRCodeUpdateFileRequestModel { Name = "n", TemplateId = Tpl }));
+        Assert.Empty(_server.Requests);
+    }
+
+    [Fact]
+    public async Task Social_SendsUpTo12Profiles_OnADynamicCode()
+    {
+        var profiles = Enumerable.Range(1, 12).Select(i => new QRCodeSocialProfileModel { Platform = QRCodeSocialPlatforms.Instagram, Handle = $"h{i}" }).ToList();
+
+        await _client.CreateSocialAsync(new QRCodeCreateSocialRequestModel { TemplateId = Tpl, Mode = QRCodeMode.Dynamic, Social = new() { Profiles = profiles } });
+
+        Assert.Equal(12, Target(_server.Requests.Single().Body, "social").GetProperty("profiles").GetArrayLength());
+    }
+
+    [Fact]
+    public async Task Responses_KeepUnknownPlatformsAndReadTheNewTargets()
+    {
+        _server.ResultJson =
+            "{ \"_id\": \"q1\", \"qrCodeTarget\": { \"type\": \"social\", " +
+            "\"social\": { \"profiles\": [ { \"platform\": \"mastodon\", \"handle\": \"x\" } ] }, " +
+            "\"appStore\": { \"fallbackUrl\": \"https://example.com\" }, " +
+            "\"file\": { \"fileName\": \"menu.pdf\", \"fileURL\": \"https://files/menu.pdf\", \"mimeType\": \"application/pdf\", \"sizeBytes\": 42 } } }";
+
+        var qr = await _client.GetAsync("q1");
+
+        Assert.Equal("mastodon", qr.QrCodeTarget!.Social!.Profiles[0].Platform);
+        Assert.Equal("https://example.com", qr.QrCodeTarget.AppStore!.FallbackUrl);
+        Assert.Equal(42, qr.QrCodeTarget.File!.SizeBytes);
+        Assert.Equal(QRCodeFileMimeTypes.Pdf, qr.QrCodeTarget.File.MimeType);
+    }
+
+    // ─── Pass 2: app store ───────────────────────────────────────────────────
+
+    [Fact]
+    public async Task AppStore_CreateAndUpdate_SendTheTarget()
+    {
+        var target = new QRCodeAppStoreTargetModel { AndroidUrl = "https://play.google.com/store/apps/details?id=x", IosUrl = "https://apps.apple.com/app/id1", FallbackUrl = "https://example.com/app" };
+
+        await _client.CreateAppStoreAsync(new QRCodeCreateAppStoreRequestModel { TemplateId = Tpl, AppStore = target });
+        await _client.UpdateAppStoreAsync("q1", new QRCodeUpdateAppStoreRequestModel { Name = "n", TemplateId = Tpl, Mode = QRCodeMode.Dynamic, AppStore = target });
+
+        Assert.Equal(new[] { "POST /api/qr-code/appStore", "PUT /api/qr-code/appStore/q1" }, _server.Requests.Select(r => $"{r.Method} {r.PathAndQuery}"));
+        var sent = Target(_server.Requests[0].Body, "appStore");
+        Assert.Equal("https://example.com/app", sent.GetProperty("fallbackUrl").GetString());
+        Assert.Equal("https://apps.apple.com/app/id1", sent.GetProperty("iosUrl").GetString());
+        Assert.Equal("dynamic", JsonDocument.Parse(_server.Requests[1].Body).RootElement.GetProperty("mode").GetString());
+    }
+
+    [Fact]
+    public async Task AppStoreAndFile_StaticMode_ThrowsBeforeAnyCall()
+    {
+        await Assert.ThrowsAsync<ArgumentException>(() => _client.CreateAppStoreAsync(new QRCodeCreateAppStoreRequestModel { TemplateId = Tpl, Mode = QRCodeMode.Static }));
+        await Assert.ThrowsAsync<ArgumentException>(() => _client.UpdateAppStoreAsync("q1", new QRCodeUpdateAppStoreRequestModel { Name = "n", TemplateId = Tpl, Mode = QRCodeMode.Static }));
+        await Assert.ThrowsAsync<ArgumentException>(() => _client.CreateFileAsync(new QRCodeCreateFileRequestModel { TemplateId = Tpl, Mode = QRCodeMode.Static }, new MemoryStream(new byte[] { 1 }), QRCodeFileMimeTypes.Pdf));
+        await Assert.ThrowsAsync<ArgumentException>(() => _client.UpdateFileAsync("q1", new QRCodeUpdateFileRequestModel { Name = "n", TemplateId = Tpl, Mode = QRCodeMode.Static }));
+        Assert.Empty(_server.Requests);
+    }
+
+    // ─── Pass 2: file ────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task CreateFile_UploadUrl_ThenPut_ThenCreateWithBucketFilePath()
+    {
+        AnswerWithTicket($"{_server.BaseUrl}/r2/signed-put");
+        var bytes = new byte[] { 0x25, 0x50, 0x44, 0x46, 0x2D };
+
+        var qr = await _client.CreateFileAsync(
+            new QRCodeCreateFileRequestModel { Name = "Menu", TemplateId = Tpl, File = new() { FileName = "menu.pdf" } },
+            new MemoryStream(bytes),
+            QRCodeFileMimeTypes.Pdf);
+
+        Assert.Equal("q1", qr.Id);
+        Assert.Equal(
+            new[] { "POST /api/qr-code/file/upload-url", "PUT /r2/signed-put", "POST /api/qr-code/file" },
+            _server.Requests.Select(r => $"{r.Method} {r.PathAndQuery}"));
+
+        var ticketRequest = JsonDocument.Parse(_server.Requests[0].Body).RootElement;
+        Assert.Equal("menu.pdf", ticketRequest.GetProperty("fileName").GetString());
+        Assert.Equal("application/pdf", ticketRequest.GetProperty("mimeType").GetString());
+        Assert.Equal(bytes.Length, ticketRequest.GetProperty("sizeBytes").GetInt64());
+
+        Assert.Equal("application/pdf", _server.Headers[1]["Content-Type"]);
+        Assert.False(_server.Headers[1].ContainsKey("Authorization"), "the API key is not sent to the signed URL");
+        Assert.False(_server.Headers[1].ContainsKey("x-api-key"), "the API key is not sent to the signed URL");
+
+        var file = Target(_server.Requests[2].Body, "file");
+        Assert.Equal("qr-code-files/u1/menu.pdf", file.GetProperty("bucketFilePath").GetString());
+        Assert.Equal("menu.pdf", file.GetProperty("fileName").GetString());
+        Assert.False(file.TryGetProperty("mimeType", out _), "mimeType is set by the API");
+    }
+
+    [Fact]
+    public async Task CreateFile_WithoutFileName_SendsFile()
+    {
+        AnswerWithTicket($"{_server.BaseUrl}/r2/signed-put");
+
+        await _client.CreateFileAsync(new QRCodeCreateFileRequestModel { TemplateId = Tpl }, new MemoryStream(new byte[] { 1, 2 }), QRCodeFileMimeTypes.Png);
+
+        Assert.Equal("file", JsonDocument.Parse(_server.Requests[0].Body).RootElement.GetProperty("fileName").GetString());
+    }
+
+    [Fact]
+    public async Task CreateFile_InvalidInput_ThrowsBeforeAnyCall()
+    {
+        var data = new QRCodeCreateFileRequestModel { TemplateId = Tpl };
+        await Assert.ThrowsAsync<ArgumentException>(() => _client.CreateFileAsync(data, new MemoryStream(), QRCodeFileMimeTypes.Pdf));
+        await Assert.ThrowsAsync<ArgumentException>(() => _client.CreateFileAsync(data, new MemoryStream(new byte[] { 1 }), ""));
+        await Assert.ThrowsAsync<ArgumentException>(() => _client.CreateFileAsync(data, new NonSeekableStream(new byte[] { 1 }), QRCodeFileMimeTypes.Pdf));
+        Assert.Empty(_server.Requests);
+    }
+
+    [Fact]
+    public async Task CreateFile_NonSeekableStream_UsesFileSizeBytes()
+    {
+        AnswerWithTicket($"{_server.BaseUrl}/r2/signed-put");
+
+        await _client.CreateFileAsync(
+            new QRCodeCreateFileRequestModel { TemplateId = Tpl, File = new() { FileName = "a.png", SizeBytes = 3 } },
+            new NonSeekableStream(new byte[] { 1, 2, 3 }),
+            QRCodeFileMimeTypes.Png);
+
+        Assert.Equal(3, JsonDocument.Parse(_server.Requests[0].Body).RootElement.GetProperty("sizeBytes").GetInt64());
+        Assert.Equal(3, _server.Requests.Count);
+    }
+
+    [Fact]
+    public async Task CreateFile_NetworkErrorOnThePut_IsRetriedOnceThenThrown()
+    {
+        // A closed port: every PUT is a network error (no HTTP status).
+        var probe = new System.Net.Sockets.TcpListener(IPAddress.Loopback, 0);
+        probe.Start();
+        var closedPort = ((IPEndPoint)probe.LocalEndpoint).Port;
+        probe.Stop();
+        AnswerWithTicket($"http://127.0.0.1:{closedPort}/r2/signed-put");
+
+        var error = await Assert.ThrowsAsync<HttpRequestException>(() => _client.CreateFileAsync(
+            new QRCodeCreateFileRequestModel { TemplateId = Tpl }, new MemoryStream(new byte[] { 1 }), QRCodeFileMimeTypes.Pdf));
+
+        Assert.Null(error.StatusCode);
+        Assert.Equal(new[] { "POST /api/qr-code/file/upload-url" }, _server.Requests.Select(r => $"{r.Method} {r.PathAndQuery}"));
+    }
+
+    [Fact]
+    public async Task UpdateFile_WithoutContent_KeepsTheStoredFile()
+    {
+        await _client.UpdateFileAsync("q1", new QRCodeUpdateFileRequestModel { Name = "Menu", TemplateId = Tpl, File = new() { FileName = "menu-2026.pdf" } });
+
+        var (method, path, body) = _server.Requests.Single();
+        Assert.Equal("PUT /api/qr-code/file/q1", $"{method} {path}");
+        var file = Target(body, "file");
+        Assert.Equal("menu-2026.pdf", file.GetProperty("fileName").GetString());
+        Assert.False(file.TryGetProperty("bucketFilePath", out _));
+    }
+
+    [Fact]
+    public async Task UpdateFile_WithContent_UploadsFirst_ThenPutsTheNewBucketFilePath()
+    {
+        AnswerWithTicket($"{_server.BaseUrl}/r2/signed-put");
+
+        await _client.UpdateFileAsync("q1", new QRCodeUpdateFileRequestModel { Name = "Menu", TemplateId = Tpl }, new MemoryStream(new byte[] { 1, 2 }), QRCodeFileMimeTypes.Webp);
+
+        Assert.Equal(
+            new[] { "POST /api/qr-code/file/upload-url", "PUT /r2/signed-put", "PUT /api/qr-code/file/q1" },
+            _server.Requests.Select(r => $"{r.Method} {r.PathAndQuery}"));
+        Assert.Equal("qr-code-files/u1/menu.pdf", Target(_server.Requests[2].Body, "file").GetProperty("bucketFilePath").GetString());
+    }
+
+    [Fact]
+    public async Task UpdateFile_WithContentButNoContentType_ThrowsBeforeAnyCall()
+    {
+        await Assert.ThrowsAsync<ArgumentException>(() => _client.UpdateFileAsync("q1", new QRCodeUpdateFileRequestModel { Name = "n", TemplateId = Tpl }, new MemoryStream(new byte[] { 1 })));
+        Assert.Empty(_server.Requests);
+    }
+
+    [Fact]
+    public void UploadExpiredException_CarriesARetryHint()
+    {
+        var error = new QRCodeFileUploadExpiredException(60, new HttpRequestException("x"));
+        Assert.IsAssignableFrom<Posty5Exception>(error);
+        Assert.Contains("60 s", error.Message);
+        Assert.Contains("retry", error.Message);
+    }
+
+    /// <summary>A stream that cannot seek, like a network body.</summary>
+    private sealed class NonSeekableStream : MemoryStream
+    {
+        public NonSeekableStream(byte[] bytes) : base(bytes) { }
+        public override bool CanSeek => false;
+    }
+}

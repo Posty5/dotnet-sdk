@@ -347,6 +347,60 @@ var mapQR = await qrCodes.CreateGeolocationAsync(new QRCodeCreateGeolocationRequ
 
 ---
 
+### vCard, Event, WhatsApp, Review and Social QR Codes (3.4.0)
+
+`CreateVCardAsync`, `CreateEventAsync`, `CreateWhatsAppAsync`, `CreateReviewAsync`,
+`CreateSocialAsync` and their `Update*Async(id, …)` twins send `qrCodeTarget`
+only; the API builds the encoded content. Platforms and phone kinds are string
+constants (`QRCodeSocialPlatforms`, `QRCodeReviewPlatforms`, `QRCodeVCardPhoneKinds`).
+
+```csharp
+await qrCodes.CreateVCardAsync(new QRCodeCreateVCardRequestModel
+{
+    Name = "My card", TemplateId = "template-123",
+    VCard = new QRCodeVCardTargetModel
+    {
+        FirstName = "Ada", Organization = "Posty5",
+        Phones = new() { new QRCodeVCardPhoneModel { Kind = QRCodeVCardPhoneKinds.Mobile, Number = "+201000000000" } },
+        Emails = new() { "ada@example.com" }
+    }
+});
+
+await qrCodes.CreateEventAsync(new QRCodeCreateEventRequestModel
+{
+    Name = "Launch", TemplateId = "template-123",
+    Event = new QRCodeEventTargetModel
+    {
+        Title = "Launch party",
+        StartsAt = new DateTimeOffset(2026, 11, 1, 18, 0, 0, TimeSpan.Zero), // sent as ISO 8601
+        Timezone = "Africa/Cairo"
+    }
+});
+
+await qrCodes.CreateWhatsAppAsync(new QRCodeCreateWhatsAppRequestModel
+{
+    Name = "Chat", TemplateId = "template-123",
+    WhatsApp = new QRCodeWhatsAppTargetModel { PhoneNumber = "+201000000000", Message = "Hi" }
+});
+
+await qrCodes.CreateReviewAsync(new QRCodeCreateReviewRequestModel
+{
+    Name = "Review us", TemplateId = "template-123",
+    Review = new QRCodeReviewTargetModel { Platform = QRCodeReviewPlatforms.Google, PlaceId = "ChIJ..." }
+});
+
+await qrCodes.CreateSocialAsync(new QRCodeCreateSocialRequestModel
+{
+    Name = "Follow us", TemplateId = "template-123",
+    Social = new QRCodeSocialTargetModel
+    {
+        Profiles = new() { new QRCodeSocialProfileModel { Platform = QRCodeSocialPlatforms.Instagram, Handle = "posty5" } }
+    }
+});
+```
+
+---
+
 ### Static and Dynamic QR Codes (3.3.0)
 
 Every request model takes `Mode` (`QRCodeMode.Static` or `QRCodeMode.Dynamic`).
@@ -545,6 +599,29 @@ Each type has a corresponding Update method.
 - `UpdateCallAsync(id, request)`
 - `UpdateSMSAsync(id, request)`
 - `UpdateGeolocationAsync(id, request)`
+- `UpdateVCardAsync`, `UpdateEventAsync`, `UpdateWhatsAppAsync`, `UpdateReviewAsync`, `UpdateSocialAsync` (3.4.0)
+- `UpdateAppStoreAsync`, `UpdateFileAsync(id, request, Stream? content = null, string? contentType = null)` (3.4.0, dynamic-only). Without a stream, the stored file is kept.
+
+#### App store and file codes (3.4.0)
+
+Both are dynamic-only (`Mode = QRCodeMode.Static` throws `ArgumentException`). `CreateFileAsync`
+asks for a signed upload URL, PUTs the file (PDF, JPEG, PNG or WebP; see `QRCodeFileMimeTypes`),
+retries the PUT once on a network error, then creates the code. If the 60-second URL expires first,
+`QRCodeFileUploadExpiredException` is thrown: call again for a fresh URL. A non-seekable stream needs
+`File.SizeBytes`. Social codes take 1 to 12 profiles (more than one requires a dynamic code).
+
+```csharp
+await using var pdf = File.OpenRead("menu.pdf");
+var qr = await qrCodeClient.CreateFileAsync(
+    new QRCodeCreateFileRequestModel { Name = "Menu", TemplateId = "template_id", File = new() { FileName = "menu.pdf" } },
+    pdf, QRCodeFileMimeTypes.Pdf);
+
+await qrCodeClient.CreateAppStoreAsync(new QRCodeCreateAppStoreRequestModel
+{
+    Name = "App", TemplateId = "template_id",
+    AppStore = new() { AndroidUrl = "https://play.google.com/...", IosUrl = "https://apps.apple.com/...", FallbackUrl = "https://example.com/app" }
+});
+```
 
 **Example (Update URL):**
 

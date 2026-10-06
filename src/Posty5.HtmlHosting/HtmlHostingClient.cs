@@ -1,4 +1,3 @@
-using System.Net.Http.Headers;
 using Posty5.Core.Configuration;
 using Posty5.Core.Http;
 using Posty5.Core.Models;
@@ -56,7 +55,7 @@ public class HtmlHostingClient
         var uploadConfig = response.Result?.UploadFileConfig ?? throw new InvalidOperationException("Upload configuration not provided");
 
         // Step 2: Upload HTML file to R2 storage
-        await UploadToR2Async(uploadConfig.UploadUrl, fileStream, contentType, cancellationToken);
+        await R2UploadHelper.UploadAsync(uploadConfig.UploadUrl, fileStream, contentType, cancellationToken);
 
         // Page is auto-published by backend after file upload
 
@@ -232,7 +231,7 @@ public class HtmlHostingClient
         // Step 2: Upload HTML file to R2 if upload config is provided
         if (uploadConfig != null)
         {
-            await UploadToR2Async(uploadConfig.UploadUrl, fileStream, contentType, cancellationToken);
+            await R2UploadHelper.UploadAsync(uploadConfig.UploadUrl, fileStream, contentType, cancellationToken);
         }
 
         // Page is auto-published by backend
@@ -296,26 +295,5 @@ public class HtmlHostingClient
     public async Task CleanCacheAsync(string id, CancellationToken cancellationToken = default)
     {
         await _http.PutAsync<object>($"{BasePath}/{id}/clean-cache", new { }, cancellationToken);
-    }
-
-    /// <summary>
-    /// Upload file to R2 storage using pre-signed URL
-    /// </summary>
-    /// <param name="uploadUrl">Pre-signed R2 upload URL</param>
-    /// <param name="fileStream">File stream to upload</param>
-    /// <param name="contentType">Content type of the file</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    private async Task UploadToR2Async(
-        string uploadUrl,
-        Stream fileStream,
-        string contentType,
-        CancellationToken cancellationToken)
-    {
-        using var client = new HttpClient();
-        using var content = new StreamContent(fileStream);
-        content.Headers.ContentType = new MediaTypeHeaderValue(contentType);
-
-        var response = await client.PutAsync(uploadUrl, content, cancellationToken);
-        response.EnsureSuccessStatusCode();
     }
 }

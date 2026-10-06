@@ -311,7 +311,7 @@ public class SocialPublisherPostClient
         if (string.IsNullOrEmpty(uploadConfig.Video.UploadFileURL))
             throw new InvalidOperationException("Video upload URL not provided");
 
-        await UploadToR2Async(uploadConfig.Video.UploadFileURL, videoStream, videoContentType, cancellationToken);
+        await R2UploadHelper.UploadAsync(uploadConfig.Video.UploadFileURL, videoStream, videoContentType, cancellationToken);
 
         var thumbUrl = await HandleThumbnailUploadAsync(thumbnailStream, thumbnailContentType, thumbnailUrl,
             uploadConfig.Thumb, cancellationToken);
@@ -394,7 +394,7 @@ public class SocialPublisherPostClient
         if (string.IsNullOrEmpty(uploadConfig.Video.UploadFileURL))
             throw new InvalidOperationException("Video upload URL not provided");
 
-        await UploadToR2Async(uploadConfig.Video.UploadFileURL, videoStream, videoContentType, cancellationToken);
+        await R2UploadHelper.UploadAsync(uploadConfig.Video.UploadFileURL, videoStream, videoContentType, cancellationToken);
 
         var thumbUrl = await HandleThumbnailUploadAsync(thumbnailStream, thumbnailContentType, thumbnailUrl,
             uploadConfig.Thumb, cancellationToken);
@@ -1007,21 +1007,12 @@ public class SocialPublisherPostClient
         throw new ArgumentException("Invalid video type. Must be Stream or string URL");
     }
 
-    private async Task UploadToR2Async(string uploadUrl, Stream fileStream, string contentType, CancellationToken cancellationToken)
-    {
-        using var client = new HttpClient();
-        using var content = new StreamContent(fileStream);
-        content.Headers.ContentType = new MediaTypeHeaderValue(contentType);
-        var response = await client.PutAsync(uploadUrl, content, cancellationToken);
-        response.EnsureSuccessStatusCode();
-    }
-
     private async Task<string?> HandleThumbnailUploadAsync(Stream? thumbnailStream, string? thumbnailContentType,
         string? thumbnailUrl, UploadUrlInfo thumbInfo, CancellationToken cancellationToken)
     {
         if (thumbnailStream != null && !string.IsNullOrEmpty(thumbInfo.UploadFileURL))
         {
-            await UploadToR2Async(thumbInfo.UploadFileURL, thumbnailStream, thumbnailContentType!, cancellationToken);
+            await R2UploadHelper.UploadAsync(thumbInfo.UploadFileURL, thumbnailStream, thumbnailContentType!, cancellationToken);
             return thumbInfo.FileURL;
         }
         return thumbnailUrl;
