@@ -100,6 +100,30 @@
       "role": "Short-link fixed values: base path, templateType/createdFrom, pageInfo.title filter key, [Obsolete] texts."
     },
     {
+      "path": "src/Posty5.ShortLink/ShortLinkClient.Controls.cs",
+      "role": "Short link controls (SC): ListTagsAsync (GET /tags), CheckHealthAsync (POST /{id}/health-check), SetRulesAsync (partial PUT; reads the link when baseUrl/templateId missing)."
+    },
+    {
+      "path": "src/Posty5.ShortLink/LinkCampaignClient.cs",
+      "role": "Link campaigns CRUD on /api/link-campaign; DeleteAsync(id, detach)."
+    },
+    {
+      "path": "src/Posty5.ShortLink/Helpers/ShortLinkRequestBodyHelper.cs",
+      "role": "Builds short-link bodies as dictionaries so explicit JSON nulls (ClearAccess, ClearUtm, RemovePassword) survive the WhenWritingNull serializer."
+    },
+    {
+      "path": "src/Posty5.ShortLink/Models/LinkRulesModels.cs",
+      "role": "Access/routing/variant/UTM/pixel/health models, constants (LinkDeviceTypes, LinkOsFamilies, LinkPixelProviders, LinkHealthStatuses), LinkRulesSectionsModel / ShortLinkControlsRequestModel bases."
+    },
+    {
+      "path": "src/Posty5.ShortLink/Models/LinkCampaignModels.cs",
+      "role": "Link campaign models and LinkCampaignColors."
+    },
+    {
+      "path": "tests/Posty5.Tests/ShortLinkControlsTests.cs",
+      "role": "Offline (RecordingServer): password/utm/access nulls, tags query, health-check route, campaign routes."
+    },
+    {
       "path": "src/Posty5.QRCode",
       "role": "QR client/models."
     },

@@ -4,6 +4,30 @@ All notable changes to the Posty5 .NET SDK will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Posty5.ShortLink - unreleased (short link controls, SC)
+
+Needs the API's short link controls release. Additive; rides the unreleased
+3.2.0 line.
+
+### Added
+
+- Create/update models gain `Tags`, `CampaignId`, `Access` (`LinkAccessInputModel`:
+  `ActiveFrom`, `ExpiresAt`, `MaxVisits`, `FallbackUrl`, write-only `Password`,
+  `RemovePassword` -> `"password": null`), `Routing`, `Variants`, `Utm`, `Pixels`,
+  `PixelsConsentAcknowledged`, `Health`; `ClearAccess` / `ClearUtm` send JSON `null`,
+  an empty list clears routing/variants/pixels.
+- Responses: `Tags`, `CampaignId`, `HasRules`, `HasPassword`, `ExpiresAt`, `Health`;
+  `GetAsync` also `Access`, `Routing`, `Variants`, `Utm`, `Pixels`, `PixelsAcknowledgedAt`.
+- List filters `Tags` (comma-joined) and `CampaignId`.
+- `ShortLinkClient.ListTagsAsync`, `CheckHealthAsync`, `SetRulesAsync`.
+- `LinkCampaignClient` (`/api/link-campaign`): list, get, create, update, `DeleteAsync(id, detach)`.
+- Constants: `LinkDeviceTypes`, `LinkOsFamilies`, `LinkPixelProviders`,
+  `LinkHealthStatuses`, `LinkCampaignColors`.
+
+### Deprecated
+
+- `Tag` on create/update/list requests: use `Tags` (still sent; the API treats it as `tags[0]`).
+
 ## Posty5.Core, Posty5.ShortLink, Posty5.QRCode, new Posty5.Webhooks - unreleased (bulk + webhooks, BW)
 
 Needs the API's bulk and webhook releases (an older API answers 404). Additive;

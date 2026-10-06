@@ -483,3 +483,41 @@ var file = await shortLinkClient.ExportAsync(new ExportOptions { Format = Export
 
 Cancelling `CreateManyAsync` stops between chunks; chunks already sent stay
 created — call again with the same `IdempotencyKey` to finish without duplicates.
+
+## Short link controls: tags, rules, campaigns, health
+
+```csharp
+// Tags and a campaign
+var campaigns = new LinkCampaignClient(httpClient);
+var campaign = await campaigns.CreateAsync(new LinkCampaignCreateRequestModel { Name = "Spring", Color = LinkCampaignColors.Green });
+
+var link = await shortLinkClient.CreateAsync(new ShortLinkCreateRequestModel
+{
+    BaseUrl = "https://example.com",
+    TemplateId = "your-template-id",
+    Tags = new[] { "spring", "email" },
+    CampaignId = campaign.Id,
+    Access = new LinkAccessInputModel { ExpiresAt = DateTimeOffset.UtcNow.AddDays(30), Password = "letmein" }
+});
+
+// Partial rule update: only the sections you set change
+await shortLinkClient.SetRulesAsync(link.Id!, new LinkRulesUpdateModel
+{
+    Access = new LinkAccessInputModel { RemovePassword = true },  // sends "password": null
+    Variants = new[]
+    {
+        new LinkVariantModel { Url = "https://example.com/a", Weight = 50 },
+        new LinkVariantModel { Url = "https://example.com/b", Weight = 50 }
+    },
+    ClearUtm = true
+});
+
+var tags = await shortLinkClient.ListTagsAsync("sp");
+await shortLinkClient.CheckHealthAsync(link.Id!);           // 202, one per link per 10 min
+await campaigns.DeleteAsync(campaign.Id!, detach: true);
+```
+
+A `null` property is never sent (it keeps the stored value). To clear, use an
+empty list (`Routing`, `Variants`, `Pixels`, `Tags`), `""` (`CampaignId`,
+`FallbackUrl`) or a `Clear...` flag / `RemovePassword`. `Tag` is obsolete; use `Tags`.
+

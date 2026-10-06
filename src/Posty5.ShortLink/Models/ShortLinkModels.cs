@@ -128,9 +128,27 @@ public class ShortLinkModel
     public string? RefId { get; set; }
     
     /// <summary>
-    /// Custom tag for filtering/categorization
+    /// Custom tag. Always <c>Tags[0]</c>; prefer <see cref="Tags"/>.
     /// </summary>
     public string? Tag { get; set; }
+
+    /// <summary>Tags of the link</summary>
+    public List<string>? Tags { get; set; }
+
+    /// <summary>Campaign the link belongs to</summary>
+    public string? CampaignId { get; set; }
+
+    /// <summary>True when any access / routing / variant / pixel rule is set.</summary>
+    public bool? HasRules { get; set; }
+
+    /// <summary>Whether the link is password-protected (the password is never returned).</summary>
+    public bool? HasPassword { get; set; }
+
+    /// <summary><c>access.expiresAt</c>, when set.</summary>
+    public DateTimeOffset? ExpiresAt { get; set; }
+
+    /// <summary>Health summary (list rows carry <c>Status</c> only; <c>GetAsync</c> the full state).</summary>
+    public LinkHealthModel? Health { get; set; }
     
     /// <summary>
     /// Number of visits to the short link. Also returned in API-key list
@@ -248,13 +266,30 @@ public class ShortLinkFullDetailsModel : ShortLinkModel
     /// Link metadata for social sharing
     /// </summary>
     public ShortLinkMetaDataModel? LinkMetaData { get; set; }
-       
+
+    /// <summary>Access rules (never the password; see <see cref="LinkAccessModel.HasPassword"/>).</summary>
+    public LinkAccessModel? Access { get; set; }
+
+    /// <summary>Ordered routing rules, each with its server-assigned id.</summary>
+    public List<LinkRoutingRuleModel>? Routing { get; set; }
+
+    /// <summary>A/B variants</summary>
+    public List<LinkVariantModel>? Variants { get; set; }
+
+    /// <summary>UTM parameters</summary>
+    public LinkUtmModel? Utm { get; set; }
+
+    /// <summary>Retargeting pixels</summary>
+    public List<LinkPixelModel>? Pixels { get; set; }
+
+    /// <summary>When the pixel lawful-basis attestation was given.</summary>
+    public DateTimeOffset? PixelsAcknowledgedAt { get; set; }
 }
 
 /// <summary>
 /// Create short link request
 /// </summary>
-public class ShortLinkCreateRequestModel
+public class ShortLinkCreateRequestModel : ShortLinkControlsRequestModel
 {
     /// <summary>
     /// Link name. Empty: the API names the link from the target page's title.
@@ -280,8 +315,9 @@ public class ShortLinkCreateRequestModel
     public string? RefId { get; set; }
 
     /// <summary>
-    /// Custom tag for filtering/categorization
+    /// Custom tag. The API treats it as <c>tags[0]</c>; when both are sent, <c>Tags</c> wins.
     /// </summary>
+    [Obsolete(ShortLinkConst.TagObsolete)]
     public string? Tag { get; set; }
 
     /// <summary>
@@ -347,7 +383,7 @@ public class ShortLinkCreateRequestModel
 /// A property left <c>null</c> is not sent. <see cref="BaseUrl"/> and
 /// <see cref="TemplateId"/> are required on every update.
 /// </remarks>
-public class ShortLinkUpdateRequestModel
+public class ShortLinkUpdateRequestModel : ShortLinkControlsRequestModel
 {
     /// <summary>
     /// Link name. <c>null</c> or empty: the API names the link from the target
@@ -374,8 +410,10 @@ public class ShortLinkUpdateRequestModel
     public string? RefId { get; set; }
 
     /// <summary>
-    /// Custom tag for filtering/categorization. <c>null</c> keeps the stored value.
+    /// Custom tag. <c>null</c> keeps the stored value. The API treats it as
+    /// <c>tags[0]</c>; when both are sent, <c>Tags</c> wins.
     /// </summary>
+    [Obsolete(ShortLinkConst.TagObsolete)]
     public string? Tag { get; set; }
 
     /// <summary>
@@ -456,7 +494,14 @@ public class ShortLinkListParamsModel
     /// <summary>
     /// Filter by custom tag
     /// </summary>
+    [Obsolete(ShortLinkConst.TagObsolete)]
     public string? Tag { get; set; }
+
+    /// <summary>Links carrying every one of these tags (sent comma-joined as <c>tags</c>).</summary>
+    public IReadOnlyList<string>? Tags { get; set; }
+
+    /// <summary>Links of this campaign (24-hex id).</summary>
+    public string? CampaignId { get; set; }
     
     /// <summary>
     /// Filter by template ID

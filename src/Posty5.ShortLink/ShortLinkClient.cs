@@ -3,6 +3,7 @@ using Posty5.Core.Exceptions;
 using Posty5.Core.Helpers;
 using Posty5.Core.Http;
 using Posty5.Core.Models;
+using Posty5.ShortLink.Helpers;
 using Posty5.ShortLink.Models;
 
 namespace Posty5.ShortLink;
@@ -51,8 +52,15 @@ public partial class ShortLinkClient
                 queryParams["shortLinkId"] = listParams.ShortLinkId;
             if (!string.IsNullOrEmpty(listParams.RefId))
                 queryParams["refId"] = listParams.RefId;
+#pragma warning disable CS0618 // Tag is obsolete but still sent while callers use it
             if (!string.IsNullOrEmpty(listParams.Tag))
                 queryParams["tag"] = listParams.Tag;
+#pragma warning restore CS0618
+            var tags = ShortLinkRequestBodyHelper.JoinTags(listParams.Tags);
+            if (tags != null)
+                queryParams["tags"] = tags;
+            if (!string.IsNullOrEmpty(listParams.CampaignId))
+                queryParams["campaignId"] = listParams.CampaignId;
             if (!string.IsNullOrEmpty(listParams.TemplateId))
                 queryParams["templateId"] = listParams.TemplateId;
             if (listParams.Status.HasValue)
@@ -200,21 +208,22 @@ public partial class ShortLinkClient
 
         // An explicit body: only fields the API accepts, so an obsolete model
         // property can never reach it. Null values are omitted on the wire.
-        var data = new
-        {
-            request.Name,
-            request.BaseUrl,
-            request.TemplateId,
-            request.CustomLandingId,
-            request.RefId,
-            request.Tag,
-            request.IsEnableLandingPage,
-            request.PageInfo,
-            request.AndroidUrl,
-            request.IosUrl,
-            TemplateType = ShortLinkConst.TemplateType,
-            CreatedFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
-        };
+        var data = new Dictionary<string, object?>();
+        ShortLinkRequestBodyHelper.AddIfSet(data, "name", request.Name);
+        ShortLinkRequestBodyHelper.AddIfSet(data, "baseUrl", request.BaseUrl);
+        ShortLinkRequestBodyHelper.AddIfSet(data, "templateId", request.TemplateId);
+        ShortLinkRequestBodyHelper.AddIfSet(data, "customLandingId", request.CustomLandingId);
+        ShortLinkRequestBodyHelper.AddIfSet(data, "refId", request.RefId);
+#pragma warning disable CS0618 // Tag is obsolete but still sent while callers use it
+        ShortLinkRequestBodyHelper.AddIfSet(data, "tag", request.Tag);
+#pragma warning restore CS0618
+        ShortLinkRequestBodyHelper.AddIfSet(data, "isEnableLandingPage", request.IsEnableLandingPage);
+        ShortLinkRequestBodyHelper.AddIfSet(data, "pageInfo", request.PageInfo);
+        ShortLinkRequestBodyHelper.AddIfSet(data, "androidUrl", request.AndroidUrl);
+        ShortLinkRequestBodyHelper.AddIfSet(data, "iosUrl", request.IosUrl);
+        ShortLinkRequestBodyHelper.AddControls(data, request);
+        data["templateType"] = ShortLinkConst.TemplateType;
+        data["createdFrom"] = _http.ResolveCreatedFrom(CreatedFromDefaults.Package);
 
         var response = await _http.PostAsync<ShortLinkModel>(ShortLinkConst.BasePath, data, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to create short link");
@@ -244,20 +253,21 @@ public partial class ShortLinkClient
 
         // Explicit body: no IsEnableMonetization, and no CustomLandingId (the
         // update schema rejects it; a link's id cannot change).
-        var data = new
-        {
-            request.Name,
-            request.BaseUrl,
-            request.TemplateId,
-            request.RefId,
-            request.Tag,
-            request.IsEnableLandingPage,
-            request.PageInfo,
-            request.AndroidUrl,
-            request.IosUrl,
-            TemplateType = ShortLinkConst.TemplateType,
-            CreatedFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
-        };
+        var data = new Dictionary<string, object?>();
+        ShortLinkRequestBodyHelper.AddIfSet(data, "name", request.Name);
+        ShortLinkRequestBodyHelper.AddIfSet(data, "baseUrl", request.BaseUrl);
+        ShortLinkRequestBodyHelper.AddIfSet(data, "templateId", request.TemplateId);
+        ShortLinkRequestBodyHelper.AddIfSet(data, "refId", request.RefId);
+#pragma warning disable CS0618 // Tag is obsolete but still sent while callers use it
+        ShortLinkRequestBodyHelper.AddIfSet(data, "tag", request.Tag);
+#pragma warning restore CS0618
+        ShortLinkRequestBodyHelper.AddIfSet(data, "isEnableLandingPage", request.IsEnableLandingPage);
+        ShortLinkRequestBodyHelper.AddIfSet(data, "pageInfo", request.PageInfo);
+        ShortLinkRequestBodyHelper.AddIfSet(data, "androidUrl", request.AndroidUrl);
+        ShortLinkRequestBodyHelper.AddIfSet(data, "iosUrl", request.IosUrl);
+        ShortLinkRequestBodyHelper.AddControls(data, request);
+        data["templateType"] = ShortLinkConst.TemplateType;
+        data["createdFrom"] = _http.ResolveCreatedFrom(CreatedFromDefaults.Package);
 
         var response = await _http.PutAsync<ShortLinkModel>($"{ShortLinkConst.BasePath}/{id}", data, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to update short link");

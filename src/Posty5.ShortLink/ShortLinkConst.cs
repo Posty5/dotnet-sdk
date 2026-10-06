@@ -27,4 +27,19 @@ internal static class ShortLinkConst
     /// <summary><c>[Obsolete]</c> text on list filters the API does not read.</summary>
     public const string IgnoredFilterObsolete =
         "The API ignores this filter, so this SDK no longer sends it. Removed in the next major.";
+
+    /// <summary><c>[Obsolete]</c> text on request <c>Tag</c> properties.</summary>
+    public const string TagObsolete = "Use Tags. The API treats Tag as Tags[0]; when both are sent, Tags wins.";
+
+    /// <summary>Sub-path of the tag list route.</summary>
+    public const string TagsPath = "/tags";
+
+    /// <summary>Sub-path of the health check route under <c>/{id}</c>.</summary>
+    public const string HealthCheckPath = "/health-check";
+
+    /// <summary>Separator of <c>?tags=a,b</c>.</summary>
+    public const string TagsQuerySeparator = ",";
+
+    /// <summary>Base path of the link campaign routes.</summary>
+    public const string LinkCampaignBasePath = "/api/link-campaign";
 }
