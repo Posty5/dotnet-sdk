@@ -132,17 +132,8 @@ public class ExportOptions
     /// <summary>CSV or JSON.</summary>
     public ExportFormat Format { get; set; } = ExportFormat.Csv;
 
-    /// <summary>Columns to include; null for all.</summary>
+    /// <summary>Column keys to include (unknown keys are ignored); null for all.</summary>
     public List<string>? Columns { get; set; }
-
-    /// <summary>Adds visit totals per row (once visit analytics is available on your plan).</summary>
-    public bool IncludeAnalytics { get; set; }
-
-    /// <summary>Start of the analytics range.</summary>
-    public DateTime? From { get; set; }
-
-    /// <summary>End of the analytics range.</summary>
-    public DateTime? To { get; set; }
 
     /// <summary>The same filters the list accepts (e.g. <c>tag</c>, <c>refId</c>), by API name.</summary>
     public Dictionary<string, object?>? Filters { get; set; }
@@ -313,6 +304,12 @@ public class LinkBulkJob
     public string? CreatedFrom { get; set; }
     /// <summary>Submitted at.</summary>
     public DateTime CreatedAt { get; set; }
+    /// <summary>Last change.</summary>
+    public DateTime? UpdatedAt { get; set; }
+    /// <summary>When a worker picked the job up.</summary>
+    public DateTime? StartedAt { get; set; }
+    /// <summary>Why a <c>failed</c> job stopped.</summary>
+    public string? FailureReason { get; set; }
     /// <summary>Finished at.</summary>
     public DateTime? FinishedAt { get; set; }
 
@@ -331,6 +328,8 @@ public class BulkJobDryRunReport
     public int Valid { get; set; }
     /// <summary>The first 200 refused rows.</summary>
     public List<BulkRowResult> Errors { get; set; } = new();
+    /// <summary>Non-fatal notes, e.g. ignored unknown columns.</summary>
+    public List<string> Warnings { get; set; } = new();
 }
 
 /// <summary>A signed, expiring download link of a job file.</summary>

@@ -80,6 +80,8 @@ public class WebhookEndpoint
     public WebhookDisabledReason? DisabledReason { get; set; }
     /// <summary>Consecutive failed deliveries.</summary>
     public int FailureCount { get; set; }
+    /// <summary>Events dropped by the daily or pending caps.</summary>
+    public int? DroppedEvents { get; set; }
     /// <summary>Last delivery attempt.</summary>
     public DateTime? LastDeliveryAt { get; set; }
     /// <summary>Last successful delivery.</summary>
@@ -94,15 +96,17 @@ public class WebhookEndpoint
     public DateTime UpdatedAt { get; set; }
 }
 
-/// <summary>The create answer: the endpoint plus its signing secret, shown this once.</summary>
-public class WebhookEndpointWithSecret : WebhookEndpoint
+/// <summary>The create answer <c>{ endpoint, secret }</c>: the endpoint plus its signing secret, shown this once.</summary>
+public class CreateWebhookEndpointResponse
 {
+    /// <summary>The new endpoint.</summary>
+    public WebhookEndpoint Endpoint { get; set; } = new();
     /// <summary><c>whsec_…</c> — store it; it is never returned again.</summary>
     public string Secret { get; set; } = string.Empty;
 }
 
-/// <summary>The rotate answer.</summary>
-public class WebhookSecret
+/// <summary>The rotate answer <c>{ secret }</c>.</summary>
+public class RotateWebhookSecretResponse
 {
     /// <summary>The new secret. The old one keeps signing for 24 h alongside it.</summary>
     public string Secret { get; set; } = string.Empty;
@@ -136,10 +140,16 @@ public class WebhookEventTypeInfo
     public string Type { get; set; } = string.Empty;
     /// <summary>What fires it.</summary>
     public string? Description { get; set; }
-    /// <summary>Plan feature it needs, if any.</summary>
-    public string? FeaturePath { get; set; }
-    /// <summary>Whether your plan allows it, when the API says.</summary>
+    /// <summary>i18n key of <see cref="Description"/>.</summary>
+    public string? DescriptionKey { get; set; }
+    /// <summary>Plan feature it needs, if any (the API's <c>gate</c>).</summary>
+    public string? Gate { get; set; }
+    /// <summary>Whether your plan allows it.</summary>
     public bool? Allowed { get; set; }
+    /// <summary>True for the <c>*_milestone</c> events (they need <c>Milestones</c> on the endpoint).</summary>
+    public bool? IsMilestone { get; set; }
+    /// <summary>A sample payload of the event.</summary>
+    public JsonElement? SamplePayload { get; set; }
 }
 
 /// <summary>State of a delivery.</summary>
@@ -156,10 +166,19 @@ public enum WebhookDeliveryStatus
     Abandoned
 }
 
+/// <summary>Filters of <c>ListDeliveriesAsync</c>.</summary>
+public class ListWebhookDeliveriesParams
+{
+    /// <summary>Only deliveries in this state.</summary>
+    public WebhookDeliveryStatus? Status { get; set; }
+    /// <summary>Only this event type (e.g. <see cref="WebhookEventTypes.ShortLinkVisited"/>).</summary>
+    public string? EventType { get; set; }
+}
+
 /// <summary>One logged delivery (kept 30 days).</summary>
 public class WebhookDelivery
 {
-    /// <summary>Delivery id (the <c>webhook-id</c> header is <c>msg_&lt;id&gt;</c>).</summary>
+    /// <summary>Delivery id.</summary>
     [JsonPropertyName("_id")]
     public string Id { get; set; } = string.Empty;
     /// <summary>Endpoint.</summary>
@@ -168,7 +187,11 @@ public class WebhookDelivery
     public string? EventId { get; set; }
     /// <summary>Event type.</summary>
     public string? EventType { get; set; }
-    /// <summary>The body sent.</summary>
+    /// <summary>The <c>webhook-id</c> header (<c>msg_&lt;first delivery id&gt;</c>), stable across retries and redeliveries.</summary>
+    public string? MessageId { get; set; }
+    /// <summary>Set on a redelivery: the delivery it repeats.</summary>
+    public string? RedeliveryOf { get; set; }
+    /// <summary>The body sent (omitted by the deliveries list).</summary>
     public JsonElement? Payload { get; set; }
     /// <summary>Attempts made.</summary>
     public int Attempt { get; set; }

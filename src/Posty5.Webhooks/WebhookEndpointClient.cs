@@ -36,8 +36,8 @@ public class WebhookEndpointClient
         return response.Result ?? throw new Posty5Exception("The API answered no webhook endpoint.");
     }
 
-    /// <summary>Registers an endpoint. The answer's <see cref="WebhookEndpointWithSecret.Secret"/> is shown only now.</summary>
-    public async Task<WebhookEndpointWithSecret> CreateAsync(WebhookEndpointRequest request, CancellationToken cancellationToken = default)
+    /// <summary>Registers an endpoint. The answer's <see cref="CreateWebhookEndpointResponse.Secret"/> is shown only now.</summary>
+    public async Task<CreateWebhookEndpointResponse> CreateAsync(WebhookEndpointRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
         var body = new
@@ -51,7 +51,7 @@ public class WebhookEndpointClient
             request.Delivery,
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
-        var response = await _http.PostAsync<WebhookEndpointWithSecret>(WebhookConst.BasePath, body, cancellationToken);
+        var response = await _http.PostAsync<CreateWebhookEndpointResponse>(WebhookConst.BasePath, body, cancellationToken);
         return response.Result ?? throw new Posty5Exception("The API answered no webhook endpoint.");
     }
 
@@ -70,9 +70,9 @@ public class WebhookEndpointClient
     }
 
     /// <summary>Issues a new secret; the old one keeps signing alongside it for 24 h.</summary>
-    public async Task<WebhookSecret> RotateSecretAsync(string id, CancellationToken cancellationToken = default)
+    public async Task<RotateWebhookSecretResponse> RotateSecretAsync(string id, CancellationToken cancellationToken = default)
     {
-        var response = await _http.PostAsync<WebhookSecret>($"{EndpointPath(id)}/rotate-secret", new { }, cancellationToken);
+        var response = await _http.PostAsync<RotateWebhookSecretResponse>($"{EndpointPath(id)}/rotate-secret", new { }, cancellationToken);
         return response.Result ?? throw new Posty5Exception("The API answered no secret.");
     }
 
@@ -84,9 +84,17 @@ public class WebhookEndpointClient
     }
 
     /// <summary>Lists an endpoint's deliveries of the last 30 days, newest first.</summary>
-    public async Task<PaginationResponse<WebhookDelivery>> ListDeliveriesAsync(string id, PaginationParams? pagination = null, CancellationToken cancellationToken = default)
+    public async Task<PaginationResponse<WebhookDelivery>> ListDeliveriesAsync(
+        string id,
+        ListWebhookDeliveriesParams? filter = null,
+        PaginationParams? pagination = null,
+        CancellationToken cancellationToken = default)
     {
-        var response = await _http.GetAsync<PaginationResponse<WebhookDelivery>>($"{EndpointPath(id)}/deliveries", PageQuery(pagination), cancellationToken);
+        var query = PageQuery(pagination) ?? new Dictionary<string, object?>();
+        if (filter?.Status is { } status) query["status"] = StatusName(status);
+        if (!string.IsNullOrEmpty(filter?.EventType)) query["eventType"] = filter!.EventType;
+        var response = await _http.GetAsync<PaginationResponse<WebhookDelivery>>(
+            $"{EndpointPath(id)}/deliveries", query.Count > 0 ? query : null, cancellationToken);
         return response.Result ?? new PaginationResponse<WebhookDelivery>();
     }
 
@@ -105,6 +113,14 @@ public class WebhookEndpointClient
         var response = await _http.GetAsync<List<WebhookEventTypeInfo>>($"{WebhookConst.BasePath}/event-types", cancellationToken: cancellationToken);
         return response.Result ?? new List<WebhookEventTypeInfo>();
     }
+
+    private static string StatusName(WebhookDeliveryStatus status) => status switch
+    {
+        WebhookDeliveryStatus.Pending => "pending",
+        WebhookDeliveryStatus.Succeeded => "succeeded",
+        WebhookDeliveryStatus.Failed => "failed",
+        _ => "abandoned"
+    };
 
     private static string EndpointPath(string id)
     {

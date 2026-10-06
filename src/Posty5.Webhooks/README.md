@@ -22,21 +22,21 @@ using Posty5.Webhooks.Models;
 var http = new Posty5HttpClient(new Posty5Options { ApiKey = "your-api-key" });
 var webhooks = new WebhookEndpointClient(http);
 
-var endpoint = await webhooks.CreateAsync(new WebhookEndpointRequest
+var created = await webhooks.CreateAsync(new WebhookEndpointRequest
 {
     Url = "https://example.com/posty5/webhooks",
     Events = new() { WebhookEventTypes.ShortLinkVisited, WebhookEventTypes.QrCodeScanned },
 });
 
 // Store this now: it is never returned again.
-Console.WriteLine(endpoint.Secret);
+Console.WriteLine(created.Secret);
 
-await webhooks.SendTestAsync(endpoint.Id);
+await webhooks.SendTestAsync(created.Endpoint.Id);
 ```
 
 Other calls: `ListAsync`, `GetAsync`, `UpdateAsync` (`Enabled = true` re-enables a
 disabled endpoint), `DeleteAsync`, `RotateSecretAsync` (the old secret keeps signing
-for 24 h), `ListDeliveriesAsync`, `RedeliverAsync` (same `webhook-id`),
+for 24 h), `ListDeliveriesAsync` (optional `ListWebhookDeliveriesParams { Status, EventType }`), `RedeliverAsync` (same `webhook-id`),
 `ListEventTypesAsync`.
 
 Endpoints must be HTTPS and must not resolve to a private address. Visit and scan

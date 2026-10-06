@@ -18,19 +18,20 @@ public class WebhookEndpointClientTests : IDisposable
     [Fact]
     public async Task Create_SendsTheEndpoint_AndReadsTheSecretOnce()
     {
-        _server.ResultJson = """{"_id":"w1","url":"https://example.com/h","events":["short_link.visited"],"delivery":{"mode":"batch","windowSeconds":60},"enabled":true,"failureCount":0,"secret":"whsec_abc","secretHint":"whsec_…abc","createdAt":"2026-10-06T00:00:00Z","updatedAt":"2026-10-06T00:00:00Z"}""";
+        _server.ResultJson = """{"endpoint":{"_id":"w1","url":"https://example.com/h","events":["short_link.visited"],"delivery":{"mode":"batch","windowSeconds":60},"enabled":true,"failureCount":0,"secretHint":"whsec_…abc","createdAt":"2026-10-06T00:00:00Z","updatedAt":"2026-10-06T00:00:00Z"},"secret":"whsec_abc"}""";
         using var http = _server.Http();
         var client = new WebhookEndpointClient(http);
 
-        var endpoint = await client.CreateAsync(new WebhookEndpointRequest
+        var created = await client.CreateAsync(new WebhookEndpointRequest
         {
             Url = "https://example.com/h",
             Events = new() { WebhookEventTypes.ShortLinkVisited },
             Delivery = new WebhookDeliverySettings { Mode = WebhookDeliveryMode.Batch, WindowSeconds = 60 }
         });
 
-        Assert.Equal("whsec_abc", endpoint.Secret);
-        Assert.Equal(WebhookDeliveryMode.Batch, endpoint.Delivery.Mode);
+        Assert.Equal("whsec_abc", created.Secret);
+        Assert.Equal("w1", created.Endpoint.Id);
+        Assert.Equal(WebhookDeliveryMode.Batch, created.Endpoint.Delivery.Mode);
         var request = _server.Requests.Single();
         Assert.Equal(("POST", "/api/webhook-endpoints"), (request.Method, request.PathAndQuery));
         using var body = JsonDocument.Parse(request.Body);
@@ -65,6 +66,21 @@ public class WebhookEndpointClientTests : IDisposable
             ("DELETE", "/api/webhook-endpoints/w1"),
             ("GET", "/api/webhook-endpoints"),
         }, _server.Requests.Select(r => (r.Method, r.PathAndQuery)));
+    }
+
+    [Fact]
+    public async Task ListDeliveries_SendsTheFilters()
+    {
+        _server.ResultJson = """{"items":[],"pagination":{}}""";
+        using var http = _server.Http();
+
+        await new WebhookEndpointClient(http).ListDeliveriesAsync("w1",
+            new ListWebhookDeliveriesParams { Status = WebhookDeliveryStatus.Failed, EventType = WebhookEventTypes.ShortLinkVisited });
+
+        var path = _server.Requests.Single().PathAndQuery;
+        Assert.StartsWith("/api/webhook-endpoints/w1/deliveries?", path);
+        Assert.Contains("status=failed", path);
+        Assert.Contains("eventType=short_link.visited", path);
     }
 
     [Fact]

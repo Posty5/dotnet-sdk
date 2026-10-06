@@ -120,9 +120,6 @@ public sealed class LinkBulkOperations
 
         query["format"] = EnumName(options.Format);
         if (options.Columns is { Count: > 0 }) query["columns"] = string.Join(",", options.Columns);
-        if (options.IncludeAnalytics) query["include"] = "analytics";
-        if (options.From.HasValue) query["from"] = options.From.Value.ToString("o");
-        if (options.To.HasValue) query["to"] = options.To.Value.ToString("o");
 
         return _http.GetBytesAsync($"{_basePath}/{BulkDefaults.ExportSubPath}", query, cancellationToken);
     }
