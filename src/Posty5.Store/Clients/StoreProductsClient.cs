@@ -129,9 +129,9 @@ public class StoreProductsClient : StoreClientBase
     // ─── Update / delete ────────────────────────────────────────────────────
 
     /// <summary>Replace any subset of the product's top-level fields.</summary>
-    public async Task<StoreProduct?> UpdateAsync(string storeId, string productId, UpdateProductInput changes, CancellationToken cancellationToken = default)
+    public async Task<StoreProduct?> UpdateAsync(string storeId, string productId, UpdateProductInput changes, long version, CancellationToken cancellationToken = default)
     {
-        var response = await Http.PutAsync<StoreProduct>($"{Base}/{storeId}/{productId}", changes, cancellationToken);
+        var response = await Http.PutAsync<StoreProduct>($"{Base}/{storeId}/{productId}", changes, version, cancellationToken);
         return response.Result;
     }
 
@@ -139,10 +139,10 @@ public class StoreProductsClient : StoreClientBase
     /// Soft-delete a product. It leaves the catalogue and the storefront; orders
     /// that reference it keep their snapshotted item rows.
     /// </summary>
-    public async Task<object?> DeleteAsync(string storeId, string productId, CancellationToken cancellationToken = default)
+    public async Task<VersionedWriteResult> DeleteAsync(string storeId, string productId, long version, CancellationToken cancellationToken = default)
     {
-        var response = await Http.DeleteAsync<object>($"{Base}/{storeId}/{productId}", cancellationToken);
-        return response.Result;
+        var response = await Http.DeleteAsync<object>($"{Base}/{storeId}/{productId}", version, cancellationToken);
+        return new VersionedWriteResult { Id = productId, Message = response.Message };
     }
 
     /// <summary>Set sortOrder on up to 500 products — the storefront display order.</summary>
@@ -154,57 +154,60 @@ public class StoreProductsClient : StoreClientBase
     }
 
     // ─── Sections ───────────────────────────────────────────────────────────
+    // Every section save is a versioned write on the product: pass the product's
+    // Version as last read; each answers with the product at its new version,
+    // so chained saves pass the previous answer's Version to the next.
 
     /// <summary>Name, SKU and description. The slug is on the SEO section, not here.</summary>
-    public Task<StoreProduct?> UpdateBasicInformationAsync(string storeId, string productId, ProductBasicInformationInput input, CancellationToken cancellationToken = default)
-        => PatchSectionAsync(storeId, productId, "basic-information", input, cancellationToken);
+    public Task<StoreProduct?> UpdateBasicInformationAsync(string storeId, string productId, ProductBasicInformationInput input, long version, CancellationToken cancellationToken = default)
+        => PatchSectionAsync(storeId, productId, "basic-information", input, version, cancellationToken);
 
     /// <summary>The full ordered image list — index 0 is the primary image.</summary>
-    public Task<StoreProduct?> UpdateMediaAsync(string storeId, string productId, ProductMediaInput input, CancellationToken cancellationToken = default)
-        => PatchSectionAsync(storeId, productId, "media", input, cancellationToken);
+    public Task<StoreProduct?> UpdateMediaAsync(string storeId, string productId, ProductMediaInput input, long version, CancellationToken cancellationToken = default)
+        => PatchSectionAsync(storeId, productId, "media", input, version, cancellationToken);
 
     /// <summary>Selling price and the optional compare-at price.</summary>
-    public Task<StoreProduct?> UpdatePriceAsync(string storeId, string productId, ProductPriceInput input, CancellationToken cancellationToken = default)
-        => PatchSectionAsync(storeId, productId, "price", input, cancellationToken);
+    public Task<StoreProduct?> UpdatePriceAsync(string storeId, string productId, ProductPriceInput input, long version, CancellationToken cancellationToken = default)
+        => PatchSectionAsync(storeId, productId, "price", input, version, cancellationToken);
 
     /// <summary>Product-level stock. <c>null</c> means stock is not tracked.</summary>
-    public Task<StoreProduct?> UpdateStockAsync(string storeId, string productId, ProductStockInput input, CancellationToken cancellationToken = default)
-        => PatchSectionAsync(storeId, productId, "stock", input, cancellationToken);
+    public Task<StoreProduct?> UpdateStockAsync(string storeId, string productId, ProductStockInput input, long version, CancellationToken cancellationToken = default)
+        => PatchSectionAsync(storeId, productId, "stock", input, version, cancellationToken);
 
     /// <summary>Variant groups and, optionally, the buyable stock combinations.</summary>
-    public Task<StoreProduct?> UpdateVariantsAsync(string storeId, string productId, ProductVariantsInput input, CancellationToken cancellationToken = default)
-        => PatchSectionAsync(storeId, productId, "variants", input, cancellationToken);
+    public Task<StoreProduct?> UpdateVariantsAsync(string storeId, string productId, ProductVariantsInput input, long version, CancellationToken cancellationToken = default)
+        => PatchSectionAsync(storeId, productId, "variants", input, version, cancellationToken);
 
     /// <summary>Replace the product's whole tag list.</summary>
-    public Task<StoreProduct?> UpdateTagsAsync(string storeId, string productId, ProductTagsInput input, CancellationToken cancellationToken = default)
-        => PatchSectionAsync(storeId, productId, "tags", input, cancellationToken);
+    public Task<StoreProduct?> UpdateTagsAsync(string storeId, string productId, ProductTagsInput input, long version, CancellationToken cancellationToken = default)
+        => PatchSectionAsync(storeId, productId, "tags", input, version, cancellationToken);
 
     /// <summary>Meta title, description, social image, index policy — and the slug.</summary>
-    public Task<StoreProduct?> UpdateSeoAsync(string storeId, string productId, ProductSeoInput input, CancellationToken cancellationToken = default)
-        => PatchSectionAsync(storeId, productId, "seo", input, cancellationToken);
+    public Task<StoreProduct?> UpdateSeoAsync(string storeId, string productId, ProductSeoInput input, long version, CancellationToken cancellationToken = default)
+        => PatchSectionAsync(storeId, productId, "seo", input, version, cancellationToken);
 
     /// <summary>Publication status, featured flag, per-order limits and sort position.</summary>
-    public Task<StoreProduct?> UpdateSettingsAsync(string storeId, string productId, ProductSettingsInput input, CancellationToken cancellationToken = default)
-        => PatchSectionAsync(storeId, productId, "settings", input, cancellationToken);
+    public Task<StoreProduct?> UpdateSettingsAsync(string storeId, string productId, ProductSettingsInput input, long version, CancellationToken cancellationToken = default)
+        => PatchSectionAsync(storeId, productId, "settings", input, version, cancellationToken);
 
     /// <summary>The landing sections: which are enabled, their order and each one's data.</summary>
-    public Task<StoreProduct?> UpdateLandingAsync(string storeId, string productId, ProductLandingInput input, CancellationToken cancellationToken = default)
-        => PatchSectionAsync(storeId, productId, "landing", input, cancellationToken);
+    public Task<StoreProduct?> UpdateLandingAsync(string storeId, string productId, ProductLandingInput input, long version, CancellationToken cancellationToken = default)
+        => PatchSectionAsync(storeId, productId, "landing", input, version, cancellationToken);
 
     /// <summary>
     /// A delivery surcharge for this one product, always charged per unit —
     /// regardless of the store's shipping calculation mode, because a bulky item
     /// costs more to ship for every copy of it.
     /// </summary>
-    public Task<StoreProduct?> UpdateShippingAsync(string storeId, string productId, ProductShippingInput input, CancellationToken cancellationToken = default)
-        => PatchSectionAsync(storeId, productId, "shipping", input, cancellationToken);
+    public Task<StoreProduct?> UpdateShippingAsync(string storeId, string productId, ProductShippingInput input, long version, CancellationToken cancellationToken = default)
+        => PatchSectionAsync(storeId, productId, "shipping", input, version, cancellationToken);
 
     /// <summary>
     /// How the product is bought: through the cart, on another shop, or both.
     /// <c>external</c> and <c>both</c> need at least one link.
     /// </summary>
-    public Task<StoreProduct?> UpdatePurchaseAsync(string storeId, string productId, ProductPurchaseInput input, CancellationToken cancellationToken = default)
-        => PatchSectionAsync(storeId, productId, "purchase", input, cancellationToken);
+    public Task<StoreProduct?> UpdatePurchaseAsync(string storeId, string productId, ProductPurchaseInput input, long version, CancellationToken cancellationToken = default)
+        => PatchSectionAsync(storeId, productId, "purchase", input, version, cancellationToken);
 
     // ─── Images ─────────────────────────────────────────────────────────────
 
@@ -244,9 +247,9 @@ public class StoreProductsClient : StoreClientBase
         return response.Result;
     }
 
-    private async Task<StoreProduct?> PatchSectionAsync(string storeId, string productId, string section, object body, CancellationToken cancellationToken)
+    private async Task<StoreProduct?> PatchSectionAsync(string storeId, string productId, string section, object body, long version, CancellationToken cancellationToken)
     {
-        var response = await Http.PatchAsync<StoreProduct>($"{Base}/{storeId}/{productId}/{section}", body, cancellationToken);
+        var response = await Http.PatchAsync<StoreProduct>($"{Base}/{storeId}/{productId}/{section}", body, version, cancellationToken);
         return response.Result;
     }
 }

@@ -448,6 +448,7 @@ public partial class QRCodeClient
     /// </summary>
     /// <param name="id">QR code ID</param>
     /// <param name="data">Free text QR code update data</param>
+    /// <param name="version">The QR code's version as last read (<see cref="Models.QRCodeModel.Version"/>), sent as <c>If-Match</c></param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Updated QR code with ID and landing page URL</returns>
     /// <example>
@@ -463,6 +464,7 @@ public partial class QRCodeClient
     public async Task<QRCodeModel> UpdateFreeTextAsync(
         string id,
         QRCodeUpdateFreeTextRequestModel data,
+        long version,
         CancellationToken cancellationToken = default)
     {
         var qrCodeTarget = new
@@ -494,7 +496,7 @@ public partial class QRCodeClient
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
-        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/freeText/{id}", payload, cancellationToken);
+        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/freeText/{id}", payload, version, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to update free text QR code");
     }
 
@@ -503,6 +505,7 @@ public partial class QRCodeClient
     /// </summary>
     /// <param name="id">QR code ID</param>
     /// <param name="data">Email QR code update data</param>
+    /// <param name="version">The QR code's version as last read (<see cref="Models.QRCodeModel.Version"/>), sent as <c>If-Match</c></param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Updated QR code with ID and landing page URL</returns>
     /// <example>
@@ -523,6 +526,7 @@ public partial class QRCodeClient
     public async Task<QRCodeModel> UpdateEmailAsync(
         string id,
         QRCodeUpdateEmailRequestModel data,
+        long version,
         CancellationToken cancellationToken = default)
     {
         var qrCodeTarget = new
@@ -550,7 +554,7 @@ public partial class QRCodeClient
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
-        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/email/{id}", payload, cancellationToken);
+        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/email/{id}", payload, version, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to update email QR code");
     }
 
@@ -559,6 +563,7 @@ public partial class QRCodeClient
     /// </summary>
     /// <param name="id">QR code ID</param>
     /// <param name="data">WiFi QR code update data</param>
+    /// <param name="version">The QR code's version as last read (<see cref="Models.QRCodeModel.Version"/>), sent as <c>If-Match</c></param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Updated QR code with ID and landing page URL</returns>
     /// <example>
@@ -579,6 +584,7 @@ public partial class QRCodeClient
     public async Task<QRCodeModel> UpdateWifiAsync(
         string id,
         QRCodeUpdateWifiRequestModel data,
+        long version,
         CancellationToken cancellationToken = default)
     {
         if (data.Mode == QRCodeMode.Dynamic)
@@ -609,7 +615,7 @@ public partial class QRCodeClient
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
-        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/wifi/{id}", payload, cancellationToken);
+        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/wifi/{id}", payload, version, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to update WiFi QR code");
     }
 
@@ -618,6 +624,7 @@ public partial class QRCodeClient
     /// </summary>
     /// <param name="id">QR code ID</param>
     /// <param name="data">Call QR code update data</param>
+    /// <param name="version">The QR code's version as last read (<see cref="Models.QRCodeModel.Version"/>), sent as <c>If-Match</c></param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Updated QR code with ID and landing page URL</returns>
     /// <example>
@@ -636,6 +643,7 @@ public partial class QRCodeClient
     public async Task<QRCodeModel> UpdateCallAsync(
         string id,
         QRCodeUpdateCallRequestModel data,
+        long version,
         CancellationToken cancellationToken = default)
     {
         var qrCodeTarget = new
@@ -663,7 +671,7 @@ public partial class QRCodeClient
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
-        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/call/{id}", payload, cancellationToken);
+        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/call/{id}", payload, version, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to update call QR code");
     }
 
@@ -672,6 +680,7 @@ public partial class QRCodeClient
     /// </summary>
     /// <param name="id">QR code ID</param>
     /// <param name="data">SMS QR code update data</param>
+    /// <param name="version">The QR code's version as last read (<see cref="Models.QRCodeModel.Version"/>), sent as <c>If-Match</c></param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Updated QR code with ID and landing page URL</returns>
     /// <example>
@@ -691,6 +700,7 @@ public partial class QRCodeClient
     public async Task<QRCodeModel> UpdateSMSAsync(
         string id,
         QRCodeUpdateSMSRequestModel data,
+        long version,
         CancellationToken cancellationToken = default)
     {
         var qrCodeTarget = new
@@ -718,7 +728,7 @@ public partial class QRCodeClient
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
-        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/sms/{id}", payload, cancellationToken);
+        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/sms/{id}", payload, version, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to update SMS QR code");
     }
 
@@ -727,6 +737,7 @@ public partial class QRCodeClient
     /// </summary>
     /// <param name="id">QR code ID</param>
     /// <param name="data">URL QR code update data</param>
+    /// <param name="version">The QR code's version as last read (<see cref="Models.QRCodeModel.Version"/>), sent as <c>If-Match</c></param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Updated QR code with ID and landing page URL</returns>
     /// <example>
@@ -744,6 +755,7 @@ public partial class QRCodeClient
     public async Task<QRCodeModel> UpdateURLAsync(
         string id,
         QRCodeUpdateURLRequestModel data,
+        long version,
         CancellationToken cancellationToken = default)
     {
         var qrCodeTarget = new
@@ -771,7 +783,7 @@ public partial class QRCodeClient
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
-        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/url/{id}", payload, cancellationToken);
+        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/url/{id}", payload, version, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to update URL QR code");
     }
 
@@ -780,6 +792,7 @@ public partial class QRCodeClient
     /// </summary>
     /// <param name="id">QR code ID</param>
     /// <param name="data">Geolocation QR code update data</param>
+    /// <param name="version">The QR code's version as last read (<see cref="Models.QRCodeModel.Version"/>), sent as <c>If-Match</c></param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Updated QR code with ID and landing page URL</returns>
     /// <example>
@@ -799,6 +812,7 @@ public partial class QRCodeClient
     public async Task<QRCodeModel> UpdateGeolocationAsync(
         string id,
         QRCodeUpdateGeolocationRequestModel data,
+        long version,
         CancellationToken cancellationToken = default)
     {
         var qrCodeTarget = new
@@ -826,7 +840,7 @@ public partial class QRCodeClient
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
-        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/geolocation/{id}", payload, cancellationToken);
+        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/geolocation/{id}", payload, version, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to update geolocation QR code");
     }
 
@@ -969,9 +983,10 @@ public partial class QRCodeClient
     /// Console.WriteLine(result.Message); // "Deleted" or success message
     /// </code>
     /// </example>
-    public async Task<DeleteResponse> DeleteAsync(string id, CancellationToken cancellationToken = default)
+    /// <param name="version">The QR code's version as last read, sent as <c>If-Match</c></param>
+    public async Task<DeleteResponse> DeleteAsync(string id, long version, CancellationToken cancellationToken = default)
     {
-        var response = await _http.DeleteAsync<DeleteResponse>($"{BasePath}/{id}", cancellationToken);
+        var response = await _http.DeleteAsync<DeleteResponse>($"{BasePath}/{id}", version, cancellationToken);
         return response.Result ?? new DeleteResponse { Message = "Deleted" };
     }
 

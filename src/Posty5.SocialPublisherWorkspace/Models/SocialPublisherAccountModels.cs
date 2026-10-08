@@ -13,8 +13,12 @@ namespace Posty5.SocialPublisherWorkspace.Models;
 /// <summary>
 /// A connected social account, as the list returns it.
 /// </summary>
-public class SocialPublisherAccountSampleDetailsModel
+public class SocialPublisherAccountSampleDetailsModel : Posty5.Core.Models.IVersioned
 {
+    /// <summary>The document's version (<c>__v</c>); pass it to the next update or delete.</summary>
+    [JsonPropertyName("__v")]
+    public long Version { get; set; }
+
     /// <summary>The account id — the <c>AccountId</c> the post methods' <c>...ToAccountAsync</c> variants take.</summary>
     [JsonPropertyName("_id")]
     public string Id { get; set; } = string.Empty;

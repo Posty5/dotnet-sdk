@@ -15,8 +15,12 @@ public class ShippingCountrySearchParams
 }
 
 /// <summary>One row of the store's shipping-countries grid.</summary>
-public class ShippingCountryRow
+public class ShippingCountryRow : Posty5.Core.Models.IVersioned
 {
+    /// <summary>The document's version (<c>__v</c>); pass it to the next update or delete.</summary>
+    [JsonPropertyName("__v")]
+    public long Version { get; set; }
+
     /// <summary>The zone id.</summary>
     [JsonPropertyName("_id")]
     public string? Id { get; set; }
@@ -111,8 +115,12 @@ public class ShippingCatalogueResult
 }
 
 /// <summary>A store's shipping zone for one country.</summary>
-public class ShippingZone
+public class ShippingZone : Posty5.Core.Models.IVersioned
 {
+    /// <summary>The document's version (<c>__v</c>); pass it to the next update or delete.</summary>
+    [JsonPropertyName("__v")]
+    public long Version { get; set; }
+
     /// <summary>Zone id.</summary>
     [JsonPropertyName("_id")]
     public string? Id { get; set; }
@@ -299,8 +307,12 @@ public class ShippingRoutesResult
 }
 
 /// <summary>A saved override on one place.</summary>
-public class ShippingRoute
+public class ShippingRoute : Posty5.Core.Models.IVersioned
 {
+    /// <summary>The document's version (<c>__v</c>); pass it to the next update or delete.</summary>
+    [JsonPropertyName("__v")]
+    public long Version { get; set; }
+
     /// <summary>Route (rate) id.</summary>
     [JsonPropertyName("_id")]
     public string? Id { get; set; }
@@ -404,6 +416,16 @@ public class BulkShippingRouteFailed
 /// <summary>Per-row result of a bulk route save.</summary>
 public class BulkShippingRoutesResult
 {
+    /// <summary>The ids of the existing routes the write applied to (versioned bulk).</summary>
+    public List<string> Applied { get; set; } = new();
+
+    /// <summary>The routes it skipped: a version conflict or a route not found.</summary>
+    public List<Posty5.Core.Models.VersionedBulkSkippedItem> Skipped { get; set; } = new();
+
+    /// <summary>The new version of every applied route, by id (from the response envelope).</summary>
+    [JsonIgnore]
+    public IDictionary<string, long> Versions { get; set; } = new Dictionary<string, long>();
+
     /// <summary>Rows that were applied.</summary>
     public List<BulkShippingRouteSaved> Saved { get; set; } = new();
 
@@ -434,6 +456,16 @@ public class ApplyShippingFeeInput
 /// </summary>
 public class ApplyShippingFeeResult
 {
+    /// <summary>The ids of the existing routes the write applied to (versioned bulk).</summary>
+    public List<string> Applied { get; set; } = new();
+
+    /// <summary>The routes it skipped: a version conflict or a route not found.</summary>
+    public List<Posty5.Core.Models.VersionedBulkSkippedItem> Skipped { get; set; } = new();
+
+    /// <summary>The new version of every applied route, by id (from the response envelope).</summary>
+    [JsonIgnore]
+    public IDictionary<string, long> Versions { get; set; } = new Dictionary<string, long>();
+
     /// <summary>Rows written.</summary>
     public int Written { get; set; }
 
@@ -520,8 +552,12 @@ public class ShippingProfileCondition
 }
 
 /// <summary>A package profile and its brackets.</summary>
-public class ShippingProfile
+public class ShippingProfile : Posty5.Core.Models.IVersioned
 {
+    /// <summary>The document's version (<c>__v</c>); pass it to the next update or delete.</summary>
+    [JsonPropertyName("__v")]
+    public long Version { get; set; }
+
     /// <summary>Profile id.</summary>
     [JsonPropertyName("_id")]
     public string? Id { get; set; }
@@ -663,8 +699,12 @@ public class ShippingAssignmentFeeRow : ShippingAssignmentFee
 }
 
 /// <summary>One profile assigned to one place.</summary>
-public class ShippingAssignment
+public class ShippingAssignment : Posty5.Core.Models.IVersioned
 {
+    /// <summary>The document's version (<c>__v</c>); pass it to the next update or delete.</summary>
+    [JsonPropertyName("__v")]
+    public long Version { get; set; }
+
     /// <summary>Assignment id.</summary>
     [JsonPropertyName("_id")]
     public string? Id { get; set; }

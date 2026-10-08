@@ -51,8 +51,12 @@ public class HtmlHostingUploadFileConfigModel
 /// <summary>
 /// HTML page model with full details
 /// </summary>
-public class HtmlHostingPageModel
+public class HtmlHostingPageModel : Posty5.Core.Models.IVersioned
 {
+    /// <summary>The document's version (<c>__v</c>); pass it to the next update or delete.</summary>
+    [JsonPropertyName("__v")]
+    public long Version { get; set; }
+
     /// <summary>
     /// MongoDB document ID
     /// </summary>
@@ -336,8 +340,12 @@ public class HtmlHostingCreatePageResponseModel
 /// <summary>
 /// Simplified response for file-based operations
 /// </summary>
-public class HtmlHostingPageFileResponseModel
+public class HtmlHostingPageFileResponseModel : Posty5.Core.Models.IVersioned
 {
+    /// <summary>The document's version (<c>__v</c>); pass it to the next update or delete.</summary>
+    [JsonPropertyName("__v")]
+    public long Version { get; set; }
+
     /// <summary>
     /// Page ID
     /// </summary>
@@ -357,8 +365,12 @@ public class HtmlHostingPageFileResponseModel
 /// <summary>
 /// Simplified response for GitHub-based operations
 /// </summary>
-public class HtmlHostingPageGithubResponseModel
+public class HtmlHostingPageGithubResponseModel : Posty5.Core.Models.IVersioned
 {
+    /// <summary>The document's version (<c>__v</c>); pass it to the next update or delete.</summary>
+    [JsonPropertyName("__v")]
+    public long Version { get; set; }
+
     /// <summary>
     /// Page ID
     /// </summary>
@@ -378,8 +390,12 @@ public class HtmlHostingPageGithubResponseModel
 /// <summary>
 /// Simplified HTML page for lookup/dropdown lists
 /// </summary>
-public class HtmlHostingPageLookupItemModel
+public class HtmlHostingPageLookupItemModel : Posty5.Core.Models.IVersioned
 {
+    /// <summary>The document's version (<c>__v</c>); pass it to the next update or delete.</summary>
+    [JsonPropertyName("__v")]
+    public long Version { get; set; }
+
     /// <summary>
     /// Page ID
     /// </summary>

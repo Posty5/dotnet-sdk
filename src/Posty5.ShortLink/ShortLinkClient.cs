@@ -240,12 +240,15 @@ public partial class ShortLinkClient
     /// </remarks>
     /// <param name="id">Short link ID</param>
     /// <param name="request">Update request data</param>
+    /// <param name="version">The link's version as last read (<see cref="ShortLinkModel.Version"/>), sent as <c>If-Match</c></param>
     /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Updated short link details</returns>
+    /// <returns>Updated short link details, carrying its new version</returns>
+    /// <exception cref="Posty5.Core.Exceptions.Posty5ConflictException">The link changed since <paramref name="version"/> was read.</exception>
     /// <exception cref="ArgumentException"><see cref="ShortLinkUpdateRequestModel.BaseUrl"/> is empty.</exception>
     public async Task<ShortLinkModel> UpdateAsync(
         string id,
         ShortLinkUpdateRequestModel request,
+        long version,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -269,7 +272,7 @@ public partial class ShortLinkClient
         data["templateType"] = ShortLinkConst.TemplateType;
         data["createdFrom"] = _http.ResolveCreatedFrom(CreatedFromDefaults.Package);
 
-        var response = await _http.PutAsync<ShortLinkModel>($"{ShortLinkConst.BasePath}/{id}", data, cancellationToken);
+        var response = await _http.PutAsync<ShortLinkModel>($"{ShortLinkConst.BasePath}/{id}", data, version, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to update short link");
     }
 
@@ -277,11 +280,13 @@ public partial class ShortLinkClient
     /// Delete a short link
     /// </summary>
     /// <param name="id">Short link ID</param>
+    /// <param name="version">The link's version as last read, sent as <c>If-Match</c></param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Deletion confirmation response</returns>
-    public async Task<DeleteResponse> DeleteAsync(string id, CancellationToken cancellationToken = default)
+    /// <exception cref="Posty5.Core.Exceptions.Posty5ConflictException">The link changed since <paramref name="version"/> was read.</exception>
+    public async Task<DeleteResponse> DeleteAsync(string id, long version, CancellationToken cancellationToken = default)
     {
-        var response = await _http.DeleteAsync<DeleteResponse>($"{ShortLinkConst.BasePath}/{id}", cancellationToken);
+        var response = await _http.DeleteAsync<DeleteResponse>($"{ShortLinkConst.BasePath}/{id}", version, cancellationToken);
         return response.Result ?? new DeleteResponse { Message = "Deleted" };
     }
 }

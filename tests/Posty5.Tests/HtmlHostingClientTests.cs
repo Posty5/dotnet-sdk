@@ -326,7 +326,7 @@ public class HtmlHostingClientTests : IDisposable
 
         var updatedContent = "<html><body><h1>Updated Content</h1></body></html>";
         using var updateStream = new MemoryStream(Encoding.UTF8.GetBytes(updatedContent));
-        var result = await _client.UpdateWithFileAsync(created.Id!, updateRequest, updateStream);
+        var result = await _client.UpdateWithFileAsync(created.Id!, updateRequest, created.Version, updateStream);
 
         // Assert
         Assert.NotNull(result);
@@ -361,7 +361,7 @@ public class HtmlHostingClientTests : IDisposable
             }
         };
 
-        var result = await _client.UpdateWithGithubFileAsync(created.Id!, updateRequest);
+        var result = await _client.UpdateWithGithubFileAsync(created.Id!, updateRequest, created.Version);
 
         // Assert
         Assert.NotNull(result);
@@ -388,7 +388,7 @@ public class HtmlHostingClientTests : IDisposable
         var created = await _client.CreateWithFileAsync(createRequest, memoryStream);
 
         // Act
-        await _client.DeleteAsync(created.Id!);
+        await _client.DeleteAsync(created.Id!, created.Version);
 
         // Assert - Remove from tracking since we successfully deleted it
         // (No exception means success)

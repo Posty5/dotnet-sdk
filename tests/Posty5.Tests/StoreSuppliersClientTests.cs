@@ -65,14 +65,14 @@ public class StoreSuppliersRouteTests : IDisposable
     {
         var client = Client();
         await client.GetCatalogueAsync("s1");
-        await client.ReplaceCredentialsAsync("s1", "i1", new ReplaceSupplierCredentialsInput { Credentials = new() { ["apiKey"] = "k" } });
-        await client.UpdateSettingsAsync("s1", "i1", new UpdateSupplierSettingsInput { Settings = new() { ["fromCountryCode"] = "US" } });
-        await client.UpdateAutomationAsync("s1", "i1", new SupplierAutomationInput { Mode = SupplierAutomationModes.Submit });
-        await client.SetEnabledAsync("s1", "i1", false);
+        await client.ReplaceCredentialsAsync("s1", "i1", new ReplaceSupplierCredentialsInput { Credentials = new() { ["apiKey"] = "k" } }, 0);
+        await client.UpdateSettingsAsync("s1", "i1", new UpdateSupplierSettingsInput { Settings = new() { ["fromCountryCode"] = "US" } }, 0);
+        await client.UpdateAutomationAsync("s1", "i1", new SupplierAutomationInput { Mode = SupplierAutomationModes.Submit }, 0);
+        await client.SetEnabledAsync("s1", "i1", false, 0);
         await client.TestAsync("s1", "i1");
         await client.GetBalanceAsync("s1", "i1");
         await client.GetDisconnectImpactAsync("s1", "i1");
-        await client.DisconnectAsync("s1", "i1", force: true);
+        await client.DisconnectAsync("s1", "i1", 0, force: true);
         await client.StartOAuthAsync("s1", new StartSupplierOAuthInput { SupplierKey = "aliexpress" });
 
         Assert.Equal(new[]
@@ -106,9 +106,9 @@ public class StoreSuppliersRouteTests : IDisposable
         await client.GetImportStatusAsync("s1", "job1");
         await client.ListLinksAsync("s1", "prod1");
         await client.CreateLinkAsync("s1", new CreateSupplierLinkInput { ProductId = "prod1", IntegrationId = "i1", SupplierProductId = "p1", Variants = { new SupplierLinkVariantInput { SupplierVariantId = "v1" } } });
-        await client.UpdateLinkAsync("s1", "l1", new UpdateSupplierLinkInput { Sync = new() { [LinkSyncFields.Price] = true } });
+        await client.UpdateLinkAsync("s1", "l1", new UpdateSupplierLinkInput { Sync = new() { [LinkSyncFields.Price] = true } }, 0);
         await client.SyncLinkAsync("s1", "l1");
-        await client.DeleteLinkAsync("s1", "l1");
+        await client.DeleteLinkAsync("s1", "l1", 0);
 
         Assert.Equal(new[]
         {
@@ -133,10 +133,10 @@ public class StoreSuppliersRouteTests : IDisposable
         await client.ListSupplierOrdersAsync("s1", new SupplierOrderSearchParams { NeedsReview = true }, new PaginationParams { PageSize = 25 });
         await client.GetSupplierOrderAsync("s1", "so1");
         await client.SubmitGroupAsync("s1", "o1", "supplier:i1", payNow: true);
-        await client.RetryAsync("s1", "so1", acceptCost: true);
-        await client.PayAsync("s1", "so1");
-        await client.CancelAsync("s1", "so1");
-        await client.FulfilGroupManuallyAsync("s1", "o1", "supplier:i1");
+        await client.RetryAsync("s1", "so1", 0, acceptCost: true);
+        await client.PayAsync("s1", "so1", 0);
+        await client.CancelAsync("s1", "so1", 0);
+        await client.FulfilGroupManuallyAsync("s1", "o1", "supplier:i1", 0);
 
         Assert.Equal(new[]
         {
@@ -189,7 +189,7 @@ public class StoreSuppliersRouteTests : IDisposable
     public async Task PausedOutcome_Throws()
     {
         _server.Status = HttpStatusCode.BadRequest;
-        await Assert.ThrowsAsync<Posty5ValidationException>(() => Client().RetryAsync("s1", "so1"));
+        await Assert.ThrowsAsync<Posty5ValidationException>(() => Client().RetryAsync("s1", "so1", 0));
     }
 }
 
@@ -214,12 +214,12 @@ public class StoreSuppliersLiveTests : IDisposable
     {
         foreach (var linkId in TestConfig.CreatedResources.SupplierLinks.ToList())
         {
-            try { _store.Suppliers.DeleteLinkAsync(StoreId, linkId).GetAwaiter().GetResult(); } catch { /* already gone */ }
+            try { _store.Suppliers.DeleteLinkAsync(StoreId, linkId, 0).GetAwaiter().GetResult(); } catch { /* already gone */ }
             TestConfig.CreatedResources.SupplierLinks.Remove(linkId);
         }
         foreach (var productId in TestConfig.CreatedResources.StoreProducts.ToList())
         {
-            try { _store.Products.DeleteAsync(StoreId, productId).GetAwaiter().GetResult(); } catch { /* already gone */ }
+            try { _store.Products.DeleteAsync(StoreId, productId, 0).GetAwaiter().GetResult(); } catch { /* already gone */ }
             TestConfig.CreatedResources.StoreProducts.Remove(productId);
         }
     }
@@ -344,7 +344,7 @@ public class StoreSuppliersLiveTests : IDisposable
         try
         {
             var changed = await _store.Suppliers.UpdateAutomationAsync(StoreId, IntegrationId,
-                new SupplierAutomationInput { AllowUnpaidOrders = !before.AllowUnpaidOrders });
+                new SupplierAutomationInput { AllowUnpaidOrders = !before.AllowUnpaidOrders }, 0);
             Assert.Equal(!before.AllowUnpaidOrders, changed!.Automation!.AllowUnpaidOrders);
         }
         finally
@@ -356,7 +356,7 @@ public class StoreSuppliersLiveTests : IDisposable
                 MaxCostPerOrder = before.MaxCostPerOrder,
                 MaxCostRatio = before.MaxCostRatio,
                 AllowedCountries = before.AllowedCountries ?? new(),
-            });
+            }, 0);
             Assert.Equal(before.AllowUnpaidOrders, restored!.Automation!.AllowUnpaidOrders);
         }
     }
@@ -381,7 +381,7 @@ public class StoreSuppliersLiveTests : IDisposable
         var updated = await _store.Suppliers.UpdateLinkAsync(StoreId, link.Id!, new UpdateSupplierLinkInput
         {
             Sync = new() { [LinkSyncFields.Price] = false },
-        });
+        }, 0);
         Assert.False(updated!.Sync![LinkSyncFields.Price]);
 
         // Never synced (SyncNow = false), so the once-a-minute limit does not apply yet.
@@ -389,7 +389,7 @@ public class StoreSuppliersLiveTests : IDisposable
         Assert.Equal(link.Id, synced?.Link?.Id);
         Assert.NotNull(synced?.Changed);
 
-        await _store.Suppliers.DeleteLinkAsync(StoreId, link.Id!);
+        await _store.Suppliers.DeleteLinkAsync(StoreId, link.Id!, 0);
         TestConfig.CreatedResources.SupplierLinks.Remove(link.Id!);
     }
 
@@ -431,9 +431,9 @@ public class StoreSuppliersLiveTests : IDisposable
     public async Task RetryAndPay_OnTheTestConnection_MoveNoMoney()
     {
         var row = await FixturePartSupplierOrder();
-        Assert.Contains(SupplierReviewReasons.TestMode, await OutcomeOf(() => _store.Suppliers.RetryAsync(StoreId, row.Id!)));
+        Assert.Contains(SupplierReviewReasons.TestMode, await OutcomeOf(() => _store.Suppliers.RetryAsync(StoreId, row.Id!, 0)));
 
-        var paid = await OutcomeOf(() => _store.Suppliers.PayAsync(StoreId, row.Id!));
+        var paid = await OutcomeOf(() => _store.Suppliers.PayAsync(StoreId, row.Id!, 0));
         Assert.DoesNotContain($"\"status\":\"{SupplierOrderStatuses.Confirmed}\"", paid);
     }
 
@@ -441,10 +441,10 @@ public class StoreSuppliersLiveTests : IDisposable
     public async Task CancelThenFulfilManually_EndsTheFixturePart()
     {
         var row = await FixturePartSupplierOrder();
-        await OutcomeOf(() => _store.Suppliers.CancelAsync(StoreId, row.Id!));
+        await OutcomeOf(() => _store.Suppliers.CancelAsync(StoreId, row.Id!, 0));
         Assert.Equal(SupplierOrderStatuses.Cancelled, (await _store.Suppliers.GetSupplierOrderAsync(StoreId, row.Id!))?.Status);
 
-        var manual = await _store.Suppliers.FulfilGroupManuallyAsync(StoreId, TestConfig.OrderId, TestConfig.GroupKey);
+        var manual = await _store.Suppliers.FulfilGroupManuallyAsync(StoreId, TestConfig.OrderId, TestConfig.GroupKey, 0);
         Assert.Equal(TestConfig.OrderId, manual?.OrderId);
     }
 

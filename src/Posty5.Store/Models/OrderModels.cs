@@ -53,8 +53,12 @@ public class OrderStatisticsParams : OrderSearchParams
 }
 
 /// <summary>Order summary row (search results).</summary>
-public class StoreOrderSummary
+public class StoreOrderSummary : Posty5.Core.Models.IVersioned
 {
+    /// <summary>The document's version (<c>__v</c>); pass it to the next update or delete.</summary>
+    [JsonPropertyName("__v")]
+    public long Version { get; set; }
+
     /// <summary>Order id.</summary>
     [JsonPropertyName("_id")]
     public string? Id { get; set; }
@@ -198,8 +202,12 @@ public class StoreOrderTotals
 /// A store order. Loosely typed beyond the fields below: the API returns the
 /// whole document, including snapshotted item rows and the status history.
 /// </summary>
-public class StoreOrder
+public class StoreOrder : Posty5.Core.Models.IVersioned
 {
+    /// <summary>The document's version (<c>__v</c>); pass it to the next update or delete.</summary>
+    [JsonPropertyName("__v")]
+    public long Version { get; set; }
+
     /// <summary>Order id.</summary>
     [JsonPropertyName("_id")]
     public string? Id { get; set; }

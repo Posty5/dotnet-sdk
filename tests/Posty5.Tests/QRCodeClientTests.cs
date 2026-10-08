@@ -70,7 +70,7 @@ public class QRCodeClientTests : IDisposable
             TemplateId = TestConfig.TemplateId,
             Text = "Updated text content"
         };
-        var result = await _client.UpdateFreeTextAsync(created.Id!, updateRequest);
+        var result = await _client.UpdateFreeTextAsync(created.Id!, updateRequest, created.Version);
 
         // Assert
         Assert.NotNull(result);
@@ -140,7 +140,7 @@ public class QRCodeClientTests : IDisposable
                 Body = "Updated body"
             }
         };
-        var result = await _client.UpdateEmailAsync(created.Id!, updateRequest);
+        var result = await _client.UpdateEmailAsync(created.Id!, updateRequest, created.Version);
 
         // Assert
         Assert.NotNull(result);
@@ -209,7 +209,7 @@ public class QRCodeClientTests : IDisposable
                 Password = "updatedpass"
             }
         };
-        var result = await _client.UpdateWifiAsync(created.Id!, updateRequest);
+        var result = await _client.UpdateWifiAsync(created.Id!, updateRequest, created.Version);
 
         // Assert
         Assert.NotNull(result);
@@ -272,7 +272,7 @@ public class QRCodeClientTests : IDisposable
                 PhoneNumber = "+9999999999"
             }
         };
-        var result = await _client.UpdateCallAsync(created.Id!, updateRequest);
+        var result = await _client.UpdateCallAsync(created.Id!, updateRequest, created.Version);
 
         // Assert
         Assert.NotNull(result);
@@ -338,7 +338,7 @@ public class QRCodeClientTests : IDisposable
                 Message = "Updated message"
             }
         };
-        var result = await _client.UpdateSMSAsync(created.Id!, updateRequest);
+        var result = await _client.UpdateSMSAsync(created.Id!, updateRequest, created.Version);
 
         // Assert
         Assert.NotNull(result);
@@ -432,7 +432,7 @@ public class QRCodeClientTests : IDisposable
                 Url = "https://guide.posty5.com"
             }
         };
-        var result = await _client.UpdateURLAsync(created.Id!, updateRequest);
+        var result = await _client.UpdateURLAsync(created.Id!, updateRequest, created.Version);
 
         // Assert
         Assert.NotNull(result);
@@ -498,7 +498,7 @@ public class QRCodeClientTests : IDisposable
                 Longitude = "-118.2437"
             }
         };
-        var result = await _client.UpdateGeolocationAsync(created.Id!, updateRequest);
+        var result = await _client.UpdateGeolocationAsync(created.Id!, updateRequest, created.Version);
 
         // Assert
         Assert.NotNull(result);
@@ -625,7 +625,7 @@ public class QRCodeClientTests : IDisposable
         TestConfig.CreatedResources.QRCodes.Add(created.Id!);
 
         // Act
-        await _client.DeleteAsync(created.Id!);
+        await _client.DeleteAsync(created.Id!, created.Version);
 
         // Assert - Remove from tracking since we successfully deleted it
         TestConfig.CreatedResources.QRCodes.Remove(created.Id!);
@@ -706,7 +706,7 @@ public class QRCodeClientTests : IDisposable
             Name = created.Name,
             TemplateId = TestConfig.TemplateId,
             Url = new QRCodeUrlTargetModel { Url = "https://example.com/b" }
-        });
+        }, created.Version);
 
         Assert.Equal(created.QrCodeLandingPageURL, updated.QrCodeLandingPageURL);
         Assert.Equal(QRCodeMode.Dynamic, updated.Mode);
@@ -757,7 +757,7 @@ public class QRCodeClientTests : IDisposable
             TemplateId = TestConfig.TemplateId,
             Url = new QRCodeUrlTargetModel { Url = "https://example.com" },
             ClearAccess = true
-        });
+        }, created.Version);
         Assert.Null(cleared.Access);
     }
 
@@ -852,12 +852,12 @@ public class QRCodeClientPayloadTests : IDisposable
         await _client.CreateSMSAsync(new QRCodeCreateSMSRequestModel { TemplateId = t, IsEnableMonetization = true, Sms = new() { PhoneNumber = "+1" } });
         await _client.CreateURLAsync(new QRCodeCreateURLRequestModel { TemplateId = t, IsEnableMonetization = true, Url = new() { Url = "https://example.com" } });
         await _client.CreateGeolocationAsync(new QRCodeCreateGeolocationRequestModel { TemplateId = t, IsEnableMonetization = true, Geolocation = new() { Latitude = "1", Longitude = "2" } });
-        await _client.UpdateEmailAsync("q1", new QRCodeUpdateEmailRequestModel { TemplateId = t, IsEnableMonetization = true, Email = new() { Email = "a@b.c" } });
-        await _client.UpdateWifiAsync("q1", new QRCodeUpdateWifiRequestModel { TemplateId = t, IsEnableMonetization = true, Wifi = new() { Name = "Net", AuthenticationType = "nopass" } });
-        await _client.UpdateCallAsync("q1", new QRCodeUpdateCallRequestModel { TemplateId = t, IsEnableMonetization = true, Call = new() { PhoneNumber = "+1" } });
-        await _client.UpdateSMSAsync("q1", new QRCodeUpdateSMSRequestModel { TemplateId = t, IsEnableMonetization = true, Sms = new() { PhoneNumber = "+1", Message = "hi" } });
-        await _client.UpdateURLAsync("q1", new QRCodeUpdateURLRequestModel { TemplateId = t, IsEnableMonetization = true, Url = new() { Url = "https://example.com" } });
-        await _client.UpdateGeolocationAsync("q1", new QRCodeUpdateGeolocationRequestModel { TemplateId = t, IsEnableMonetization = true, Geolocation = new() { Latitude = "1", Longitude = "2" } });
+        await _client.UpdateEmailAsync("q1", new QRCodeUpdateEmailRequestModel { TemplateId = t, IsEnableMonetization = true, Email = new() { Email = "a@b.c" } }, 0);
+        await _client.UpdateWifiAsync("q1", new QRCodeUpdateWifiRequestModel { TemplateId = t, IsEnableMonetization = true, Wifi = new() { Name = "Net", AuthenticationType = "nopass" } }, 0);
+        await _client.UpdateCallAsync("q1", new QRCodeUpdateCallRequestModel { TemplateId = t, IsEnableMonetization = true, Call = new() { PhoneNumber = "+1" } }, 0);
+        await _client.UpdateSMSAsync("q1", new QRCodeUpdateSMSRequestModel { TemplateId = t, IsEnableMonetization = true, Sms = new() { PhoneNumber = "+1", Message = "hi" } }, 0);
+        await _client.UpdateURLAsync("q1", new QRCodeUpdateURLRequestModel { TemplateId = t, IsEnableMonetization = true, Url = new() { Url = "https://example.com" } }, 0);
+        await _client.UpdateGeolocationAsync("q1", new QRCodeUpdateGeolocationRequestModel { TemplateId = t, IsEnableMonetization = true, Geolocation = new() { Latitude = "1", Longitude = "2" } }, 0);
     }
 
     [Fact]
@@ -888,7 +888,7 @@ public class QRCodeClientPayloadTests : IDisposable
     public async Task FreeText_KeepsOptionsText_AndDropsMonetization()
     {
         await _client.CreateFreeTextAsync(new QRCodeCreateFreeTextRequestModel { TemplateId = "tpl-1", Text = "hello", IsEnableMonetization = true });
-        await _client.UpdateFreeTextAsync("q1", new QRCodeUpdateFreeTextRequestModel { TemplateId = "tpl-1", Text = "bye", IsEnableMonetization = true });
+        await _client.UpdateFreeTextAsync("q1", new QRCodeUpdateFreeTextRequestModel { TemplateId = "tpl-1", Text = "bye", IsEnableMonetization = true }, 0);
 
         var texts = _server.Requests.Select(r =>
         {
@@ -942,7 +942,7 @@ public class QRCodeClientPayloadTests : IDisposable
     [Fact]
     public async Task Update_WithoutIsEnableLandingPage_DoesNotSendIt()
     {
-        await _client.UpdateURLAsync("q1", new QRCodeUpdateURLRequestModel { TemplateId = "tpl-1", Url = new() { Url = "https://example.com" } });
+        await _client.UpdateURLAsync("q1", new QRCodeUpdateURLRequestModel { TemplateId = "tpl-1", Url = new() { Url = "https://example.com" } }, 0);
 
         using var json = JsonDocument.Parse(_server.Requests.Single().Body);
         Assert.False(json.RootElement.TryGetProperty("isEnableLandingPage", out _));
@@ -969,7 +969,7 @@ public class QRCodeClientPayloadTests : IDisposable
     public async Task WithoutMode_NoModeOnTheWire()
     {
         await _client.CreateURLAsync(new QRCodeCreateURLRequestModel { TemplateId = "tpl-1", Url = new() { Url = "https://example.com" } });
-        await _client.UpdateWifiAsync("q1", new QRCodeUpdateWifiRequestModel { TemplateId = "tpl-1", Wifi = new() { Name = "Net" } });
+        await _client.UpdateWifiAsync("q1", new QRCodeUpdateWifiRequestModel { TemplateId = "tpl-1", Wifi = new() { Name = "Net" } }, 0);
 
         foreach (var r in _server.Requests)
         {
@@ -1001,7 +1001,7 @@ public class QRCodeClientPayloadTests : IDisposable
     public async Task Mode_IsSentOnCreateAndUpdate()
     {
         await _client.CreateURLAsync(new QRCodeCreateURLRequestModel { TemplateId = "tpl-1", Mode = QRCodeMode.Dynamic, Url = new() { Url = "https://example.com" } });
-        await _client.UpdateFreeTextAsync("q1", new QRCodeUpdateFreeTextRequestModel { TemplateId = "tpl-1", Mode = QRCodeMode.Static, Text = "x" });
+        await _client.UpdateFreeTextAsync("q1", new QRCodeUpdateFreeTextRequestModel { TemplateId = "tpl-1", Mode = QRCodeMode.Static, Text = "x" }, 0);
         await _client.CreateWifiAsync(new QRCodeCreateWifiRequestModel { TemplateId = "tpl-1", Mode = QRCodeMode.Static, Wifi = new() { Name = "Net" } });
 
         var modes = _server.Requests.Select(r =>
@@ -1016,7 +1016,7 @@ public class QRCodeClientPayloadTests : IDisposable
     public async Task DynamicWifi_ThrowsBeforeAnyCall()
     {
         await Assert.ThrowsAsync<ArgumentException>(() => _client.CreateWifiAsync(new QRCodeCreateWifiRequestModel { TemplateId = "tpl-1", Mode = QRCodeMode.Dynamic, Wifi = new() { Name = "Net" } }));
-        await Assert.ThrowsAsync<ArgumentException>(() => _client.UpdateWifiAsync("q1", new QRCodeUpdateWifiRequestModel { TemplateId = "tpl-1", Mode = QRCodeMode.Dynamic, Wifi = new() { Name = "Net" } }));
+        await Assert.ThrowsAsync<ArgumentException>(() => _client.UpdateWifiAsync("q1", new QRCodeUpdateWifiRequestModel { TemplateId = "tpl-1", Mode = QRCodeMode.Dynamic, Wifi = new() { Name = "Net" } }, 0));
         Assert.Empty(_server.Requests);
     }
 
@@ -1048,7 +1048,7 @@ public class QRCodeClientPayloadTests : IDisposable
     public async Task WithoutAccess_NoAccessOnTheWire()
     {
         await _client.CreateURLAsync(new QRCodeCreateURLRequestModel { TemplateId = "tpl-1", Url = new() { Url = "https://example.com" } });
-        await _client.UpdateURLAsync("q1", new QRCodeUpdateURLRequestModel { TemplateId = "tpl-1", Url = new() { Url = "https://example.com" } });
+        await _client.UpdateURLAsync("q1", new QRCodeUpdateURLRequestModel { TemplateId = "tpl-1", Url = new() { Url = "https://example.com" } }, 0);
 
         foreach (var r in _server.Requests)
         {
@@ -1091,7 +1091,7 @@ public class QRCodeClientPayloadTests : IDisposable
             Url = new() { Url = "https://example.com" },
             Access = new QRCodeAccessModel { MaxVisits = 5 },
             ClearAccess = true
-        });
+        }, 0);
 
         using var json = JsonDocument.Parse(_server.Requests.Single().Body);
         Assert.Equal(JsonValueKind.Null, json.RootElement.GetProperty("access").ValueKind);
@@ -1291,11 +1291,11 @@ public class QRCodeClientContentTypeTests : IDisposable
         await _client.CreateWhatsAppAsync(new QRCodeCreateWhatsAppRequestModel { TemplateId = Tpl, WhatsApp = wa });
         await _client.CreateReviewAsync(new QRCodeCreateReviewRequestModel { TemplateId = Tpl, Review = review });
         await _client.CreateSocialAsync(new QRCodeCreateSocialRequestModel { TemplateId = Tpl, Social = social });
-        await _client.UpdateVCardAsync("q1", new QRCodeUpdateVCardRequestModel { Name = "n", TemplateId = Tpl, VCard = vcard });
-        await _client.UpdateEventAsync("q1", new QRCodeUpdateEventRequestModel { Name = "n", TemplateId = Tpl, Event = ev });
-        await _client.UpdateWhatsAppAsync("q1", new QRCodeUpdateWhatsAppRequestModel { Name = "n", TemplateId = Tpl, WhatsApp = wa });
-        await _client.UpdateReviewAsync("q1", new QRCodeUpdateReviewRequestModel { Name = "n", TemplateId = Tpl, Review = review });
-        await _client.UpdateSocialAsync("q1", new QRCodeUpdateSocialRequestModel { Name = "n", TemplateId = Tpl, Social = social });
+        await _client.UpdateVCardAsync("q1", new QRCodeUpdateVCardRequestModel { Name = "n", TemplateId = Tpl, VCard = vcard }, 0);
+        await _client.UpdateEventAsync("q1", new QRCodeUpdateEventRequestModel { Name = "n", TemplateId = Tpl, Event = ev }, 0);
+        await _client.UpdateWhatsAppAsync("q1", new QRCodeUpdateWhatsAppRequestModel { Name = "n", TemplateId = Tpl, WhatsApp = wa }, 0);
+        await _client.UpdateReviewAsync("q1", new QRCodeUpdateReviewRequestModel { Name = "n", TemplateId = Tpl, Review = review }, 0);
+        await _client.UpdateSocialAsync("q1", new QRCodeUpdateSocialRequestModel { Name = "n", TemplateId = Tpl, Social = social }, 0);
 
         var types = new[] { "vcard", "event", "whatsapp", "review", "social" };
         Assert.Equal(
@@ -1339,9 +1339,9 @@ public class QRCodeClientContentTypeTests : IDisposable
     [Fact]
     public async Task Update_WithoutId_ThrowsBeforeAnyCall()
     {
-        await Assert.ThrowsAsync<ArgumentException>(() => _client.UpdateVCardAsync("", new QRCodeUpdateVCardRequestModel { Name = "n", TemplateId = Tpl }));
-        await Assert.ThrowsAsync<ArgumentException>(() => _client.UpdateAppStoreAsync(" ", new QRCodeUpdateAppStoreRequestModel { Name = "n", TemplateId = Tpl }));
-        await Assert.ThrowsAsync<ArgumentException>(() => _client.UpdateFileAsync("", new QRCodeUpdateFileRequestModel { Name = "n", TemplateId = Tpl }));
+        await Assert.ThrowsAsync<ArgumentException>(() => _client.UpdateVCardAsync("", new QRCodeUpdateVCardRequestModel { Name = "n", TemplateId = Tpl }, 0));
+        await Assert.ThrowsAsync<ArgumentException>(() => _client.UpdateAppStoreAsync(" ", new QRCodeUpdateAppStoreRequestModel { Name = "n", TemplateId = Tpl }, 0));
+        await Assert.ThrowsAsync<ArgumentException>(() => _client.UpdateFileAsync("", new QRCodeUpdateFileRequestModel { Name = "n", TemplateId = Tpl }, 0));
         Assert.Empty(_server.Requests);
     }
 
@@ -1380,7 +1380,7 @@ public class QRCodeClientContentTypeTests : IDisposable
         var target = new QRCodeAppStoreTargetModel { AndroidUrl = "https://play.google.com/store/apps/details?id=x", IosUrl = "https://apps.apple.com/app/id1", FallbackUrl = "https://example.com/app" };
 
         await _client.CreateAppStoreAsync(new QRCodeCreateAppStoreRequestModel { TemplateId = Tpl, AppStore = target });
-        await _client.UpdateAppStoreAsync("q1", new QRCodeUpdateAppStoreRequestModel { Name = "n", TemplateId = Tpl, Mode = QRCodeMode.Dynamic, AppStore = target });
+        await _client.UpdateAppStoreAsync("q1", new QRCodeUpdateAppStoreRequestModel { Name = "n", TemplateId = Tpl, Mode = QRCodeMode.Dynamic, AppStore = target }, 0);
 
         Assert.Equal(new[] { "POST /api/qr-code/appStore", "PUT /api/qr-code/appStore/q1" }, _server.Requests.Select(r => $"{r.Method} {r.PathAndQuery}"));
         var sent = Target(_server.Requests[0].Body, "appStore");
@@ -1393,9 +1393,9 @@ public class QRCodeClientContentTypeTests : IDisposable
     public async Task AppStoreAndFile_StaticMode_ThrowsBeforeAnyCall()
     {
         await Assert.ThrowsAsync<ArgumentException>(() => _client.CreateAppStoreAsync(new QRCodeCreateAppStoreRequestModel { TemplateId = Tpl, Mode = QRCodeMode.Static }));
-        await Assert.ThrowsAsync<ArgumentException>(() => _client.UpdateAppStoreAsync("q1", new QRCodeUpdateAppStoreRequestModel { Name = "n", TemplateId = Tpl, Mode = QRCodeMode.Static }));
+        await Assert.ThrowsAsync<ArgumentException>(() => _client.UpdateAppStoreAsync("q1", new QRCodeUpdateAppStoreRequestModel { Name = "n", TemplateId = Tpl, Mode = QRCodeMode.Static }, 0));
         await Assert.ThrowsAsync<ArgumentException>(() => _client.CreateFileAsync(new QRCodeCreateFileRequestModel { TemplateId = Tpl, Mode = QRCodeMode.Static }, new MemoryStream(new byte[] { 1 }), QRCodeFileMimeTypes.Pdf));
-        await Assert.ThrowsAsync<ArgumentException>(() => _client.UpdateFileAsync("q1", new QRCodeUpdateFileRequestModel { Name = "n", TemplateId = Tpl, Mode = QRCodeMode.Static }));
+        await Assert.ThrowsAsync<ArgumentException>(() => _client.UpdateFileAsync("q1", new QRCodeUpdateFileRequestModel { Name = "n", TemplateId = Tpl, Mode = QRCodeMode.Static }, 0));
         Assert.Empty(_server.Requests);
     }
 
@@ -1486,7 +1486,7 @@ public class QRCodeClientContentTypeTests : IDisposable
     [Fact]
     public async Task UpdateFile_WithoutContent_KeepsTheStoredFile()
     {
-        await _client.UpdateFileAsync("q1", new QRCodeUpdateFileRequestModel { Name = "Menu", TemplateId = Tpl, File = new() { FileName = "menu-2026.pdf" } });
+        await _client.UpdateFileAsync("q1", new QRCodeUpdateFileRequestModel { Name = "Menu", TemplateId = Tpl, File = new() { FileName = "menu-2026.pdf" } }, 0);
 
         var (method, path, body) = _server.Requests.Single();
         Assert.Equal("PUT /api/qr-code/file/q1", $"{method} {path}");
@@ -1500,7 +1500,7 @@ public class QRCodeClientContentTypeTests : IDisposable
     {
         AnswerWithTicket($"{_server.BaseUrl}/r2/signed-put");
 
-        await _client.UpdateFileAsync("q1", new QRCodeUpdateFileRequestModel { Name = "Menu", TemplateId = Tpl }, new MemoryStream(new byte[] { 1, 2 }), QRCodeFileMimeTypes.Webp);
+        await _client.UpdateFileAsync("q1", new QRCodeUpdateFileRequestModel { Name = "Menu", TemplateId = Tpl }, 0, new MemoryStream(new byte[] { 1, 2 }), QRCodeFileMimeTypes.Webp);
 
         Assert.Equal(
             new[] { "POST /api/qr-code/file/upload-url", "PUT /r2/signed-put", "PUT /api/qr-code/file/q1" },
@@ -1511,7 +1511,7 @@ public class QRCodeClientContentTypeTests : IDisposable
     [Fact]
     public async Task UpdateFile_WithContentButNoContentType_ThrowsBeforeAnyCall()
     {
-        await Assert.ThrowsAsync<ArgumentException>(() => _client.UpdateFileAsync("q1", new QRCodeUpdateFileRequestModel { Name = "n", TemplateId = Tpl }, new MemoryStream(new byte[] { 1 })));
+        await Assert.ThrowsAsync<ArgumentException>(() => _client.UpdateFileAsync("q1", new QRCodeUpdateFileRequestModel { Name = "n", TemplateId = Tpl }, 0, new MemoryStream(new byte[] { 1 })));
         Assert.Empty(_server.Requests);
     }
 

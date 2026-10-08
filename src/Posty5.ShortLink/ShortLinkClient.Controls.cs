@@ -45,11 +45,13 @@ public partial class ShortLinkClient
     /// </summary>
     /// <param name="id">Short link ID</param>
     /// <param name="rules">The sections to set</param>
+    /// <param name="version">The link's version as last read, sent as <c>If-Match</c></param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Updated short link</returns>
     public async Task<ShortLinkModel> SetRulesAsync(
         string id,
         LinkRulesUpdateModel rules,
+        long version,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(id);
@@ -72,7 +74,7 @@ public partial class ShortLinkClient
         ShortLinkRequestBodyHelper.AddRuleSections(data, rules);
         data["templateType"] = ShortLinkConst.TemplateType;
 
-        var response = await _http.PutAsync<ShortLinkModel>($"{ShortLinkConst.BasePath}/{id}", data, cancellationToken);
+        var response = await _http.PutAsync<ShortLinkModel>($"{ShortLinkConst.BasePath}/{id}", data, version, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to update short link rules");
     }
 }

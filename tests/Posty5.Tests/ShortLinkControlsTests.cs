@@ -30,7 +30,7 @@ public class ShortLinkControlsTests : IDisposable
             Access = new LinkAccessInputModel { RemovePassword = true, MaxVisits = 10 },
             ClearUtm = true,
             Variants = Array.Empty<LinkVariantModel>()
-        });
+        }, 0);
 
         var request = Assert.Single(_server.Requests);
         Assert.Equal("PUT", request.Method);
@@ -53,7 +53,7 @@ public class ShortLinkControlsTests : IDisposable
         using var http = _server.Http();
         var client = new ShortLinkClient(http);
 
-        await client.SetRulesAsync("l1", new LinkRulesUpdateModel { ClearAccess = true });
+        await client.SetRulesAsync("l1", new LinkRulesUpdateModel { ClearAccess = true }, 0);
 
         Assert.Equal(2, _server.Requests.Count);
         Assert.Equal("GET", _server.Requests[0].Method);
@@ -137,9 +137,9 @@ public class ShortLinkControlsTests : IDisposable
         var client = new LinkCampaignClient(http);
 
         await client.CreateAsync(new LinkCampaignCreateRequestModel { Name = "Spring", Color = LinkCampaignColors.Green });
-        await client.UpdateAsync("c1", new LinkCampaignUpdateRequestModel { ClearUtm = true });
+        await client.UpdateAsync("c1", new LinkCampaignUpdateRequestModel { ClearUtm = true }, 0);
         await client.GetAsync("c1");
-        await client.DeleteAsync("c1", detach: true);
+        await client.DeleteAsync("c1", 0, detach: true);
 
         Assert.Equal(("POST", "/api/link-campaign"), (_server.Requests[0].Method, _server.Requests[0].PathAndQuery));
         Assert.Equal(("PUT", "/api/link-campaign/c1"), (_server.Requests[1].Method, _server.Requests[1].PathAndQuery));

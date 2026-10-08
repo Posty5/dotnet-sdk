@@ -8,7 +8,7 @@
 
     <!-- NuGet Package Properties -->
     <PackageId>Posty5.Account</PackageId>
-    <Version>3.1.0</Version>
+    <Version>3.2.0</Version>
     <Authors>Posty5</Authors>
     <Company>Posty5</Company>
     <Description>Account client for Posty5 .NET SDK - who the API key belongs to, its plan and credits, credit history, and the live price of every operation</Description>

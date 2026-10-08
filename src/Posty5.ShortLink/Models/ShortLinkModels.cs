@@ -9,8 +9,12 @@ namespace Posty5.ShortLink.Models;
 /// <summary>
 /// QR Code template information
 /// </summary>
-public class QRCodeTemplateModel
+public class QRCodeTemplateModel : Posty5.Core.Models.IVersioned
 {
+    /// <summary>The document's version (<c>__v</c>); pass it to the next update or delete.</summary>
+    [JsonPropertyName("__v")]
+    public long Version { get; set; }
+
     /// <summary>
     /// Template ID
     /// </summary>
@@ -92,8 +96,12 @@ public class ShortLinkPageInfoModel
     
 }
 
-public class ShortLinkModel
+public class ShortLinkModel : Posty5.Core.Models.IVersioned
 {
+    /// <summary>The document's version (<c>__v</c>); pass it to the next update or delete.</summary>
+    [JsonPropertyName("__v")]
+    public long Version { get; set; }
+
     /// <summary>
     /// MongoDB document ID
     /// </summary>

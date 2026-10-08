@@ -4,6 +4,107 @@ All notable changes to the Posty5 .NET SDK will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Versioned writes (optimistic concurrency) - unreleased majors
+
+`Posty5.Core` 4.0.0, `Posty5.ShortLink` 4.0.0, `Posty5.QRCode` 4.0.0,
+`Posty5.HtmlHosting` 4.0.0, `Posty5.HtmlHostingVariables` 4.0.0,
+`Posty5.HtmlHostingFormSubmission` 4.0.0, `Posty5.SocialPublisherWorkspace` 4.0.0,
+`Posty5.SocialPublisherPost` 5.0.0, `Posty5.Store` 4.0.0, `Posty5.Webhooks` 4.0.0;
+`Posty5.Account` 3.2.0 (dependency-only: it has no writes).
+
+Needs the API's versioned-writes batches (report mode or later). Publish date
+(for the rollout's phase D): _not yet published_.
+
+Every update, delete and state change now takes the version of the document
+you read and sends it as `If-Match: "<version>"`, so a write never silently
+overwrites someone else's change. The old signatures are **not** kept as
+`[Obsolete]`: they would compile and then fail with 428 once the API enforces
+versions (18_DECISIONS D16).
+
+### Breaking changes
+
+- **Posty5.Core**
+  - `Posty5HttpClient` gains versioned `PutAsync` / `PatchAsync` / `PostAsync` /
+    `DeleteAsync` overloads (`long version`) and `SendBulkVersionedAsync`. The
+    unversioned overloads stay for exempt routes. `PatchAsync` now goes through
+    the shared send path.
+  - A 409 with `code: VERSION_CONFLICT` raises `Posty5ConflictException`
+    (`CurrentVersion`, `ResourceId`); a 428 raises
+    `Posty5VersionRequiredException`. Any other 409 is still a plain
+    `Posty5Exception`.
+- **Posty5.ShortLink**: `UpdateAsync(id, request, version, ct)`,
+  `DeleteAsync(id, version, ct)`, `SetRulesAsync(id, rules, version, ct)`;
+  `LinkCampaignClient.UpdateAsync(id, request, version, ct)` and
+  `DeleteAsync(id, version, detach, ct)` (now returns `VersionedWriteResult`).
+- **Posty5.QRCode**: every `Update*Async(id, data, version, ...)` (the seven
+  classic types and the seven content types, `UpdateFileAsync(id, data, version, content?, contentType?, ct)`),
+  `DeleteAsync(id, version, ct)`.
+- **Posty5.HtmlHosting**: `UpdateWithFileAsync(id, data, version, stream, contentType, ct)`,
+  `UpdateWithGithubFileAsync(id, data, version, ct)`, `DeleteAsync(id, version, ct)`
+  (returns `VersionedWriteResult`). `CleanCacheAsync` is unchanged.
+- **Posty5.HtmlHostingVariables**: `UpdateAsync(id, data, version, ct)` returns
+  `VersionedWriteResult` (was `Task`); `DeleteAsync(id, version, ct)`.
+- **Posty5.HtmlHostingFormSubmission**: `ChangeStatusAsync(id, request, version, ct)`
+  returns `VersionedWriteResult` (was `bool`); `DeleteAsync(id, version, ct)`.
+- **Posty5.SocialPublisherWorkspace**: `UpdateAsync(id, data, version, logo?, contentType, ct)`
+  returns `VersionedWriteResult` (was `Task`); `DeleteAsync(id, version, ct)`.
+- **Posty5.SocialPublisherPost**: `ReschedulePostAsync(id, schedule, version, caption?, ct)`
+  and `DeletePostAsync(id, version, ct)` return `VersionedWriteResult` (were `Task`);
+  `RemovePostAsync(id, version, ct)`. The resumable (tus) upload is unchanged.
+- **Posty5.Webhooks**: `UpdateAsync(id, request, version, ct)`,
+  `DeleteAsync(id, version, ct)` (returns `VersionedWriteResult`),
+  `RotateSecretAsync(id, version, ct)`.
+- **Posty5.Store**
+  - Products: `UpdateAsync`, `DeleteAsync` (returns `VersionedWriteResult`) and
+    the eleven section saves (`UpdateBasicInformationAsync` ... `UpdatePurchaseAsync`)
+    take `version`. `ReorderAsync` is unchanged (ordering is unversioned).
+  - Tags: `UpdateAsync`, `DeleteAsync` (returns `VersionedWriteResult`);
+    `SetProductTagsAsync(storeId, productId, tagIds, productVersion, ct)` guards
+    the product. Assign/unassign are unchanged.
+  - Orders: `UpdateStatusAsync(storeId, orderId, status, version, note?, ct)`
+    (and `StoreClient.UpdateOrderStatusAsync`).
+  - Shipping: `UpdateCountryAsync`, `DeleteCountryAsync`, `UpsertRouteAsync`
+    (0 for a place with no route yet), `ClearRouteAsync`, `UpdateProfileAsync`,
+    `DeleteProfileAsync`, `AddProfileConditionsAsync` / `RemoveProfileConditionAsync`
+    (`profileVersion`), `SetDefaultAssignmentAsync`, `RemoveAssignmentAsync`;
+    `BulkUpsertRoutesAsync` and `ApplyFeeAsync` take `IDictionary<string, long> versions`.
+  - Suppliers: `ReplaceCredentialsAsync`, `UpdateSettingsAsync`,
+    `UpdateAutomationAsync`, `SetEnabledAsync`, `DisconnectAsync`,
+    `UpdateLinkAsync`, `DeleteLinkAsync`, `RetryAsync`, `PayAsync`, `CancelAsync`,
+    `FulfilGroupManuallyAsync` (`orderVersion`).
+
+### Added
+
+- `Version` (`[JsonPropertyName("__v")]`, `long`) on every entity model, which
+  implements `Posty5.Core.Models.IVersioned`.
+- `ApiResponse<T>.Version`, `.Versions`, `.Code`; the new version (envelope or
+  `ETag`) is copied onto the returned model.
+- `VersionedWriteResult`, `VersionedBulkResult`, `VersionedBulkSkippedItem`,
+  `Posty5ConcurrencyConst`.
+- `Posty5Options.Logger` (`ILogger`): one warning the first time the API answers
+  `X-Posty5-Concurrency: missing-version`.
+- Bulk shipping results carry `Applied`, `Skipped` and `Versions`.
+
+### Behaviour
+
+- Versioned writes are never retried (18_DECISIONS D17).
+
+### Migration
+
+```csharp
+// Before
+await client.ShortLink.UpdateAsync(id, req);
+await client.ShortLink.DeleteAsync(id);
+
+// After: read, then write with the version you read
+var link = await client.ShortLink.GetAsync(id);
+var saved = await client.ShortLink.UpdateAsync(id, req, link.Version);
+await client.ShortLink.DeleteAsync(id, saved.Version);
+
+// On a conflict: re-read and reapply
+catch (Posty5ConflictException ex) { /* ex.CurrentVersion */ }
+```
+
 ## Posty5.ShortLink - unreleased (short link controls, SC)
 
 Needs the API's short link controls release. Additive; rides the unreleased

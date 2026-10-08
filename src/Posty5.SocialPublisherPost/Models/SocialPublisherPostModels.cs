@@ -1273,8 +1273,12 @@ public class GenerateUploadUrlsResponse
 /// <summary>
 /// Simplified post model for list operations
 /// </summary>
-public class PostModel
+public class PostModel : Posty5.Core.Models.IVersioned
 {
+    /// <summary>The document's version (<c>__v</c>); pass it to the next update or delete.</summary>
+    [JsonPropertyName("__v")]
+    public long Version { get; set; }
+
     /// <summary>
     /// MongoDB document ID
     /// </summary>
@@ -1336,8 +1340,12 @@ public class PostModeWorkspace
 /// <summary>
 /// Post status response with full details for status page
 /// </summary>
-public class PostStatusFullDetailsResponse
+public class PostStatusFullDetailsResponse : Posty5.Core.Models.IVersioned
 {
+    /// <summary>The document's version (<c>__v</c>); pass it to the next update or delete.</summary>
+    [JsonPropertyName("__v")]
+    public long Version { get; set; }
+
     /// <summary>
     /// MongoDB document ID
     /// </summary>
@@ -1478,8 +1486,12 @@ public class SourceURLsModel
 /// <summary>
 /// Post status response (simplified, for backward compatibility)
 /// </summary>
-public class PostStatusResponse
+public class PostStatusResponse : Posty5.Core.Models.IVersioned
 {
+    /// <summary>The document's version (<c>__v</c>); pass it to the next update or delete.</summary>
+    [JsonPropertyName("__v")]
+    public long Version { get; set; }
+
     /// <summary>
     /// MongoDB document ID
     /// </summary>

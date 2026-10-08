@@ -47,12 +47,12 @@ public class WebhookEndpointClientTests : IDisposable
         var client = new WebhookEndpointClient(http);
 
         await client.GetAsync("w1");
-        await client.UpdateAsync("w1", new WebhookEndpointRequest { Enabled = true });
-        await client.RotateSecretAsync("w1");
+        await client.UpdateAsync("w1", new WebhookEndpointRequest { Enabled = true }, 0);
+        await client.RotateSecretAsync("w1", 0);
         await client.SendTestAsync("w1");
         await client.ListDeliveriesAsync("w1");
         await client.RedeliverAsync("w1", "d1");
-        await client.DeleteAsync("w1");
+        await client.DeleteAsync("w1", 0);
         await client.ListAsync();
 
         Assert.Equal(new[]

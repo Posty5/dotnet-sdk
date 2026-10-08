@@ -135,12 +135,13 @@ public class StoreClient
         CancellationToken cancellationToken = default)
         => Orders.CreateAsync(storeId, order, cancellationToken);
 
-    /// <summary>Shorthand for <c>Orders.UpdateStatusAsync</c>.</summary>
+    /// <summary>Shorthand for <c>Orders.UpdateStatusAsync</c>; <paramref name="version"/> is the order's <c>Version</c> as last read.</summary>
     public Task<StoreOrder?> UpdateOrderStatusAsync(
         string storeId,
         string orderId,
         string status,
+        long version,
         string? note = null,
         CancellationToken cancellationToken = default)
-        => Orders.UpdateStatusAsync(storeId, orderId, status, note, cancellationToken);
+        => Orders.UpdateStatusAsync(storeId, orderId, status, version, note, cancellationToken);
 }

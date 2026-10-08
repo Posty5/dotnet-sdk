@@ -814,13 +814,16 @@ public class SocialPublisherPostClient
     /// <see cref="RemovePostAsync"/> to take down media that is already live.
     /// </remarks>
     /// <param name="id">The post id.</param>
+    /// <param name="version">The post's version as last read (<see cref="PostStatusResponse.Version"/>), sent as <c>If-Match</c>.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    public async Task DeletePostAsync(string id, CancellationToken cancellationToken = default)
+    /// <returns>The deleted post's id; <see cref="VersionedWriteResult.Version"/> is null after a delete.</returns>
+    public async Task<VersionedWriteResult> DeletePostAsync(string id, long version, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(id))
             throw new ArgumentException("id is required", nameof(id));
 
-        await _http.DeleteAsync<object>($"{BasePath}/{id}", cancellationToken: cancellationToken);
+        var response = await _http.DeleteAsync<object>($"{BasePath}/{id}", version, cancellationToken);
+        return new VersionedWriteResult { Id = id, Message = response.Message };
     }
 
     /// <summary>
@@ -845,9 +848,10 @@ public class SocialPublisherPostClient
     /// </para>
     /// </remarks>
     /// <param name="id">The post id.</param>
+    /// <param name="version">The post's version as last read (<see cref="PostStatusResponse.Version"/>), sent as <c>If-Match</c>.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The outcome on each platform.</returns>
-    public async Task<RemovePostResult> RemovePostAsync(string id, CancellationToken cancellationToken = default)
+    /// <returns>The outcome on each platform, with the post's new version.</returns>
+    public async Task<RemovePostResult> RemovePostAsync(string id, long version, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(id))
             throw new ArgumentException("id is required", nameof(id));
@@ -855,6 +859,7 @@ public class SocialPublisherPostClient
         var response = await _http.PostAsync<RemovePostResult>(
             $"{BasePath}/{id}/remove",
             new { },
+            version,
             cancellationToken);
 
         return response.Result ?? new RemovePostResult { Id = id };
@@ -876,10 +881,13 @@ public class SocialPublisherPostClient
     /// <param name="id">The post id.</param>
     /// <param name="schedule">A <see cref="DateTime"/>, or the string "now".</param>
     /// <param name="caption">A replacement caption, or null to keep it.</param>
+    /// <param name="version">The post's version as last read (<see cref="PostStatusResponse.Version"/>), sent as <c>If-Match</c>.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    public async Task ReschedulePostAsync(
+    /// <returns>The post's id and new version.</returns>
+    public async Task<VersionedWriteResult> ReschedulePostAsync(
         string id,
         object schedule,
+        long version,
         string? caption = null,
         CancellationToken cancellationToken = default)
     {
@@ -889,10 +897,12 @@ public class SocialPublisherPostClient
         var built = BuildSchedule(schedule)
             ?? throw new ArgumentException("schedule must be a DateTime or the string \"now\"", nameof(schedule));
 
-        await _http.PutAsync<object>(
+        var response = await _http.PutAsync<object>(
             $"{BasePath}/{id}",
             new ReschedulePostRequest { ScheduleType = built.Type, ScheduledAt = built.Type == "schedule" ? built.ScheduledAt : null, Caption = caption },
-            cancellationToken: cancellationToken);
+            version,
+            cancellationToken);
+        return new VersionedWriteResult { Id = id, Version = response.Version, Message = response.Message };
     }
 
     /// <summary>

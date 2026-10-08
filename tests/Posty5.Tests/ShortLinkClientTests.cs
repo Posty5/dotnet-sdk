@@ -154,7 +154,7 @@ public class ShortLinkClientTests : IDisposable
             BaseUrl = "https://guide.posty5.com",
             TemplateId = TestConfig.TemplateId
         };
-        var result = await _client.UpdateAsync(created.Id!, updateRequest);
+        var result = await _client.UpdateAsync(created.Id!, updateRequest, created.Version);
 
         // Assert
         Assert.NotNull(result);
@@ -180,7 +180,7 @@ public class ShortLinkClientTests : IDisposable
             BaseUrl = "https://updated.posty5.com",
             TemplateId = TestConfig.TemplateId
         };
-        var result = await _client.UpdateAsync(created.Id!, updateRequest);
+        var result = await _client.UpdateAsync(created.Id!, updateRequest, created.Version);
 
         // Assert
         Assert.NotNull(result);
@@ -201,7 +201,7 @@ public class ShortLinkClientTests : IDisposable
         TestConfig.CreatedResources.ShortLinks.Add(created.Id!);
 
         // Act
-        await _client.DeleteAsync(created.Id!);
+        await _client.DeleteAsync(created.Id!, created.Version);
 
         // Assert - Remove from tracking since we successfully deleted it
         TestConfig.CreatedResources.ShortLinks.Remove(created.Id!);
@@ -233,7 +233,7 @@ public class ShortLinkClientTests : IDisposable
             Name = "Renamed",
             BaseUrl = "https://posty5.com",
             TemplateId = TestConfig.TemplateId
-        });
+        }, created.Version);
         Assert.Equal("myapp://item/1", (await _client.GetAsync(created.Id!)).AndroidUrl);
 
         // "" clears.
@@ -242,7 +242,7 @@ public class ShortLinkClientTests : IDisposable
             BaseUrl = "https://posty5.com",
             TemplateId = TestConfig.TemplateId,
             AndroidUrl = ""
-        });
+        }, created.Version);
         var cleared = await _client.GetAsync(created.Id!);
         Assert.True(string.IsNullOrEmpty(cleared.AndroidUrl));
         Assert.False(cleared.IsSupportAndroidDeepUrl ?? false);
@@ -277,7 +277,7 @@ public class ShortLinkClientTests : IDisposable
             Name = "Renamed, landing page untouched",
             BaseUrl = "https://posty5.com",
             TemplateId = TestConfig.TemplateId
-        });
+        }, created.Version);
 
         Assert.True((await _client.GetAsync(created.Id!)).IsEnableLandingPage);
 
@@ -468,7 +468,7 @@ public class ShortLinkClientPayloadTests : IDisposable
             BaseUrl = "https://example.com/new",
             TemplateId = "tpl-1",
             IsEnableMonetization = true
-        });
+        }, 0);
 #pragma warning restore CS0618
 
         var (method, path, body) = _server.Requests.Single();
@@ -498,7 +498,7 @@ public class ShortLinkClientPayloadTests : IDisposable
             IosUrl = "myapp://item/9",
             RefId = "REF-2",
             Tag = "t2"
-        });
+        }, 0);
 
         using var json = JsonDocument.Parse(_server.Requests.Single().Body);
         var root = json.RootElement;
@@ -514,7 +514,7 @@ public class ShortLinkClientPayloadTests : IDisposable
     public async Task UpdateAsync_EmptyBaseUrl_ThrowsBeforeSending()
     {
         await Assert.ThrowsAsync<ArgumentException>(() =>
-            _client.UpdateAsync("id1", new ShortLinkUpdateRequestModel { BaseUrl = " ", TemplateId = "tpl-1" }));
+            _client.UpdateAsync("id1", new ShortLinkUpdateRequestModel { BaseUrl = " ", TemplateId = "tpl-1" }, 0));
         Assert.Empty(_server.Requests);
     }
 

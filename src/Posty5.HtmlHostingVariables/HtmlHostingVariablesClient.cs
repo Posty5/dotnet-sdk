@@ -103,9 +103,10 @@ public class HtmlHostingVariablesClient
     /// });
     /// </code>
     /// </example>
-    public async Task UpdateAsync(
+    public async Task<VersionedWriteResult> UpdateAsync(
         string id,
         HtmlHostingVariablesCreateRequestModel data,
+        long version,
         CancellationToken cancellationToken = default)
     {
         // Validate key prefix
@@ -116,13 +117,15 @@ public class HtmlHostingVariablesClient
                 nameof(data));
         }
 
-        await _http.PutAsync<object>($"{BasePath}/{id}", data, cancellationToken);
+        var response = await _http.PutAsync<object>($"{BasePath}/{id}", data, version, cancellationToken);
+        return new VersionedWriteResult { Id = id, Version = response.Version, Message = response.Message };
     }
 
     /// <summary>
     /// Delete an HTML hosting variable
     /// </summary>
     /// <param name="id">Variable ID to delete</param>
+    /// <param name="version">The variable's version as last read (<see cref="Models.HtmlHostingVariablesVariableModel.Version"/>), sent as <c>If-Match</c></param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Deletion confirmation response</returns>
     /// <example>
@@ -133,9 +136,10 @@ public class HtmlHostingVariablesClient
     /// </example>
     public async Task<DeleteResponse> DeleteAsync(
         string id,
+        long version,
         CancellationToken cancellationToken = default)
     {
-        var response = await _http.DeleteAsync<DeleteResponse>($"{BasePath}/{id}", cancellationToken);
+        var response = await _http.DeleteAsync<DeleteResponse>($"{BasePath}/{id}", version, cancellationToken);
         return response.Result ?? new DeleteResponse { Message = "Deleted" };
     }
 

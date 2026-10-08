@@ -30,7 +30,7 @@ public partial class QRCodeClient
     /// </code>
     /// </example>
     public Task<QRCodeModel> CreateVCardAsync(QRCodeCreateVCardRequestModel data, CancellationToken cancellationToken = default)
-        => SendContentTypeAsync(HttpMethod.Post, "vcard", null, data, data?.Name, data?.VCard, cancellationToken);
+        => SendContentTypeAsync(HttpMethod.Post, "vcard", null, data, data?.Name, data?.VCard, null, cancellationToken);
 
     /// <summary>Create a calendar event QR code. <c>StartsAt</c> / <c>EndsAt</c> are sent as ISO 8601.</summary>
     /// <example>
@@ -44,19 +44,19 @@ public partial class QRCodeClient
     /// </code>
     /// </example>
     public Task<QRCodeModel> CreateEventAsync(QRCodeCreateEventRequestModel data, CancellationToken cancellationToken = default)
-        => SendContentTypeAsync(HttpMethod.Post, "event", null, data, data?.Name, data?.Event, cancellationToken);
+        => SendContentTypeAsync(HttpMethod.Post, "event", null, data, data?.Name, data?.Event, null, cancellationToken);
 
     /// <summary>Create a WhatsApp chat QR code (<c>https://wa.me/…</c>).</summary>
     public Task<QRCodeModel> CreateWhatsAppAsync(QRCodeCreateWhatsAppRequestModel data, CancellationToken cancellationToken = default)
-        => SendContentTypeAsync(HttpMethod.Post, "whatsapp", null, data, data?.Name, data?.WhatsApp, cancellationToken);
+        => SendContentTypeAsync(HttpMethod.Post, "whatsapp", null, data, data?.Name, data?.WhatsApp, null, cancellationToken);
 
     /// <summary>Create a review QR code (Google place ID or a review page URL).</summary>
     public Task<QRCodeModel> CreateReviewAsync(QRCodeCreateReviewRequestModel data, CancellationToken cancellationToken = default)
-        => SendContentTypeAsync(HttpMethod.Post, "review", null, data, data?.Name, data?.Review, cancellationToken);
+        => SendContentTypeAsync(HttpMethod.Post, "review", null, data, data?.Name, data?.Review, null, cancellationToken);
 
     /// <summary>Create a social profiles QR code. A static code takes one profile.</summary>
     public Task<QRCodeModel> CreateSocialAsync(QRCodeCreateSocialRequestModel data, CancellationToken cancellationToken = default)
-        => SendContentTypeAsync(HttpMethod.Post, "social", null, data, data?.Name, data?.Social, cancellationToken);
+        => SendContentTypeAsync(HttpMethod.Post, "social", null, data, data?.Name, data?.Social, null, cancellationToken);
 
     /// <summary>
     /// Create an app store QR code (dynamic-only): a scan goes to the store of the scanning
@@ -80,7 +80,7 @@ public partial class QRCodeClient
     public Task<QRCodeModel> CreateAppStoreAsync(QRCodeCreateAppStoreRequestModel data, CancellationToken cancellationToken = default)
     {
         EnsureDynamicOnly(data, "appStore");
-        return SendContentTypeAsync(HttpMethod.Post, "appStore", null, data, data.Name, data.AppStore, cancellationToken);
+        return SendContentTypeAsync(HttpMethod.Post, "appStore", null, data, data.Name, data.AppStore, null, cancellationToken);
     }
 
     /// <summary>
@@ -108,7 +108,7 @@ public partial class QRCodeClient
         EnsureDynamicOnly(data, "file");
         ArgumentNullException.ThrowIfNull(content);
         var bucketFilePath = await UploadQRCodeFileAsync(data.File, content, contentType, cancellationToken);
-        return await SendContentTypeAsync(HttpMethod.Post, "file", null, data, data.Name, FileTarget(data.File, bucketFilePath), cancellationToken);
+        return await SendContentTypeAsync(HttpMethod.Post, "file", null, data, data.Name, FileTarget(data.File, bucketFilePath), null, cancellationToken);
     }
 
     #endregion
@@ -116,30 +116,30 @@ public partial class QRCodeClient
     #region Content-type Update Methods
 
     /// <summary>Update a vCard QR code.</summary>
-    public Task<QRCodeModel> UpdateVCardAsync(string id, QRCodeUpdateVCardRequestModel data, CancellationToken cancellationToken = default)
-        => SendContentTypeAsync(HttpMethod.Put, "vcard", id, data, data?.Name, data?.VCard, cancellationToken);
+    public Task<QRCodeModel> UpdateVCardAsync(string id, QRCodeUpdateVCardRequestModel data, long version, CancellationToken cancellationToken = default)
+        => SendContentTypeAsync(HttpMethod.Put, "vcard", id, data, data?.Name, data?.VCard, version, cancellationToken);
 
     /// <summary>Update a calendar event QR code.</summary>
-    public Task<QRCodeModel> UpdateEventAsync(string id, QRCodeUpdateEventRequestModel data, CancellationToken cancellationToken = default)
-        => SendContentTypeAsync(HttpMethod.Put, "event", id, data, data?.Name, data?.Event, cancellationToken);
+    public Task<QRCodeModel> UpdateEventAsync(string id, QRCodeUpdateEventRequestModel data, long version, CancellationToken cancellationToken = default)
+        => SendContentTypeAsync(HttpMethod.Put, "event", id, data, data?.Name, data?.Event, version, cancellationToken);
 
     /// <summary>Update a WhatsApp chat QR code.</summary>
-    public Task<QRCodeModel> UpdateWhatsAppAsync(string id, QRCodeUpdateWhatsAppRequestModel data, CancellationToken cancellationToken = default)
-        => SendContentTypeAsync(HttpMethod.Put, "whatsapp", id, data, data?.Name, data?.WhatsApp, cancellationToken);
+    public Task<QRCodeModel> UpdateWhatsAppAsync(string id, QRCodeUpdateWhatsAppRequestModel data, long version, CancellationToken cancellationToken = default)
+        => SendContentTypeAsync(HttpMethod.Put, "whatsapp", id, data, data?.Name, data?.WhatsApp, version, cancellationToken);
 
     /// <summary>Update a review QR code.</summary>
-    public Task<QRCodeModel> UpdateReviewAsync(string id, QRCodeUpdateReviewRequestModel data, CancellationToken cancellationToken = default)
-        => SendContentTypeAsync(HttpMethod.Put, "review", id, data, data?.Name, data?.Review, cancellationToken);
+    public Task<QRCodeModel> UpdateReviewAsync(string id, QRCodeUpdateReviewRequestModel data, long version, CancellationToken cancellationToken = default)
+        => SendContentTypeAsync(HttpMethod.Put, "review", id, data, data?.Name, data?.Review, version, cancellationToken);
 
     /// <summary>Update a social profiles QR code.</summary>
-    public Task<QRCodeModel> UpdateSocialAsync(string id, QRCodeUpdateSocialRequestModel data, CancellationToken cancellationToken = default)
-        => SendContentTypeAsync(HttpMethod.Put, "social", id, data, data?.Name, data?.Social, cancellationToken);
+    public Task<QRCodeModel> UpdateSocialAsync(string id, QRCodeUpdateSocialRequestModel data, long version, CancellationToken cancellationToken = default)
+        => SendContentTypeAsync(HttpMethod.Put, "social", id, data, data?.Name, data?.Social, version, cancellationToken);
 
     /// <summary>Update an app store QR code. <c>Mode = Static</c> throws <see cref="ArgumentException"/> before any call.</summary>
-    public Task<QRCodeModel> UpdateAppStoreAsync(string id, QRCodeUpdateAppStoreRequestModel data, CancellationToken cancellationToken = default)
+    public Task<QRCodeModel> UpdateAppStoreAsync(string id, QRCodeUpdateAppStoreRequestModel data, long version, CancellationToken cancellationToken = default)
     {
         EnsureDynamicOnly(data, "appStore");
-        return SendContentTypeAsync(HttpMethod.Put, "appStore", id, data, data.Name, data.AppStore, cancellationToken);
+        return SendContentTypeAsync(HttpMethod.Put, "appStore", id, data, data.Name, data.AppStore, version, cancellationToken);
     }
 
     /// <summary>
@@ -149,6 +149,7 @@ public partial class QRCodeClient
     /// </summary>
     /// <param name="id">QR code ID</param>
     /// <param name="data">Common fields and <c>File.FileName</c></param>
+    /// <param name="version">The QR code's version as last read (<see cref="Models.QRCodeModel.Version"/>), sent as <c>If-Match</c></param>
     /// <param name="content">New file content, or <c>null</c> to keep the stored file</param>
     /// <param name="contentType">The new file's MIME type; required with <paramref name="content"/></param>
     /// <param name="cancellationToken">Cancellation token</param>
@@ -157,13 +158,13 @@ public partial class QRCodeClient
     /// await qrCodeClient.UpdateFileAsync("qr_code_id", new QRCodeUpdateFileRequestModel { Name = "Menu", TemplateId = "template_123", File = new() { FileName = "menu-2026.pdf" } });
     /// </code>
     /// </example>
-    public async Task<QRCodeModel> UpdateFileAsync(string id, QRCodeUpdateFileRequestModel data, Stream? content = null, string? contentType = null, CancellationToken cancellationToken = default)
+    public async Task<QRCodeModel> UpdateFileAsync(string id, QRCodeUpdateFileRequestModel data, long version, Stream? content = null, string? contentType = null, CancellationToken cancellationToken = default)
     {
         EnsureDynamicOnly(data, "file");
         if (string.IsNullOrWhiteSpace(id))
             throw new ArgumentException("QR code id is required", nameof(id));
         var bucketFilePath = content == null ? null : await UploadQRCodeFileAsync(data.File, content, contentType, cancellationToken);
-        return await SendContentTypeAsync(HttpMethod.Put, "file", id, data, data.Name, FileTarget(data.File, bucketFilePath), cancellationToken);
+        return await SendContentTypeAsync(HttpMethod.Put, "file", id, data, data.Name, FileTarget(data.File, bucketFilePath), version, cancellationToken);
     }
 
     #endregion
@@ -249,6 +250,7 @@ public partial class QRCodeClient
         QRCodeRequestBaseModel data,
         string? name,
         object? content,
+        long? version,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(data);
@@ -283,7 +285,9 @@ public partial class QRCodeClient
             return created.Result ?? throw new InvalidOperationException($"Failed to create {type} QR code");
         }
 
-        var updated = await _http.PutAsync<QRCodeModel>($"{BasePath}/{type}/{id}", payload, cancellationToken);
+        if (version == null)
+            throw new ArgumentNullException(nameof(version), "An update needs the QR code's version");
+        var updated = await _http.PutAsync<QRCodeModel>($"{BasePath}/{type}/{id}", payload, version.Value, cancellationToken);
         return updated.Result ?? throw new InvalidOperationException($"Failed to update {type} QR code");
     }
 }

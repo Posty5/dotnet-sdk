@@ -55,25 +55,35 @@ public class WebhookEndpointClient
         return response.Result ?? throw new Posty5Exception("The API answered no webhook endpoint.");
     }
 
-    /// <summary>Updates an endpoint; <see cref="WebhookEndpointRequest.Enabled"/> = true re-enables it.</summary>
-    public async Task<WebhookEndpoint> UpdateAsync(string id, WebhookEndpointRequest request, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Updates an endpoint; <see cref="WebhookEndpointRequest.Enabled"/> = true re-enables it.
+    /// <paramref name="version"/> is the endpoint's <see cref="WebhookEndpoint.Version"/> as last read, sent as <c>If-Match</c>.
+    /// </summary>
+    public async Task<WebhookEndpoint> UpdateAsync(string id, WebhookEndpointRequest request, long version, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var response = await _http.PutAsync<WebhookEndpoint>(EndpointPath(id), request, cancellationToken);
+        var response = await _http.PutAsync<WebhookEndpoint>(EndpointPath(id), request, version, cancellationToken);
         return response.Result ?? throw new Posty5Exception("The API answered no webhook endpoint.");
     }
 
-    /// <summary>Deletes an endpoint.</summary>
-    public async Task DeleteAsync(string id, CancellationToken cancellationToken = default)
+    /// <summary>Deletes an endpoint. <paramref name="version"/> is its <see cref="WebhookEndpoint.Version"/> as last read.</summary>
+    /// <returns>The deleted endpoint's id; <see cref="VersionedWriteResult.Version"/> is null after a delete.</returns>
+    public async Task<VersionedWriteResult> DeleteAsync(string id, long version, CancellationToken cancellationToken = default)
     {
-        await _http.DeleteAsync<object>(EndpointPath(id), cancellationToken);
+        var response = await _http.DeleteAsync<object>(EndpointPath(id), version, cancellationToken);
+        return new VersionedWriteResult { Id = id, Message = response.Message };
     }
 
-    /// <summary>Issues a new secret; the old one keeps signing alongside it for 24 h.</summary>
-    public async Task<RotateWebhookSecretResponse> RotateSecretAsync(string id, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Issues a new secret; the old one keeps signing alongside it for 24 h.
+    /// <paramref name="version"/> is the endpoint's <see cref="WebhookEndpoint.Version"/> as last read.
+    /// </summary>
+    public async Task<RotateWebhookSecretResponse> RotateSecretAsync(string id, long version, CancellationToken cancellationToken = default)
     {
-        var response = await _http.PostAsync<RotateWebhookSecretResponse>($"{EndpointPath(id)}/rotate-secret", new { }, cancellationToken);
-        return response.Result ?? throw new Posty5Exception("The API answered no secret.");
+        var response = await _http.PostAsync<RotateWebhookSecretResponse>($"{EndpointPath(id)}/rotate-secret", new { }, version, cancellationToken);
+        var result = response.Result ?? throw new Posty5Exception("The API answered no secret.");
+        result.Version = response.Version;
+        return result;
     }
 
     /// <summary>Queues one <c>webhook.test</c> delivery to the endpoint.</summary>

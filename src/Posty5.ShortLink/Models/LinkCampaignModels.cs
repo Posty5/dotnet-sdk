@@ -28,8 +28,12 @@ public static class LinkCampaignColors
 }
 
 /// <summary>A link campaign as the API returns it.</summary>
-public class LinkCampaignModel
+public class LinkCampaignModel : Posty5.Core.Models.IVersioned
 {
+    /// <summary>The document's version (<c>__v</c>); pass it to the next update or delete.</summary>
+    [JsonPropertyName("__v")]
+    public long Version { get; set; }
+
     /// <summary>Database ID</summary>
     [JsonPropertyName("_id")]
     public string? Id { get; set; }

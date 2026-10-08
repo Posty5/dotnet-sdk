@@ -34,7 +34,7 @@ public class SocialPublisherPostRouteTests : IDisposable
     [Fact]
     public async Task ReschedulePostAsync_SendsScheduleTypeAndScheduledAtFlat()
     {
-        await Client().ReschedulePostAsync("p1", new DateTime(2026, 9, 20, 8, 0, 0, DateTimeKind.Utc), "New caption");
+        await Client().ReschedulePostAsync("p1", new DateTime(2026, 9, 20, 8, 0, 0, DateTimeKind.Utc), 0, "New caption");
 
         var (route, body) = Last();
         Assert.Equal($"PUT {Base}/p1", route);
@@ -47,7 +47,7 @@ public class SocialPublisherPostRouteTests : IDisposable
     [Fact]
     public async Task ReschedulePostAsync_Now_SendsNoScheduledAt()
     {
-        await Client().ReschedulePostAsync("p1", "now");
+        await Client().ReschedulePostAsync("p1", "now", 0);
 
         var (_, body) = Last();
         Assert.Equal("now", body.GetProperty("scheduleType").GetString());
@@ -106,7 +106,7 @@ public class SocialPublisherPostRouteTests : IDisposable
             "instagram": { "success": false, "notSupported": true, "error": "Instagram has no delete API" } } }
         """;
 
-        var result = await Client().RemovePostAsync("p1");
+        var result = await Client().RemovePostAsync("p1", 0);
 
         var (route, body) = Last();
         Assert.Equal($"POST {Base}/p1/remove", route);
@@ -121,7 +121,7 @@ public class SocialPublisherPostRouteTests : IDisposable
     public async Task RemovePostAsync_AFailedRemoval_Throws()
     {
         _server.Status = HttpStatusCode.BadRequest;
-        await Assert.ThrowsAsync<Posty5ValidationException>(() => Client().RemovePostAsync("p1"));
+        await Assert.ThrowsAsync<Posty5ValidationException>(() => Client().RemovePostAsync("p1", 0));
     }
 
     // ─── Text posts ─────────────────────────────────────────────────────────

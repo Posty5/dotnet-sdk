@@ -52,8 +52,12 @@ public class TagSearchParams
 }
 
 /// <summary>A catalogue tag as returned by the API.</summary>
-public class StoreTag
+public class StoreTag : Posty5.Core.Models.IVersioned
 {
+    /// <summary>The document's version (<c>__v</c>); pass it to the next update or delete.</summary>
+    [JsonPropertyName("__v")]
+    public long Version { get; set; }
+
     /// <summary>Tag id.</summary>
     [JsonPropertyName("_id")]
     public string? Id { get; set; }

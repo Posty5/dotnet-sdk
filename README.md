@@ -95,8 +95,8 @@ var qrCodes = await qrCodeClient.ListAsync(
 // Get a specific QR code
 var existingQr = await qrCodeClient.GetAsync("qr-code-id");
 
-// Delete a QR code
-await qrCodeClient.DeleteAsync("qr-code-id");
+// Delete a QR code: pass the version you read (see "Versioned writes")
+await qrCodeClient.DeleteAsync("qr-code-id", existingQr.Version);
 ```
 
 ### 3. Short Link Management
@@ -125,15 +125,17 @@ var shortLinks = await shortLinkClient.ListAsync(
     new PaginationParams { PageSize = 20 }
 );
 
-// Update a short link (BaseUrl and TemplateId are required on every update)
+// Update a short link (BaseUrl and TemplateId are required on every update).
+// The version you read goes with the write; the answer carries the new one.
+var link = await shortLinkClient.GetAsync("link-id");
 var updated = await shortLinkClient.UpdateAsync("link-id", new ShortLinkUpdateRequestModel
 {
     BaseUrl = "https://example.com/new-url",
     TemplateId = "your-template-id"
-});
+}, link.Version);
 
 // Delete a short link
-await shortLinkClient.DeleteAsync("link-id");
+await shortLinkClient.DeleteAsync("link-id", updated.Version);
 ```
 
 ### 4. HTML Hosting
@@ -153,17 +155,19 @@ var htmlPage = await htmlHostingClient.CreateAsync(new CreateHtmlHostingRequest
 
 Console.WriteLine($"Page URL: {htmlPage.PublicUrl}");
 
-// Update HTML content
-var updatedPage = await htmlHostingClient.UpdateAsync("page-id", new UpdateHtmlHostingRequest
+// Update the page from a new GitHub file, with the version you read
+var page = await htmlHostingClient.GetAsync("page-id");
+var updatedPage = await htmlHostingClient.UpdateWithGithubFileAsync("page-id", new HtmlHostingUpdatePageGithubRequestModel
 {
-    HtmlContent = "<html><body><h1>Updated Content</h1></body></html>"
-});
+    Name = "Landing Page",
+    GithubInfo = new() { FileURL = "https://github.com/owner/repo/blob/main/index.html" }
+}, page.Version);
 
 // List HTML pages
 var pages = await htmlHostingClient.ListAsync();
 
 // Delete a page
-await htmlHostingClient.DeleteAsync("page-id");
+await htmlHostingClient.DeleteAsync("page-id", updatedPage.Version);
 ```
 
 ### 5. Social Media Publishing
@@ -277,11 +281,55 @@ catch (Posty5RateLimitException ex)
 {
     Console.WriteLine($"Rate limit exceeded: {ex.Message}");
 }
+catch (Posty5ConflictException ex)
+{
+    Console.WriteLine($"Changed by someone else; stored version is {ex.CurrentVersion}");
+}
 catch (Posty5Exception ex)
 {
     Console.WriteLine($"API error: {ex.Message}, Status: {ex.StatusCode}");
 }
 ```
+
+### Versioned writes (optimistic concurrency)
+
+Every update, delete and state change takes the version of the document you
+read, and the SDK sends it as `If-Match: "<version>"` on that request only. If
+someone else changed the document in between, the API refuses the write with
+`409 VERSION_CONFLICT` instead of silently overwriting their change.
+
+```csharp
+using Posty5.Core.Exceptions;
+
+var link = await shortLinkClient.GetAsync(id);            // link.Version is the document's __v
+try
+{
+    var saved = await shortLinkClient.UpdateAsync(id, request, link.Version);
+    // saved.Version is the new version: pass it to the next write
+}
+catch (Posty5ConflictException ex)
+{
+    // Someone else saved first. ex.CurrentVersion is the stored version;
+    // read the document again, reapply your change, and write again.
+}
+```
+
+- Every model exposes `Version` (`[JsonPropertyName("__v")]`). A write answers
+  with the new version (the envelope's `version`, also sent as `ETag`), and the
+  SDK copies it onto the returned model.
+- Bulk writes take `IDictionary<string, long> versions` covering every id; the
+  result lists `Applied`, `Skipped` (with `CurrentVersion` on a conflict) and the
+  new `Versions`.
+- `Posty5VersionRequiredException` (428) means a write reached a versioned route
+  without a version: a bug, since every SDK write method requires one.
+- Versioned writes are **never retried** by the SDK: a retry with the same
+  version would either succeed twice or conflict with itself.
+- During the API's rollout, a write that should have carried a version is
+  answered with `X-Posty5-Concurrency: missing-version`. Set
+  `Posty5Options.Logger` to an `ILogger` and the SDK logs one warning the first
+  time it sees it.
+- Creates, reorders and job triggers (health checks, cache clears, tests,
+  syncs) take no version.
 
 ### Using Dependency Injection (ASP.NET Core)
 
@@ -362,16 +410,16 @@ This SDK ecosystem contains the following tool packages:
 
 | Package                                                                    | Description                   | Version | NuGet                                                                       |
 | -------------------------------------------------------------------------- | ----------------------------- | ------- | --------------------------------------------------------------------------- |
-| [Posty5.Core](./src/Posty5.Core)                                           | Core HTTP client and models   | 3.1.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.Core)                      |
-| [Posty5.Account](./src/Posty5.Account)                                     | Key owner, credits, prices    | 3.1.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.Account)                   |
-| [Posty5.ShortLink](./src/Posty5.ShortLink)                                 | URL shortener client          | 3.1.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.ShortLink)                 |
-| [Posty5.QRCode](./src/Posty5.QRCode)                                       | QR code generator client      | 3.1.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.QRCode)                    |
-| [Posty5.HtmlHosting](./src/Posty5.HtmlHosting)                             | HTML hosting client           | 3.1.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHosting)               |
-| [Posty5.HtmlHostingVariables](./src/Posty5.HtmlHostingVariables)           | Variable management           | 3.1.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHostingVariables)      |
-| [Posty5.HtmlHostingFormSubmission](./src/Posty5.HtmlHostingFormSubmission) | Form submission management    | 3.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHostingFormSubmission) |
-| [Posty5.SocialPublisherWorkspace](./src/Posty5.SocialPublisherWorkspace)   | Social workspace management   | 3.1.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.SocialPublisherWorkspace)  |
-| [Posty5.SocialPublisherPost](./src/Posty5.SocialPublisherPost)             | Social publishing post client | 4.6.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.SocialPublisherPost)       |
-| [Posty5.Store](./src/Posty5.Store)                                         | Online store client           | 3.3.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.Store)                     |
+| [Posty5.Core](./src/Posty5.Core)                                           | Core HTTP client and models   | 4.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.Core)                      |
+| [Posty5.Account](./src/Posty5.Account)                                     | Key owner, credits, prices    | 3.2.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.Account)                   |
+| [Posty5.ShortLink](./src/Posty5.ShortLink)                                 | URL shortener client          | 4.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.ShortLink)                 |
+| [Posty5.QRCode](./src/Posty5.QRCode)                                       | QR code generator client      | 4.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.QRCode)                    |
+| [Posty5.HtmlHosting](./src/Posty5.HtmlHosting)                             | HTML hosting client           | 4.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHosting)               |
+| [Posty5.HtmlHostingVariables](./src/Posty5.HtmlHostingVariables)           | Variable management           | 4.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHostingVariables)      |
+| [Posty5.HtmlHostingFormSubmission](./src/Posty5.HtmlHostingFormSubmission) | Form submission management    | 4.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHostingFormSubmission) |
+| [Posty5.SocialPublisherWorkspace](./src/Posty5.SocialPublisherWorkspace)   | Social workspace management   | 4.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.SocialPublisherWorkspace)  |
+| [Posty5.SocialPublisherPost](./src/Posty5.SocialPublisherPost)             | Social publishing post client | 5.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.SocialPublisherPost)       |
+| [Posty5.Store](./src/Posty5.Store)                                         | Online store client           | 4.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.Store)                     |
 
 ---
 

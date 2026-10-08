@@ -60,6 +60,13 @@ public class Posty5Options
     public string? CreatedFrom { get; set; }
 
     /// <summary>
+    /// Optional logger. The SDK writes one warning through it the first time
+    /// the API answers with <c>X-Posty5-Concurrency: missing-version</c>: a
+    /// write that will be refused once the API enforces versions.
+    /// </summary>
+    public Microsoft.Extensions.Logging.ILogger? Logger { get; set; }
+
+    /// <summary>
     /// Request timeout in seconds
     /// </summary>
     public readonly int TimeoutSeconds = 120;

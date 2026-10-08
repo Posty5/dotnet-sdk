@@ -115,7 +115,7 @@ public class LongVideoTests
     [InlineData("   ")]
     public async Task ReschedulePost_RequiresAnId(string id)
     {
-        await Assert.ThrowsAsync<ArgumentException>(() => MakeClient().ReschedulePostAsync(id, "now"));
+        await Assert.ThrowsAsync<ArgumentException>(() => MakeClient().ReschedulePostAsync(id, "now", 0));
     }
 
     [Theory]
@@ -123,7 +123,7 @@ public class LongVideoTests
     [InlineData("   ")]
     public async Task DeletePost_RequiresAnId(string id)
     {
-        await Assert.ThrowsAsync<ArgumentException>(() => MakeClient().DeletePostAsync(id));
+        await Assert.ThrowsAsync<ArgumentException>(() => MakeClient().DeletePostAsync(id, 0));
     }
 
     [Fact]
@@ -131,7 +131,7 @@ public class LongVideoTests
     {
         // Anything that is not a DateTime or the string "now" would otherwise
         // be silently dropped, leaving the post at its original time.
-        var ex = await Assert.ThrowsAsync<ArgumentException>(() => MakeClient().ReschedulePostAsync("post_1", 42));
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() => MakeClient().ReschedulePostAsync("post_1", 42, 0));
         Assert.Contains("schedule", ex.Message);
     }
 

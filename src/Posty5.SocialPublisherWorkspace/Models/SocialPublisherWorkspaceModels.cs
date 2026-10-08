@@ -63,8 +63,12 @@ public class SocialPublisherWorkspaceAccountModel
 /// <summary>
 /// Full workspace model with account details
 /// </summary>
-public class SocialPublisherWorkspaceModel
+public class SocialPublisherWorkspaceModel : Posty5.Core.Models.IVersioned
 {
+    /// <summary>The document's version (<c>__v</c>); pass it to the next update or delete.</summary>
+    [JsonPropertyName("__v")]
+    public long Version { get; set; }
+
     /// <summary>
     /// MongoDB document ID
     /// </summary>
@@ -97,8 +101,12 @@ public class SocialPublisherWorkspaceModel
 /// <summary>
 /// Simplified workspace details for list operations
 /// </summary>
-public class SocialPublisherWorkspaceSampleDetailsModel
+public class SocialPublisherWorkspaceSampleDetailsModel : Posty5.Core.Models.IVersioned
 {
+    /// <summary>The document's version (<c>__v</c>); pass it to the next update or delete.</summary>
+    [JsonPropertyName("__v")]
+    public long Version { get; set; }
+
     /// <summary>
     /// MongoDB document ID
     /// </summary>

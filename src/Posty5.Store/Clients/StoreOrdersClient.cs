@@ -108,11 +108,12 @@ public class StoreOrdersClient : StoreClientBase
         string storeId,
         string orderId,
         string status,
+        long version,
         string? note = null,
         CancellationToken cancellationToken = default)
     {
         var body = new ChangeStatusRequest { Status = status, Note = note ?? string.Empty };
-        var response = await Http.PostAsync<StoreOrder>($"{Base}/{storeId}/{orderId}/status", body, cancellationToken);
+        var response = await Http.PostAsync<StoreOrder>($"{Base}/{storeId}/{orderId}/status", body, version, cancellationToken);
         return response.Result;
     }
 

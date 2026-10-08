@@ -44,8 +44,12 @@ public class CreatePostResult
 /// <summary>
 /// What the API answers when a published post is removed from the platforms.
 /// </summary>
-public class RemovePostResult
+public class RemovePostResult : Posty5.Core.Models.IVersioned
 {
+    /// <summary>The document's version (<c>__v</c>); pass it to the next update or delete.</summary>
+    [JsonPropertyName("__v")]
+    public long Version { get; set; }
+
     /// <summary>The post's id.</summary>
     [JsonPropertyName("_id")]
     public string Id { get; set; } = string.Empty;

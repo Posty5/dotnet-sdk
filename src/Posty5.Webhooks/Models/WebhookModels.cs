@@ -51,8 +51,12 @@ public class WebhookTargets
 }
 
 /// <summary>A registered endpoint (<c>IWebhookEndpoint</c>). The secret is never returned after creation.</summary>
-public class WebhookEndpoint
+public class WebhookEndpoint : Posty5.Core.Models.IVersioned
 {
+    /// <summary>The document's version (<c>__v</c>); pass it to the next update or delete.</summary>
+    [JsonPropertyName("__v")]
+    public long Version { get; set; }
+
     /// <summary>Endpoint id.</summary>
     [JsonPropertyName("_id")]
     public string Id { get; set; } = string.Empty;
@@ -110,6 +114,9 @@ public class RotateWebhookSecretResponse
 {
     /// <summary>The new secret. The old one keeps signing for 24 h alongside it.</summary>
     public string Secret { get; set; } = string.Empty;
+
+    /// <summary>The endpoint's new version, to send with its next write.</summary>
+    public long? Version { get; set; }
 }
 
 /// <summary>Fields to create or update an endpoint.</summary>

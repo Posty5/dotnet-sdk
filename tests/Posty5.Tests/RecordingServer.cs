@@ -27,6 +27,10 @@ internal sealed class RecordingServer : IDisposable
     /// <summary>The envelope's <c>message</c>; an error answer carries the API's text here.</summary>
     public string Message { get; set; } = "ok";
     public HttpStatusCode Status { get; set; } = HttpStatusCode.OK;
+    /// <summary>When set, sent as the whole response body instead of the envelope (e.g. an error with a <c>code</c>).</summary>
+    public string? RawBody { get; set; }
+    /// <summary>Extra headers on every response, e.g. <c>ETag</c> or <c>X-Posty5-Concurrency</c>.</summary>
+    public Dictionary<string, string> ResponseHeaders { get; } = new();
     public string BaseUrl { get; }
 
     public RecordingServer()
@@ -63,8 +67,10 @@ internal sealed class RecordingServer : IDisposable
                 Headers.Add(headers);
             }
 
-            var payload = Encoding.UTF8.GetBytes($"{{\"message\":{JsonSerializer.Serialize(Message)},\"result\":{ResultJson}}}");
+            var payload = Encoding.UTF8.GetBytes(RawBody ?? $"{{\"message\":{JsonSerializer.Serialize(Message)},\"result\":{ResultJson}}}");
             context.Response.StatusCode = (int)Status;
+            foreach (var (name, value) in ResponseHeaders)
+                context.Response.Headers[name] = value;
             context.Response.ContentType = "application/json";
             await context.Response.OutputStream.WriteAsync(payload);
             context.Response.Close();

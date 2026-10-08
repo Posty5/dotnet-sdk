@@ -73,10 +73,14 @@ public class LinkCampaignClient
         return response.Result ?? throw new InvalidOperationException("Failed to create link campaign");
     }
 
-    /// <summary>Update a campaign; a <c>null</c> property keeps the stored value.</summary>
+    /// <summary>
+    /// Update a campaign; a <c>null</c> property keeps the stored value.
+    /// <paramref name="version"/> is the campaign's <see cref="LinkCampaignModel.Version"/> as last read.
+    /// </summary>
     public async Task<LinkCampaignModel> UpdateAsync(
         string id,
         LinkCampaignUpdateRequestModel request,
+        long version,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -90,7 +94,7 @@ public class LinkCampaignClient
             ShortLinkRequestBodyHelper.AddIfSet(data, "utm", request.Utm);
         ShortLinkRequestBodyHelper.AddIfSet(data, "archived", request.Archived);
 
-        var response = await _http.PutAsync<LinkCampaignModel>($"{ShortLinkConst.LinkCampaignBasePath}/{id}", data, cancellationToken);
+        var response = await _http.PutAsync<LinkCampaignModel>($"{ShortLinkConst.LinkCampaignBasePath}/{id}", data, version, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to update link campaign");
     }
 
@@ -98,9 +102,11 @@ public class LinkCampaignClient
     /// Delete a campaign. The API refuses while links use it unless
     /// <paramref name="detach"/> is <c>true</c>, which detaches the links first.
     /// </summary>
-    public async Task DeleteAsync(string id, bool detach = false, CancellationToken cancellationToken = default)
+    /// <returns>The deleted campaign's id; <see cref="VersionedWriteResult.Version"/> is null after a delete.</returns>
+    public async Task<VersionedWriteResult> DeleteAsync(string id, long version, bool detach = false, CancellationToken cancellationToken = default)
     {
         var path = $"{ShortLinkConst.LinkCampaignBasePath}/{id}" + (detach ? "?detach=true" : string.Empty);
-        await _http.DeleteAsync<object>(path, cancellationToken);
+        var response = await _http.DeleteAsync<object>(path, version, cancellationToken);
+        return new VersionedWriteResult { Id = id, Message = response.Message };
     }
 }
