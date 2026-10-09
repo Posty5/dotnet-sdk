@@ -45,41 +45,47 @@ public class Examples
         
         // Store dropshipping (suppliers) Examples
         await SuppliersExample(httpClient);
+
+        // Account, discovery, text post and story Examples
+        await AccountAndDiscoveryExample(httpClient);
     }
     
-    static async Post QRCodeExamples(Posty5HttpClient httpClient)
+    static async Task QRCodeExamples(Posty5HttpClient httpClient)
     {
         Console.WriteLine("\n=== QR Code Examples ===\n");
-        
+
         var qrCodeClient = new QRCodeClient(httpClient);
-        
+        const string templateId = "your-template-id"; // required for API-key calls
+
         // Create a URL QR code
-        var urlQr = await qrCodeClient.CreateUrlAsync(new CreateUrlQRCodeRequest
+        var urlQr = await qrCodeClient.CreateURLAsync(new QRCodeCreateURLRequestModel
         {
             Name = "Website QR Code",
-            QrCodeTarget = new UrlQRTarget { Url = "https://posty5.com" }
+            TemplateId = templateId,
+            Url = new QRCodeUrlTargetModel { Url = "https://posty5.com" }
         });
         Console.WriteLine($"Created URL QR Code: {urlQr.QrCodeLandingPageURL}");
-        
-        // Create a WiFi QR code
-        var wifiQr = await qrCodeClient.CreateWifiAsync(new CreateWifiQRCodeRequest
+
+        // Create a WiFi QR code (the API builds and escapes the encoded text)
+        var wifiQr = await qrCodeClient.CreateWifiAsync(new QRCodeCreateWifiRequestModel
         {
             Name = "Office WiFi",
-            QrCodeTarget = new WifiQRTarget
+            TemplateId = templateId,
+            Wifi = new QRCodeWifiTargetModel
             {
-                Ssid = "OfficeNetwork",
+                Name = "OfficeNetwork",
                 Password = "SecurePassword123",
-                SecurityType = "WPA",
-                Hidden = false
+                AuthenticationType = "WPA"
             }
         });
         Console.WriteLine($"Created WiFi QR Code: {wifiQr.QrCodeLandingPageURL}");
-        
+
         // Create an Email QR code
-        var emailQr = await qrCodeClient.CreateEmailAsync(new CreateEmailQRCodeRequest
+        var emailQr = await qrCodeClient.CreateEmailAsync(new QRCodeCreateEmailRequestModel
         {
             Name = "Contact Email",
-            QrCodeTarget = new EmailQRTarget
+            TemplateId = templateId,
+            Email = new QRCodeEmailTargetModel
             {
                 Email = "contact@example.com",
                 Subject = "Hello",
@@ -87,47 +93,53 @@ public class Examples
             }
         });
         Console.WriteLine($"Created Email QR Code: {emailQr.QrCodeLandingPageURL}");
-        
-        // List QR codes
+
+        // List QR codes (cursor pagination)
         var qrCodes = await qrCodeClient.ListAsync(
-            pagination: new PaginationParams { PageNumber = 0, PageSize = 10 }
+            pagination: new PaginationParams { PageSize = 10 }
         );
-        Console.WriteLine($"Found {qrCodes.TotalCount} QR codes");
+        Console.WriteLine($"Found {qrCodes.Items.Count} QR codes on this page");
     }
-    
-    static async Post ShortLinkExamples(Posty5HttpClient httpClient)
+
+    static async Task ShortLinkExamples(Posty5HttpClient httpClient)
     {
         Console.WriteLine("\n=== Short Link Examples ===\n");
-        
+
         var shortLinkClient = new ShortLinkClient(httpClient);
-        
+        const string templateId = "your-template-id"; // required for API-key calls
+
         // Create a short link
-        var shortLink = await shortLinkClient.CreateAsync(new CreateShortLinkRequest
+        var shortLink = await shortLinkClient.CreateAsync(new ShortLinkCreateRequestModel
         {
             Name = "Marketing Campaign",
-            TargetUrl = "https://example.com/very-long-url-with-parameters?utm_source=campaign",
-            CustomSlug = "summer-sale"
+            BaseUrl = "https://example.com/very-long-url-with-parameters?utm_source=campaign",
+            TemplateId = templateId,
+            CustomLandingId = "summer-sale", // Starter plan and above
+            RefId = "CAMPAIGN-001",
+            Tag = "campaign"
         });
-        Console.WriteLine($"Created Short Link: {shortLink.ShortUrl}");
-        
+        Console.WriteLine($"Created Short Link: {shortLink.ShorterLink}");
+
         // Get short link details
         var details = await shortLinkClient.GetAsync(shortLink.Id!);
-        Console.WriteLine($"Clicks: {details.ClickCount}");
-        
-        // Update short link
-        await shortLinkClient.UpdateAsync(shortLink.Id!, new UpdateShortLinkRequest
+        Console.WriteLine($"Visits: {details.NumberOfVisitors}");
+
+        // Update short link (BaseUrl and TemplateId are required on every update)
+        await shortLinkClient.UpdateAsync(shortLink.Id!, new ShortLinkUpdateRequestModel
         {
-            Name = "Updated Campaign Name"
-        });
+            Name = "Updated Campaign Name",
+            BaseUrl = details.BaseUrl!,
+            TemplateId = templateId
+        }, details.Version); // the version just read, sent as If-Match
         Console.WriteLine("Updated short link");
-        
-        // List short links
+
+        // List short links by reference ID
         var shortLinks = await shortLinkClient.ListAsync(
-            new ListShortLinksParams { Search = "campaign" }
+            new ShortLinkListParamsModel { RefId = "CAMPAIGN-001" }
         );
-        Console.WriteLine($"Found {shortLinks.TotalCount} short links");
+        Console.WriteLine($"Found {shortLinks.Items.Count} short links on this page");
     }
-    
+
     static async Post HtmlHostingExamples(Posty5HttpClient httpClient)
     {
         Console.WriteLine("\n=== HTML Hosting Examples ===\n");
@@ -162,7 +174,7 @@ public class Examples
         await htmlHostingClient.UpdateAsync(page.Id!, new UpdateHtmlHostingRequest
         {
             HtmlContent = htmlContent.Replace("Welcome", "Hello")
-        });
+        }, page.Version);
         Console.WriteLine("Updated HTML content");
         
         // List pages
@@ -296,5 +308,72 @@ public class Examples
                 Console.WriteLine($"  {part.Label}: {part.Status} {part.Shipment?.TrackingNumber}");
             }
         }
+    }
+
+    /// <summary>
+    /// Who the key is, what it can spend and what things cost; then find the ids
+    /// the other calls take — stores, connected accounts, QR templates — and
+    /// publish a text post and a story by URL. Reads are free; the two posts
+    /// are charged at the price GetOperationCostsAsync reports.
+    /// </summary>
+    static async Task AccountAndDiscoveryExample(Posty5HttpClient httpClient)
+    {
+        Console.WriteLine("\n=== Account, discovery, text post and story ===\n");
+
+        // Who am I, and what can I spend? (an unknown or revoked key throws Posty5AuthenticationException)
+        var account = new Posty5.Account.AccountClient(httpClient);
+        var me = await account.GetCurrentAsync();
+        Console.WriteLine($"{me.User.UserName} on {me.Plan?.Name ?? "no plan"}: {me.Credits.Spendable} credits spendable");
+
+        // Prices change — read them rather than hard-coding them
+        var costs = await account.GetOperationCostsAsync();
+        var textPostCost = costs.Modules.SelectMany(m => m.Operations)
+            .FirstOrDefault(o => o.FeaturePath == "socialMediaPublisher.textPost");
+        Console.WriteLine($"A text post costs {textPostCost?.Cost} {costs.Currency}");
+
+        // The ids the other calls take
+        var stores = await new StoreClient(httpClient).ListStoresAsync();
+        Console.WriteLine($"Stores: {string.Join(", ", stores.Select(s => $"{s.Name} ({s.Id})"))}");
+
+        var templates = await new QRCodeTemplateClient(httpClient).ListPublicTemplatesAsync();
+        Console.WriteLine($"First public QR template: {templates.Items.FirstOrDefault()?.Name}");
+
+        var accounts = await new Posty5.SocialPublisherWorkspace.SocialPublisherAccountClient(httpClient)
+            .ListAsync(new Posty5.SocialPublisherWorkspace.Models.SocialPublisherAccountListParamsModel { Platform = "facebook", Status = "active" });
+        var page = accounts.Items.FirstOrDefault();
+        if (page == null)
+        {
+            Console.WriteLine("No active Facebook Page connected — connect one in the dashboard first.");
+            return;
+        }
+
+        // A text post, then a story, to that Page
+        var posts = new Posty5.SocialPublisherPost.SocialPublisherPostClient(httpClient);
+        var text = await posts.CreateTextPostToAccountAsync(new Posty5.SocialPublisherPost.Models.CreateTextPostToAccountRequest
+        {
+            AccountId = page.Id,
+            Caption = "Our autumn menu is out.",
+            Facebook = new Posty5.SocialPublisherPost.Models.TextPostFacebookConfig
+            {
+                Description = "Our autumn menu is out. Take a look:",
+                Link = "https://example.com/menu"
+            }
+        });
+        Console.WriteLine($"Text post {text.Id} queued");
+
+        var story = await posts.CreateStoryPostToAccountAsync(new Posty5.SocialPublisherPost.Models.CreateStoryPostToAccountRequest
+        {
+            AccountId = page.Id,
+            Kind = Posty5.SocialPublisherPost.Models.StoryKinds.Image,
+            Image = new Posty5.SocialPublisherPost.Models.ImageRequest
+            {
+                Source = Posty5.SocialPublisherPost.Models.ImageSource.ImageUrl,
+                ExternalUrl = "https://example.com/menu-story.jpg"
+            }
+        });
+
+        // Status lives at /{id}/status (fixed in Posty5.SocialPublisherPost 4.6.0)
+        var status = await posts.GetStatusAsync(story.Id);
+        Console.WriteLine($"Story {story.Id}: {status.CurrentStatus}, expires {status.StoryExpiresAt}");
     }
 }

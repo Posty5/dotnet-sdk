@@ -30,4 +30,16 @@ public class ApiResponse<T>
     /// Exception information if any error occurred
     /// </summary>
     public object? Exception { get; set; }
+
+    /// <summary>
+    /// The written document's new version, on a versioned update (also sent as
+    /// <c>ETag</c>). Null on a read, a create and a delete.
+    /// </summary>
+    public long? Version { get; set; }
+
+    /// <summary>The new version of every applied document, by id, on a versioned bulk write.</summary>
+    public IDictionary<string, long>? Versions { get; set; }
+
+    /// <summary>A stable error or outcome code, e.g. <c>VERSION_CONFLICT</c>.</summary>
+    public string? Code { get; set; }
 }

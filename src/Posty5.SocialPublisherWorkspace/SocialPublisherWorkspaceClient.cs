@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using Posty5.Core.Configuration;
 using Posty5.Core.Http;
 using Posty5.Core.Models;
 using Posty5.SocialPublisherWorkspace.Models;
@@ -156,7 +157,7 @@ public class SocialPublisherWorkspaceClient
             data.Tag,
             data.RefId,
             hasImage = logoStream != null,
-            createdFrom = "dotnetPackage"
+            createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
         var response = await _http.PostAsync<SocialPublisherWorkspaceCreateResponseModel>(BasePath, payload, cancellationToken);
@@ -176,26 +177,30 @@ public class SocialPublisherWorkspaceClient
     /// </summary>
     /// <param name="id">Workspace ID to update</param>
     /// <param name="data">Updated workspace data</param>
+    /// <param name="version">The workspace's version as last read (<see cref="SocialPublisherWorkspaceModel.Version"/>), sent as <c>If-Match</c></param>
     /// <param name="logoStream">Optional new workspace logo/image stream</param>
     /// <param name="contentType">Image content type (default: image/png)</param>
     /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The workspace's id and new version</returns>
     /// <example>
     /// <code>
     /// // Update without changing image
-    /// await client.UpdateAsync("workspace-id", new UpdateWorkspaceRequest
+    /// var workspace = await client.GetAsync("workspace-id");
+    /// var written = await client.UpdateAsync("workspace-id", new SocialPublisherWorkspaceUpdateRequestModel
     /// {
     ///     Name = "Updated Name",
     ///     Description = "Updated description"
-    /// });
+    /// }, workspace.Version);
     /// 
-    /// // Update with new image
+    /// // Update with new image, using the version the last write returned
     /// using var newLogo = File.OpenRead("new-logo.png");
-    /// await client.UpdateAsync("workspace-id", request, newLogo);
+    /// await client.UpdateAsync("workspace-id", request, written.Version!.Value, newLogo);
     /// </code>
     /// </example>
-    public async Task UpdateAsync(
+    public async Task<VersionedWriteResult> UpdateAsync(
         string id,
         SocialPublisherWorkspaceUpdateRequestModel data,
+        long version,
         Stream? logoStream = null,
         string contentType = "image/png",
         CancellationToken cancellationToken = default)
@@ -210,7 +215,7 @@ public class SocialPublisherWorkspaceClient
             hasImage = logoStream != null
         };
 
-        var response = await _http.PutAsync<SocialPublisherWorkspaceCreateResponseModel>($"{BasePath}/{id}", payload, cancellationToken);
+        var response = await _http.PutAsync<SocialPublisherWorkspaceCreateResponseModel>($"{BasePath}/{id}", payload, version, cancellationToken);
         var result = response.Result;
 
         // Step 2: Upload image if provided
@@ -218,19 +223,23 @@ public class SocialPublisherWorkspaceClient
         {
             await UploadImageAsync(result.UploadImageConfig.UploadUrl, logoStream, contentType, cancellationToken);
         }
+
+        return new VersionedWriteResult { Id = id, Version = response.Version, Message = response.Message };
     }
 
     /// <summary>
     /// Delete a workspace
     /// </summary>
     /// <param name="id">Workspace ID to delete</param>
+    /// <param name="version">The workspace's version as last read (<see cref="SocialPublisherWorkspaceModel.Version"/>), sent as <c>If-Match</c></param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Deletion confirmation response</returns>
     public async Task<DeleteResponse> DeleteAsync(
         string id,
+        long version,
         CancellationToken cancellationToken = default)
     {
-        var response = await _http.DeleteAsync<DeleteResponse>($"{BasePath}/{id}", cancellationToken);
+        var response = await _http.DeleteAsync<DeleteResponse>($"{BasePath}/{id}", version, cancellationToken);
         return response.Result ?? new DeleteResponse { Message = "Deleted" };
     }
 

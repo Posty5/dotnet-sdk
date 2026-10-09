@@ -1,21 +1,31 @@
 {
-  "generated_at": "2026-07-19",
+  "generated_at": "2026-10-05",
   "project": "dotnet-sdk",
   "modules": [
     {
       "name": "core",
-      "purpose": "Posty5Options, Posty5HttpClient, errors, response/pagination types, converters.",
+      "purpose": "Posty5Options (incl. DefaultHeaders, CreatedFrom), Posty5HttpClient (X-Posty5-Client on every request, ResolveCreatedFrom, no retries), errors, response/pagination types, AgentOrigin, converters.",
       "primary_path": "src/Posty5.Core"
     },
     {
+      "name": "account",
+      "purpose": "Posty5.Account: AccountClient - who the API key is (key, owner, plan, credits, MCP settings), credits, credit history and summary, live operation costs. Read-only.",
+      "primary_path": "src/Posty5.Account"
+    },
+    {
       "name": "short-link",
-      "purpose": "Short-link list/get/create/update/delete.",
+      "purpose": "Short-link list/get/create/update/delete; bulk create (CreateManyAsync), export, bulk jobs (ShortLinkClient.Bulk.cs).",
       "primary_path": "src/Posty5.ShortLink"
     },
     {
       "name": "qr-code",
-      "purpose": "Create/update seven QR types plus get/list/delete.",
+      "purpose": "Create/update seven QR types plus get/list/delete; QRCodeTemplateClient lists user and public templates; bulk create, export, bulk jobs with ZIP (QRCodeClient.Bulk.cs).",
       "primary_path": "src/Posty5.QRCode"
+    },
+    {
+      "name": "webhooks",
+      "purpose": "Posty5.Webhooks: WebhookEndpointClient (/api/webhook-endpoints) and WebhookSignature.Verify (Standard Webhooks) with polymorphic WebhookEvent models.",
+      "primary_path": "src/Posty5.Webhooks"
     },
     {
       "name": "html-hosting",
@@ -34,17 +44,17 @@
     },
     {
       "name": "social-publisher-workspace",
-      "purpose": "Workspace CRUD/list and logo upload.",
+      "purpose": "Workspace CRUD/list and logo upload; SocialPublisherAccountClient reads connected social accounts (list/lookup/get, read-only).",
       "primary_path": "src/Posty5.SocialPublisherWorkspace"
     },
     {
       "name": "social-publisher-post",
-      "purpose": "Video/image publishing and post status/list.",
+      "purpose": "Video/image/text/story publishing, post status (/{id}/status), reschedule, delete (unpublished) and remove (published) from platforms.",
       "primary_path": "src/Posty5.SocialPublisherPost"
     },
     {
       "name": "store",
-      "purpose": "Online Store management: products (incl. per-section saves, clone, Excel, AI), orders (incl. dropshipping parts), tags, customers, shipping and dropshipping suppliers. Split into six sub-clients on StoreClient. Packed by CI since 3.2.0.",
+      "purpose": "Online Store management: store lookup (ListStoresAsync/LookupStoresAsync, no storeId), products (incl. per-section saves, clone, Excel, AI), orders (incl. dropshipping parts), tags, customers, shipping and dropshipping suppliers. Split into six sub-clients on StoreClient. Packed by CI since 3.2.0.",
       "primary_path": "src/Posty5.Store"
     }
   ]

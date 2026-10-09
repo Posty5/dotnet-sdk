@@ -170,8 +170,12 @@ public class StoreSupplierAuditEntry
 }
 
 /// <summary>A supplier connection. Credentials are never returned — only <see cref="HasCredentials"/>.</summary>
-public class StoreSupplierIntegration
+public class StoreSupplierIntegration : Posty5.Core.Models.IVersioned
 {
+    /// <summary>The document's version (<c>__v</c>); pass it to the next update or delete.</summary>
+    [JsonPropertyName("__v")]
+    public long Version { get; set; }
+
     /// <summary>Connection id.</summary>
     [JsonPropertyName("_id")]
     public string? Id { get; set; }
@@ -614,8 +618,12 @@ public class StoreProductSupplierLinkVariant
 }
 
 /// <summary>A store product and the supplier product it is fulfilled from.</summary>
-public class StoreProductSupplierLink
+public class StoreProductSupplierLink : Posty5.Core.Models.IVersioned
 {
+    /// <summary>The document's version (<c>__v</c>); pass it to the next update or delete.</summary>
+    [JsonPropertyName("__v")]
+    public long Version { get; set; }
+
     /// <summary>Link id.</summary>
     [JsonPropertyName("_id")]
     public string? Id { get; set; }

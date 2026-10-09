@@ -1,5 +1,9 @@
+using Posty5.Core.Configuration;
+using Posty5.Core.Exceptions;
+using Posty5.Core.Helpers;
 using Posty5.Core.Http;
 using Posty5.Core.Models;
+using Posty5.ShortLink.Helpers;
 using Posty5.ShortLink.Models;
 
 namespace Posty5.ShortLink;
@@ -7,10 +11,9 @@ namespace Posty5.ShortLink;
 /// <summary>
 /// Client for managing short links via Posty5 API
 /// </summary>
-public class ShortLinkClient
+public partial class ShortLinkClient
 {
     private readonly Posty5HttpClient _http;
-    private const string BasePath = "/api/short-link";
 
     /// <summary>
     /// Creates a new Short Link client
@@ -42,29 +45,30 @@ public class ShortLinkClient
             if (!string.IsNullOrEmpty(listParams.Name))
                 queryParams["name"] = listParams.Name;
             if (!string.IsNullOrEmpty(listParams.PageInfoTitle))
-                queryParams["pageinfo.title"] = listParams.PageInfoTitle;
+                queryParams[ShortLinkConst.PageInfoTitleFilterKey] = listParams.PageInfoTitle;
             if (!string.IsNullOrEmpty(listParams.CreatedFrom))
                 queryParams["createdFrom"] = listParams.CreatedFrom;
             if (!string.IsNullOrEmpty(listParams.ShortLinkId))
                 queryParams["shortLinkId"] = listParams.ShortLinkId;
             if (!string.IsNullOrEmpty(listParams.RefId))
                 queryParams["refId"] = listParams.RefId;
+#pragma warning disable CS0618 // Tag is obsolete but still sent while callers use it
             if (!string.IsNullOrEmpty(listParams.Tag))
                 queryParams["tag"] = listParams.Tag;
+#pragma warning restore CS0618
+            var tags = ShortLinkRequestBodyHelper.JoinTags(listParams.Tags);
+            if (tags != null)
+                queryParams["tags"] = tags;
+            if (!string.IsNullOrEmpty(listParams.CampaignId))
+                queryParams["campaignId"] = listParams.CampaignId;
             if (!string.IsNullOrEmpty(listParams.TemplateId))
                 queryParams["templateId"] = listParams.TemplateId;
             if (listParams.Status.HasValue)
                 queryParams["status"] = listParams.Status.Value.ToString();
             if (listParams.IsForDeepLink.HasValue)
                 queryParams["isForDeepLink"] = listParams.IsForDeepLink.Value;
-            if (listParams.IsEnableMonetization.HasValue)
-                queryParams["isEnableMonetization"] = listParams.IsEnableMonetization.Value;
-            if (!string.IsNullOrEmpty(listParams.Search))
-                queryParams["search"] = listParams.Search;
-            if (listParams.FromDate.HasValue)
-                queryParams["fromDate"] = listParams.FromDate.Value.ToString("o");
-            if (listParams.ToDate.HasValue)
-                queryParams["toDate"] = listParams.ToDate.Value.ToString("o");
+            // IsEnableMonetization, Search, FromDate and ToDate are obsolete: the
+            // API has no such filters, so they are never sent.
         }
 
         if (pagination != null)
@@ -75,10 +79,10 @@ public class ShortLinkClient
         }
 
         var response = await _http.GetAsync<PaginationResponse<ShortLinkModel>>(
-            BasePath, 
-            queryParams, 
+            ShortLinkConst.BasePath,
+            queryParams,
             cancellationToken);
-        
+
         return response.Result ?? new PaginationResponse<ShortLinkModel>();
     }
 
@@ -90,8 +94,104 @@ public class ShortLinkClient
     /// <returns>Short link full details including populated template, user, API key, and metadata</returns>
     public async Task<ShortLinkFullDetailsModel> GetAsync(string id, CancellationToken cancellationToken = default)
     {
-        var response = await _http.GetAsync<ShortLinkFullDetailsModel>($"{BasePath}/{id}", cancellationToken: cancellationToken);
+        var response = await _http.GetAsync<ShortLinkFullDetailsModel>($"{ShortLinkConst.BasePath}/{id}", cancellationToken: cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Short link not found");
+    }
+
+    /// <summary>
+    /// Visit analytics of one short link: totals, a series and breakdowns
+    /// (<c>GET /api/short-link/{id}/analytics</c>). Reading analytics costs no credits.
+    /// </summary>
+    /// <remarks>
+    /// <para>Bots and link-preview crawlers are excluded from every <c>Visits</c>
+    /// and counted only in <see cref="LinkAnalyticsTotals.BotVisits"/>.</para>
+    /// <para><c>UniqueVisitors</c> over more than one day is the sum of daily
+    /// uniques (the visitor hash rotates daily).</para>
+    /// <para>Data starts on <see cref="LinkAnalyticsMeta.AnalyticsStartedAt"/>,
+    /// when Posty5 started recording visits; nothing earlier exists.</para>
+    /// <para>Plan limits come from the API: unless you name breakdowns, you get
+    /// every breakdown your plan allows and the rest are listed in
+    /// <see cref="LinkAnalyticsMeta.Locked"/>; naming one
+    /// in <see cref="LinkAnalyticsQuery.Breakdown"/>, or a
+    /// <see cref="LinkAnalyticsQuery.From"/> older than your plan's history, throws
+    /// <see cref="Posty5Exception"/> with <see cref="Posty5Exception.StatusCode"/>
+    /// 403 and the API's message (<c>This feature is not available on your current plan.</c>,
+    /// or <c>You Have Not Permission</c>) in <see cref="Posty5Exception.ResponseBody"/>.</para>
+    /// </remarks>
+    /// <param name="id">Short link ID</param>
+    /// <param name="query">Range, interval, time zone and breakdowns; <c>null</c> for the API defaults (last 30 days, by day, every breakdown your plan allows).</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The analytics answer</returns>
+    /// <exception cref="ArgumentOutOfRangeException"><see cref="LinkAnalyticsQuery.Limit"/> is outside 1-50.</exception>
+    /// <exception cref="ArgumentException"><paramref name="id"/> is empty, or both <see cref="LinkAnalyticsQuery.AllBreakdowns"/> and <see cref="LinkAnalyticsQuery.Breakdown"/> are set.</exception>
+    /// <exception cref="Posty5ValidationException">
+    /// 400: the API refused the query (e.g. an unknown interval or time zone), or no
+    /// short link with that ID is visible to this API key (<c>The Short Link Is Not Found</c>; the API answers
+    /// 400, not 404, for a missing record).
+    /// </exception>
+    /// <example>
+    /// <code>
+    /// var analytics = await shortLinkClient.GetAnalyticsAsync("link123", new LinkAnalyticsQuery
+    /// {
+    ///     From = new DateTime(2026, 10, 1),
+    ///     To = new DateTime(2026, 10, 31),
+    ///     Interval = LinkAnalyticsInterval.Week,
+    ///     AllBreakdowns = true
+    /// });
+    /// Console.WriteLine(analytics.Totals.Visits);
+    /// foreach (var row in analytics.Breakdowns.GetValueOrDefault("device") ?? new())
+    ///     Console.WriteLine($"{row.Key}: {row.Visits}");
+    /// </code>
+    /// </example>
+    public async Task<LinkAnalyticsModel> GetAnalyticsAsync(
+        string id,
+        LinkAnalyticsQuery? query = null,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await _http.GetAsync<LinkAnalyticsModel>(
+            LinkAnalyticsQueryHelper.BuildPath(ShortLinkConst.BasePath, id),
+            LinkAnalyticsQueryHelper.ToQueryParams(query),
+            cancellationToken);
+
+        return response.Result ?? throw new InvalidOperationException("Short link analytics were not returned");
+    }
+
+    /// <summary>
+    /// Account-wide statistics over all your short links (<c>GET /api/short-link/statistics</c>):
+    /// lifetime totals, visit totals in the range, a <c>daily</c> list in UTC days
+    /// and the top ten short links by visits in the range.
+    /// </summary>
+    /// <remarks>
+    /// <para><c>VisitsInRange</c>, <c>UniqueVisitorsInRange</c>, <c>BotVisitsInRange</c>,
+    /// <c>Daily[].VisitorsSum</c> and <c>TopLinks[].VisitsInRange</c> come from visit
+    /// analytics: bots excluded, uniques summed per UTC day, nothing before
+    /// analytics launched. <c>TotalVisitors</c> is the lifetime counter and still
+    /// includes older visits.</para>
+    /// <para>Days are UTC days whatever your account time zone; use
+    /// <see cref="GetAnalyticsAsync"/> for one short link in your time zone.</para>
+    /// </remarks>
+    /// <param name="query">Preset period or custom <c>From</c>/<c>To</c>; <c>null</c> for the last 30 days.</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The resolved range and the statistics</returns>
+    /// <exception cref="ArgumentException"><c>From</c>/<c>To</c> set with a non-custom <c>Period</c>, or <c>From</c> after <c>To</c>.</exception>
+    /// <example>
+    /// <code>
+    /// var stats = await shortLinkClient.GetStatisticsAsync(new LinkStatisticsQuery { Period = LinkStatisticsPeriod.Last7Days });
+    /// Console.WriteLine($"{stats.Data.Totals.VisitsInRange} visits since {stats.Range.From:d}");
+    /// foreach (var day in stats.Data.Daily)
+    ///     Console.WriteLine($"{day.Day}: {day.VisitorsSum}");
+    /// </code>
+    /// </example>
+    public async Task<ShortLinkStatisticsModel> GetStatisticsAsync(
+        LinkStatisticsQuery? query = null,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await _http.GetAsync<ShortLinkStatisticsModel>(
+            LinkAnalyticsQueryHelper.BuildStatisticsPath(ShortLinkConst.BasePath),
+            LinkAnalyticsQueryHelper.ToStatisticsQueryParams(query),
+            cancellationToken);
+
+        return response.Result ?? throw new InvalidOperationException("Short link statistics were not returned");
     }
 
     /// <summary>
@@ -104,33 +204,75 @@ public class ShortLinkClient
         ShortLinkCreateRequestModel request,
         CancellationToken cancellationToken = default)
     {
-        var data = new
-        {
-            request.Name,
-            request.BaseUrl,
-            request.TemplateId,
-            request.CustomLandingId,
-            TemplateType = "user",
-            CreatedFrom = "dotnetPackage"
-        };
+        ArgumentNullException.ThrowIfNull(request);
 
-        var response = await _http.PostAsync<ShortLinkModel>(BasePath, data, cancellationToken);
+        // An explicit body: only fields the API accepts, so an obsolete model
+        // property can never reach it. Null values are omitted on the wire.
+        var data = new Dictionary<string, object?>();
+        ShortLinkRequestBodyHelper.AddIfSet(data, "name", request.Name);
+        ShortLinkRequestBodyHelper.AddIfSet(data, "baseUrl", request.BaseUrl);
+        ShortLinkRequestBodyHelper.AddIfSet(data, "templateId", request.TemplateId);
+        ShortLinkRequestBodyHelper.AddIfSet(data, "customLandingId", request.CustomLandingId);
+        ShortLinkRequestBodyHelper.AddIfSet(data, "refId", request.RefId);
+#pragma warning disable CS0618 // Tag is obsolete but still sent while callers use it
+        ShortLinkRequestBodyHelper.AddIfSet(data, "tag", request.Tag);
+#pragma warning restore CS0618
+        ShortLinkRequestBodyHelper.AddIfSet(data, "isEnableLandingPage", request.IsEnableLandingPage);
+        ShortLinkRequestBodyHelper.AddIfSet(data, "pageInfo", request.PageInfo);
+        ShortLinkRequestBodyHelper.AddIfSet(data, "androidUrl", request.AndroidUrl);
+        ShortLinkRequestBodyHelper.AddIfSet(data, "iosUrl", request.IosUrl);
+        ShortLinkRequestBodyHelper.AddControls(data, request);
+        data["templateType"] = ShortLinkConst.TemplateType;
+        data["createdFrom"] = _http.ResolveCreatedFrom(CreatedFromDefaults.Package);
+
+        var response = await _http.PostAsync<ShortLinkModel>(ShortLinkConst.BasePath, data, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to create short link");
     }
 
     /// <summary>
     /// Update an existing short link
     /// </summary>
+    /// <remarks>
+    /// The API needs <see cref="ShortLinkUpdateRequestModel.BaseUrl"/> and
+    /// <see cref="ShortLinkUpdateRequestModel.TemplateId"/> on every update.
+    /// A property left <c>null</c> is not sent; see each property for what the
+    /// API does then.
+    /// </remarks>
     /// <param name="id">Short link ID</param>
     /// <param name="request">Update request data</param>
+    /// <param name="version">The link's version as last read (<see cref="ShortLinkModel.Version"/>), sent as <c>If-Match</c></param>
     /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Updated short link details</returns>
+    /// <returns>Updated short link details, carrying its new version</returns>
+    /// <exception cref="Posty5.Core.Exceptions.Posty5ConflictException">The link changed since <paramref name="version"/> was read.</exception>
+    /// <exception cref="ArgumentException"><see cref="ShortLinkUpdateRequestModel.BaseUrl"/> is empty.</exception>
     public async Task<ShortLinkModel> UpdateAsync(
         string id,
         ShortLinkUpdateRequestModel request,
+        long version,
         CancellationToken cancellationToken = default)
     {
-        var response = await _http.PutAsync<ShortLinkModel>($"{BasePath}/{id}", request, cancellationToken);
+        ArgumentNullException.ThrowIfNull(request);
+        ArgumentException.ThrowIfNullOrWhiteSpace(request.BaseUrl, $"{nameof(request)}.{nameof(request.BaseUrl)}");
+
+        // Explicit body: no IsEnableMonetization, and no CustomLandingId (the
+        // update schema rejects it; a link's id cannot change).
+        var data = new Dictionary<string, object?>();
+        ShortLinkRequestBodyHelper.AddIfSet(data, "name", request.Name);
+        ShortLinkRequestBodyHelper.AddIfSet(data, "baseUrl", request.BaseUrl);
+        ShortLinkRequestBodyHelper.AddIfSet(data, "templateId", request.TemplateId);
+        ShortLinkRequestBodyHelper.AddIfSet(data, "refId", request.RefId);
+#pragma warning disable CS0618 // Tag is obsolete but still sent while callers use it
+        ShortLinkRequestBodyHelper.AddIfSet(data, "tag", request.Tag);
+#pragma warning restore CS0618
+        ShortLinkRequestBodyHelper.AddIfSet(data, "isEnableLandingPage", request.IsEnableLandingPage);
+        ShortLinkRequestBodyHelper.AddIfSet(data, "pageInfo", request.PageInfo);
+        ShortLinkRequestBodyHelper.AddIfSet(data, "androidUrl", request.AndroidUrl);
+        ShortLinkRequestBodyHelper.AddIfSet(data, "iosUrl", request.IosUrl);
+        ShortLinkRequestBodyHelper.AddControls(data, request);
+        data["templateType"] = ShortLinkConst.TemplateType;
+        data["createdFrom"] = _http.ResolveCreatedFrom(CreatedFromDefaults.Package);
+
+        var response = await _http.PutAsync<ShortLinkModel>($"{ShortLinkConst.BasePath}/{id}", data, version, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to update short link");
     }
 
@@ -138,11 +280,13 @@ public class ShortLinkClient
     /// Delete a short link
     /// </summary>
     /// <param name="id">Short link ID</param>
+    /// <param name="version">The link's version as last read, sent as <c>If-Match</c></param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Deletion confirmation response</returns>
-    public async Task<DeleteResponse> DeleteAsync(string id, CancellationToken cancellationToken = default)
+    /// <exception cref="Posty5.Core.Exceptions.Posty5ConflictException">The link changed since <paramref name="version"/> was read.</exception>
+    public async Task<DeleteResponse> DeleteAsync(string id, long version, CancellationToken cancellationToken = default)
     {
-        var response = await _http.DeleteAsync<DeleteResponse>($"{BasePath}/{id}", cancellationToken);
+        var response = await _http.DeleteAsync<DeleteResponse>($"{ShortLinkConst.BasePath}/{id}", version, cancellationToken);
         return response.Result ?? new DeleteResponse { Message = "Deleted" };
     }
 }

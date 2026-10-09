@@ -1,4 +1,4 @@
-using System.Net.Http.Headers;
+using Posty5.Core.Configuration;
 using Posty5.Core.Http;
 using Posty5.Core.Models;
 using Posty5.HtmlHosting.Models;
@@ -47,7 +47,7 @@ public class HtmlHostingClient
             data.AutoSaveInGoogleSheet,
             data.RefId,
             data.Tag,
-            createdFrom = "dotnetPackage"
+            createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
         var response = await _http.PostAsync<HtmlHostingCreatePageResponseModel>($"{BasePath}/file", payload, cancellationToken);
@@ -55,7 +55,7 @@ public class HtmlHostingClient
         var uploadConfig = response.Result?.UploadFileConfig ?? throw new InvalidOperationException("Upload configuration not provided");
 
         // Step 2: Upload HTML file to R2 storage
-        await UploadToR2Async(uploadConfig.UploadUrl, fileStream, contentType, cancellationToken);
+        await R2UploadHelper.UploadAsync(uploadConfig.UploadUrl, fileStream, contentType, cancellationToken);
 
         // Page is auto-published by backend after file upload
 
@@ -63,7 +63,8 @@ public class HtmlHostingClient
         {
             Id = result.Id,
             ShorterLink = result.ShorterLink,
-            FileUrl = result.FileUrl!
+            FileUrl = result.FileUrl!,
+            Version = response.Version ?? result.Version
         };
     }
 
@@ -87,7 +88,7 @@ public class HtmlHostingClient
             data.AutoSaveInGoogleSheet,
             data.RefId,
             data.Tag,
-            createdFrom = "dotnetPackage"
+            createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
         var response = await _http.PostAsync<HtmlHostingCreatePageResponseModel>($"{BasePath}/github", payload, cancellationToken);
@@ -99,7 +100,8 @@ public class HtmlHostingClient
         {
             Id = result.Id,
             ShorterLink = result.ShorterLink,
-            GithubInfo = result.GithubInfo!
+            GithubInfo = result.GithubInfo!,
+            Version = result.Version
         };
     }
 
@@ -202,6 +204,7 @@ public class HtmlHostingClient
     /// </summary>
     /// <param name="id">HTML page ID to update</param>
     /// <param name="data">Update request data with file information</param>
+    /// <param name="version">The page's version as last read (<see cref="HtmlHostingPageModel.Version"/>), sent as <c>If-Match</c></param>
     /// <param name="fileStream">New HTML file stream to upload</param>
     /// <param name="contentType">Content type of the file (default: text/html)</param>
     /// <param name="cancellationToken">Cancellation token</param>
@@ -209,6 +212,7 @@ public class HtmlHostingClient
     public async Task<HtmlHostingPageFileResponseModel> UpdateWithFileAsync(
         string id,
         HtmlHostingUpdatePageFileRequestModel data,
+        long version,
         Stream fileStream,
         string contentType = "text/html",
         CancellationToken cancellationToken = default)
@@ -224,14 +228,14 @@ public class HtmlHostingClient
             isNewFile = true
         };
 
-        var response = await _http.PutAsync<HtmlHostingCreatePageResponseModel>($"{BasePath}/{id}/file", payload, cancellationToken);
+        var response = await _http.PutAsync<HtmlHostingCreatePageResponseModel>($"{BasePath}/{id}/file", payload, version, cancellationToken);
         var result = response.Result?.Details ?? throw new InvalidOperationException("Failed to update HTML page");
         var uploadConfig = response.Result?.UploadFileConfig;
 
         // Step 2: Upload HTML file to R2 if upload config is provided
         if (uploadConfig != null)
         {
-            await UploadToR2Async(uploadConfig.UploadUrl, fileStream, contentType, cancellationToken);
+            await R2UploadHelper.UploadAsync(uploadConfig.UploadUrl, fileStream, contentType, cancellationToken);
         }
 
         // Page is auto-published by backend
@@ -240,7 +244,8 @@ public class HtmlHostingClient
         {
             Id = result.Id,
             ShorterLink = result.ShorterLink,
-            FileUrl = result.FileUrl!
+            FileUrl = result.FileUrl!,
+            Version = response.Version ?? result.Version
         };
     }
 
@@ -250,11 +255,13 @@ public class HtmlHostingClient
     /// </summary>
     /// <param name="id">HTML page ID to update</param>
     /// <param name="data">Update request data with GitHub file URL</param>
+    /// <param name="version">The page's version as last read (<see cref="HtmlHostingPageModel.Version"/>), sent as <c>If-Match</c></param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Updated page with ID, shorter link, and GitHub info</returns>
     public async Task<HtmlHostingPageGithubResponseModel> UpdateWithGithubFileAsync(
         string id,
         HtmlHostingUpdatePageGithubRequestModel data,
+        long version,
         CancellationToken cancellationToken = default)
     {
         var payload = new
@@ -266,14 +273,15 @@ public class HtmlHostingClient
             data.AutoSaveInGoogleSheet
         };
 
-        var response = await _http.PutAsync<HtmlHostingCreatePageResponseModel>($"{BasePath}/{id}/github", payload, cancellationToken);
+        var response = await _http.PutAsync<HtmlHostingCreatePageResponseModel>($"{BasePath}/{id}/github", payload, version, cancellationToken);
         var result = response.Result?.Details ?? throw new InvalidOperationException("Failed to update HTML page");
 
         return new HtmlHostingPageGithubResponseModel
         {
             Id = result.Id,
             ShorterLink = result.ShorterLink,
-            GithubInfo = result.GithubInfo
+            GithubInfo = result.GithubInfo,
+            Version = response.Version ?? result.Version
         };
     }
 
@@ -281,10 +289,13 @@ public class HtmlHostingClient
     /// Delete an HTML page
     /// </summary>
     /// <param name="id">HTML page ID</param>
+    /// <param name="version">The page's version as last read (<see cref="HtmlHostingPageModel.Version"/>), sent as <c>If-Match</c></param>
     /// <param name="cancellationToken">Cancellation token</param>
-    public async Task DeleteAsync(string id, CancellationToken cancellationToken = default)
+    /// <returns>The deleted page's id; <see cref="VersionedWriteResult.Version"/> is null after a delete.</returns>
+    public async Task<VersionedWriteResult> DeleteAsync(string id, long version, CancellationToken cancellationToken = default)
     {
-        await _http.DeleteAsync<object>($"{BasePath}/{id}", cancellationToken);
+        var response = await _http.DeleteAsync<object>($"{BasePath}/{id}", version, cancellationToken);
+        return new VersionedWriteResult { Id = id, Message = response.Message };
     }
 
     /// <summary>
@@ -295,26 +306,5 @@ public class HtmlHostingClient
     public async Task CleanCacheAsync(string id, CancellationToken cancellationToken = default)
     {
         await _http.PutAsync<object>($"{BasePath}/{id}/clean-cache", new { }, cancellationToken);
-    }
-
-    /// <summary>
-    /// Upload file to R2 storage using pre-signed URL
-    /// </summary>
-    /// <param name="uploadUrl">Pre-signed R2 upload URL</param>
-    /// <param name="fileStream">File stream to upload</param>
-    /// <param name="contentType">Content type of the file</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    private async Task UploadToR2Async(
-        string uploadUrl,
-        Stream fileStream,
-        string contentType,
-        CancellationToken cancellationToken)
-    {
-        using var client = new HttpClient();
-        using var content = new StreamContent(fileStream);
-        content.Headers.ContentType = new MediaTypeHeaderValue(contentType);
-
-        var response = await client.PutAsync(uploadUrl, content, cancellationToken);
-        response.EnsureSuccessStatusCode();
     }
 }

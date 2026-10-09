@@ -53,8 +53,12 @@ public class OrderStatisticsParams : OrderSearchParams
 }
 
 /// <summary>Order summary row (search results).</summary>
-public class StoreOrderSummary
+public class StoreOrderSummary : Posty5.Core.Models.IVersioned
 {
+    /// <summary>The document's version (<c>__v</c>); pass it to the next update or delete.</summary>
+    [JsonPropertyName("__v")]
+    public long Version { get; set; }
+
     /// <summary>Order id.</summary>
     [JsonPropertyName("_id")]
     public string? Id { get; set; }
@@ -152,8 +156,13 @@ public class CreateOrderInput
     /// <summary>Free-text detail about the channel.</summary>
     public string? OrderSourceNote { get; set; }
 
-    /// <summary>Technical origin tag — set by the SDK.</summary>
-    public string CreatedFrom { get; set; } = "dotnet";
+    /// <summary>
+    /// Technical origin tag. Leave it null and the SDK fills it in when the order
+    /// is sent: <c>Posty5Options.CreatedFrom</c> when that is set, otherwise
+    /// <c>"dotnet"</c> (<c>CreatedFromDefaults.StoreOrder</c>). A value set here
+    /// wins over both.
+    /// </summary>
+    public string? CreatedFrom { get; set; }
 }
 
 /// <summary>Request body to change an order's status.</summary>
@@ -193,8 +202,12 @@ public class StoreOrderTotals
 /// A store order. Loosely typed beyond the fields below: the API returns the
 /// whole document, including snapshotted item rows and the status history.
 /// </summary>
-public class StoreOrder
+public class StoreOrder : Posty5.Core.Models.IVersioned
 {
+    /// <summary>The document's version (<c>__v</c>); pass it to the next update or delete.</summary>
+    [JsonPropertyName("__v")]
+    public long Version { get; set; }
+
     /// <summary>Order id.</summary>
     [JsonPropertyName("_id")]
     public string? Id { get; set; }

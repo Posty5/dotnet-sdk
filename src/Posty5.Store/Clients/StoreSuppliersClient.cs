@@ -77,16 +77,16 @@ public class StoreSuppliersClient : StoreClientBase
     }
 
     /// <summary>Replace a connection's credentials. <c>suppliers.manage</c>, plan gate.</summary>
-    public async Task<StoreSupplierIntegration?> ReplaceCredentialsAsync(string storeId, string id, ReplaceSupplierCredentialsInput input, CancellationToken cancellationToken = default)
+    public async Task<StoreSupplierIntegration?> ReplaceCredentialsAsync(string storeId, string id, ReplaceSupplierCredentialsInput input, long version, CancellationToken cancellationToken = default)
     {
-        var response = await Http.PutAsync<StoreSupplierIntegration>($"{Base}/{storeId}/{id}", input, cancellationToken);
+        var response = await Http.PutAsync<StoreSupplierIntegration>($"{Base}/{storeId}/{id}", input, version, cancellationToken);
         return response.Result;
     }
 
     /// <summary>Change the supplier-specific settings (and optionally the mode). <c>suppliers.manage</c>.</summary>
-    public async Task<StoreSupplierIntegration?> UpdateSettingsAsync(string storeId, string id, UpdateSupplierSettingsInput input, CancellationToken cancellationToken = default)
+    public async Task<StoreSupplierIntegration?> UpdateSettingsAsync(string storeId, string id, UpdateSupplierSettingsInput input, long version, CancellationToken cancellationToken = default)
     {
-        var response = await Http.PutAsync<StoreSupplierIntegration>($"{Base}/{storeId}/{id}/settings", input, cancellationToken);
+        var response = await Http.PutAsync<StoreSupplierIntegration>($"{Base}/{storeId}/{id}/settings", input, version, cancellationToken);
         return response.Result;
     }
 
@@ -94,16 +94,16 @@ public class StoreSuppliersClient : StoreClientBase
     /// Change what the connection may do on its own. <c>submitAndPay</c> is refused
     /// for a supplier that cannot be paid from a balance. <c>suppliers.manage</c>, plan gate.
     /// </summary>
-    public async Task<StoreSupplierIntegration?> UpdateAutomationAsync(string storeId, string id, SupplierAutomationInput automation, CancellationToken cancellationToken = default)
+    public async Task<StoreSupplierIntegration?> UpdateAutomationAsync(string storeId, string id, SupplierAutomationInput automation, long version, CancellationToken cancellationToken = default)
     {
-        var response = await Http.PutAsync<StoreSupplierIntegration>($"{Base}/{storeId}/{id}/automation", automation, cancellationToken);
+        var response = await Http.PutAsync<StoreSupplierIntegration>($"{Base}/{storeId}/{id}/automation", automation, version, cancellationToken);
         return response.Result;
     }
 
     /// <summary>Switch the connection on or off. <c>suppliers.manage</c>, plan gate.</summary>
-    public async Task<StoreSupplierIntegration?> SetEnabledAsync(string storeId, string id, bool enabled, CancellationToken cancellationToken = default)
+    public async Task<StoreSupplierIntegration?> SetEnabledAsync(string storeId, string id, bool enabled, long version, CancellationToken cancellationToken = default)
     {
-        var response = await Http.PutAsync<StoreSupplierIntegration>($"{Base}/{storeId}/{id}/enabled", new SetSupplierEnabledRequest { Enabled = enabled }, cancellationToken);
+        var response = await Http.PutAsync<StoreSupplierIntegration>($"{Base}/{storeId}/{id}/enabled", new SetSupplierEnabledRequest { Enabled = enabled }, version, cancellationToken);
         return response.Result;
     }
 
@@ -133,11 +133,11 @@ public class StoreSuppliersClient : StoreClientBase
     /// own. Refused while supplier orders are open unless <paramref name="force"/>.
     /// <c>suppliers.manage</c>.
     /// </summary>
-    public async Task<DisconnectSupplierResult?> DisconnectAsync(string storeId, string id, bool force = false, CancellationToken cancellationToken = default)
+    public async Task<DisconnectSupplierResult?> DisconnectAsync(string storeId, string id, long version, bool force = false, CancellationToken cancellationToken = default)
     {
         // DeleteAsync takes no query dictionary; the one flag rides on the path.
         var path = force ? $"{Base}/{storeId}/{id}?force=true" : $"{Base}/{storeId}/{id}";
-        var response = await Http.DeleteAsync<DisconnectSupplierResult>(path, cancellationToken);
+        var response = await Http.DeleteAsync<DisconnectSupplierResult>(path, version, cancellationToken);
         return response.Result;
     }
 
@@ -225,16 +225,16 @@ public class StoreSuppliersClient : StoreClientBase
     }
 
     /// <summary>Change a link's price rule, sync switches, estimate or disclosure. <c>suppliers.import</c>.</summary>
-    public async Task<StoreProductSupplierLink?> UpdateLinkAsync(string storeId, string linkId, UpdateSupplierLinkInput changes, CancellationToken cancellationToken = default)
+    public async Task<StoreProductSupplierLink?> UpdateLinkAsync(string storeId, string linkId, UpdateSupplierLinkInput changes, long version, CancellationToken cancellationToken = default)
     {
-        var response = await Http.PutAsync<StoreProductSupplierLink>($"{Base}/{storeId}/links/{linkId}", changes, cancellationToken);
+        var response = await Http.PutAsync<StoreProductSupplierLink>($"{Base}/{storeId}/links/{linkId}", changes, version, cancellationToken);
         return response.Result;
     }
 
     /// <summary>Unlink. The product stays and becomes the store's own. <c>suppliers.import</c>.</summary>
-    public async Task<DeletedSupplierLink?> DeleteLinkAsync(string storeId, string linkId, CancellationToken cancellationToken = default)
+    public async Task<DeletedSupplierLink?> DeleteLinkAsync(string storeId, string linkId, long version, CancellationToken cancellationToken = default)
     {
-        var response = await Http.DeleteAsync<DeletedSupplierLink>($"{Base}/{storeId}/links/{linkId}", cancellationToken);
+        var response = await Http.DeleteAsync<DeletedSupplierLink>($"{Base}/{storeId}/links/{linkId}", version, cancellationToken);
         return response.Result;
     }
 
@@ -320,12 +320,14 @@ public class StoreSuppliersClient : StoreClientBase
     public async Task<SupplierOrderActionResult?> RetryAsync(
         string storeId,
         string supplierOrderId,
+        long version,
         bool? acceptCost = null,
         CancellationToken cancellationToken = default)
     {
         var response = await Http.PostAsync<SupplierOrderActionResult>(
             $"{Base}/{storeId}/orders/{supplierOrderId}/retry",
             new RetrySupplierOrderRequest { AcceptCost = acceptCost },
+            version,
             cancellationToken);
         return response.Result;
     }
@@ -335,9 +337,9 @@ public class StoreSuppliersClient : StoreClientBase
     /// status is read first, so an order already paid there is recorded, not paid
     /// again. <c>suppliers.orders.manage</c>, plan gate. Throws on a pause.
     /// </summary>
-    public async Task<SupplierOrderActionResult?> PayAsync(string storeId, string supplierOrderId, CancellationToken cancellationToken = default)
+    public async Task<SupplierOrderActionResult?> PayAsync(string storeId, string supplierOrderId, long version, CancellationToken cancellationToken = default)
     {
-        var response = await Http.PostAsync<SupplierOrderActionResult>($"{Base}/{storeId}/orders/{supplierOrderId}/pay", new { }, cancellationToken);
+        var response = await Http.PostAsync<SupplierOrderActionResult>($"{Base}/{storeId}/orders/{supplierOrderId}/pay", new { }, version, cancellationToken);
         return response.Result;
     }
 
@@ -346,18 +348,22 @@ public class StoreSuppliersClient : StoreClientBase
     /// shipped it cannot be withdrawn and the call throws. Open below Pro.
     /// <c>suppliers.orders.manage</c>.
     /// </summary>
-    public async Task<SupplierOrderActionResult?> CancelAsync(string storeId, string supplierOrderId, CancellationToken cancellationToken = default)
+    public async Task<SupplierOrderActionResult?> CancelAsync(string storeId, string supplierOrderId, long version, CancellationToken cancellationToken = default)
     {
-        var response = await Http.PostAsync<SupplierOrderActionResult>($"{Base}/{storeId}/orders/{supplierOrderId}/cancel", new { }, cancellationToken);
+        var response = await Http.PostAsync<SupplierOrderActionResult>($"{Base}/{storeId}/orders/{supplierOrderId}/cancel", new { }, version, cancellationToken);
         return response.Result;
     }
 
-    /// <summary>Take a part over: the store ships it itself. Open below Pro. <c>suppliers.orders.manage</c>.</summary>
-    public async Task<FulfilGroupManuallyResult?> FulfilGroupManuallyAsync(string storeId, string orderId, string groupKey, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Take a part over: the store ships it itself. Open below Pro. <c>suppliers.orders.manage</c>.
+    /// <paramref name="orderVersion"/> is the store order's <c>Version</c> as last read.
+    /// </summary>
+    public async Task<FulfilGroupManuallyResult?> FulfilGroupManuallyAsync(string storeId, string orderId, string groupKey, long orderVersion, CancellationToken cancellationToken = default)
     {
         var response = await Http.PostAsync<FulfilGroupManuallyResult>(
             $"{Base}/{storeId}/orders/{orderId}/groups/{Uri.EscapeDataString(groupKey)}/fulfil-manually",
             new { },
+            orderVersion,
             cancellationToken);
         return response.Result;
     }

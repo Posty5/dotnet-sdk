@@ -183,8 +183,12 @@ public class HtmlHostingFormSubmissionSyncingStatusModel
 /// <summary>
 /// HTML hosting form submission model
 /// </summary>
-public class HtmlHostingFormSubmissionModel
+public class HtmlHostingFormSubmissionModel : Posty5.Core.Models.IVersioned
 {
+    /// <summary>The document's version (<c>__v</c>); pass it to the next update or delete.</summary>
+    [JsonPropertyName("__v")]
+    public long Version { get; set; }
+
     /// <summary>
     /// Submission ID
     /// </summary>

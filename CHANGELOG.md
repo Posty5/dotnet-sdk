@@ -4,6 +4,500 @@ All notable changes to the Posty5 .NET SDK will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Versioned writes (optimistic concurrency) - unreleased majors
+
+`Posty5.Core` 4.0.0, `Posty5.ShortLink` 4.0.0, `Posty5.QRCode` 4.0.0,
+`Posty5.HtmlHosting` 4.0.0, `Posty5.HtmlHostingVariables` 4.0.0,
+`Posty5.HtmlHostingFormSubmission` 4.0.0, `Posty5.SocialPublisherWorkspace` 4.0.0,
+`Posty5.SocialPublisherPost` 5.0.0, `Posty5.Store` 4.0.0, `Posty5.Webhooks` 4.0.0;
+`Posty5.Account` 3.2.0 (dependency-only: it has no writes).
+
+Needs the API's versioned-writes batches (report mode or later). Publish date
+(for the rollout's phase D): _not yet published_.
+
+Every update, delete and state change now takes the version of the document
+you read and sends it as `If-Match: "<version>"`, so a write never silently
+overwrites someone else's change. The old signatures are **not** kept as
+`[Obsolete]`: they would compile and then fail with 428 once the API enforces
+versions (18_DECISIONS D16).
+
+### Breaking changes
+
+- **Posty5.Core**
+  - `Posty5HttpClient` gains versioned `PutAsync` / `PatchAsync` / `PostAsync` /
+    `DeleteAsync` overloads (`long version`) and `SendBulkVersionedAsync`. The
+    unversioned overloads stay for exempt routes. `PatchAsync` now goes through
+    the shared send path.
+  - A 409 with `code: VERSION_CONFLICT` raises `Posty5ConflictException`
+    (`CurrentVersion`, `ResourceId`); a 428 raises
+    `Posty5VersionRequiredException`. Any other 409 is still a plain
+    `Posty5Exception`.
+- **Posty5.ShortLink**: `UpdateAsync(id, request, version, ct)`,
+  `DeleteAsync(id, version, ct)`, `SetRulesAsync(id, rules, version, ct)`;
+  `LinkCampaignClient.UpdateAsync(id, request, version, ct)` and
+  `DeleteAsync(id, version, detach, ct)` (now returns `VersionedWriteResult`).
+- **Posty5.QRCode**: every `Update*Async(id, data, version, ...)` (the seven
+  classic types and the seven content types, `UpdateFileAsync(id, data, version, content?, contentType?, ct)`),
+  `DeleteAsync(id, version, ct)`.
+- **Posty5.HtmlHosting**: `UpdateWithFileAsync(id, data, version, stream, contentType, ct)`,
+  `UpdateWithGithubFileAsync(id, data, version, ct)`, `DeleteAsync(id, version, ct)`
+  (returns `VersionedWriteResult`). `CleanCacheAsync` is unchanged.
+- **Posty5.HtmlHostingVariables**: `UpdateAsync(id, data, version, ct)` returns
+  `VersionedWriteResult` (was `Task`); `DeleteAsync(id, version, ct)`.
+- **Posty5.HtmlHostingFormSubmission**: `ChangeStatusAsync(id, request, version, ct)`
+  returns `VersionedWriteResult` (was `bool`); `DeleteAsync(id, version, ct)`.
+- **Posty5.SocialPublisherWorkspace**: `UpdateAsync(id, data, version, logo?, contentType, ct)`
+  returns `VersionedWriteResult` (was `Task`); `DeleteAsync(id, version, ct)`.
+- **Posty5.SocialPublisherPost**: `ReschedulePostAsync(id, schedule, version, caption?, ct)`
+  and `DeletePostAsync(id, version, ct)` return `VersionedWriteResult` (were `Task`);
+  `RemovePostAsync(id, version, ct)`. The resumable (tus) upload is unchanged.
+- **Posty5.Webhooks**: `UpdateAsync(id, request, version, ct)`,
+  `DeleteAsync(id, version, ct)` (returns `VersionedWriteResult`),
+  `RotateSecretAsync(id, version, ct)`.
+- **Posty5.Store**
+  - Products: `UpdateAsync`, `DeleteAsync` (returns `VersionedWriteResult`) and
+    the eleven section saves (`UpdateBasicInformationAsync` ... `UpdatePurchaseAsync`)
+    take `version`. `ReorderAsync` is unchanged (ordering is unversioned).
+  - Tags: `UpdateAsync`, `DeleteAsync` (returns `VersionedWriteResult`);
+    `SetProductTagsAsync(storeId, productId, tagIds, productVersion, ct)` guards
+    the product. Assign/unassign are unchanged.
+  - Orders: `UpdateStatusAsync(storeId, orderId, status, version, note?, ct)`
+    (and `StoreClient.UpdateOrderStatusAsync`).
+  - Shipping: `UpdateCountryAsync`, `DeleteCountryAsync`, `UpsertRouteAsync`
+    (0 for a place with no route yet), `ClearRouteAsync`, `UpdateProfileAsync`,
+    `DeleteProfileAsync`, `AddProfileConditionsAsync` / `RemoveProfileConditionAsync`
+    (`profileVersion`), `SetDefaultAssignmentAsync`, `RemoveAssignmentAsync`;
+    `BulkUpsertRoutesAsync` and `ApplyFeeAsync` take `IDictionary<string, long> versions`.
+  - Suppliers: `ReplaceCredentialsAsync`, `UpdateSettingsAsync`,
+    `UpdateAutomationAsync`, `SetEnabledAsync`, `DisconnectAsync`,
+    `UpdateLinkAsync`, `DeleteLinkAsync`, `RetryAsync`, `PayAsync`, `CancelAsync`,
+    `FulfilGroupManuallyAsync` (`orderVersion`).
+
+### Added
+
+- `Version` (`[JsonPropertyName("__v")]`, `long`) on every entity model, which
+  implements `Posty5.Core.Models.IVersioned`.
+- `ApiResponse<T>.Version`, `.Versions`, `.Code`; the new version (envelope or
+  `ETag`) is copied onto the returned model.
+- `VersionedWriteResult`, `VersionedBulkResult`, `VersionedBulkSkippedItem`,
+  `Posty5ConcurrencyConst`.
+- `Posty5Options.Logger` (`ILogger`): one warning the first time the API answers
+  `X-Posty5-Concurrency: missing-version`.
+- Bulk shipping results carry `Applied`, `Skipped` and `Versions`.
+
+### Behaviour
+
+- Versioned writes are never retried (18_DECISIONS D17).
+
+### Migration
+
+```csharp
+// Before
+await client.ShortLink.UpdateAsync(id, req);
+await client.ShortLink.DeleteAsync(id);
+
+// After: read, then write with the version you read
+var link = await client.ShortLink.GetAsync(id);
+var saved = await client.ShortLink.UpdateAsync(id, req, link.Version);
+await client.ShortLink.DeleteAsync(id, saved.Version);
+
+// On a conflict: re-read and reapply
+catch (Posty5ConflictException ex) { /* ex.CurrentVersion */ }
+```
+
+## Posty5.ShortLink - unreleased (short link controls, SC)
+
+Needs the API's short link controls release. Additive; rides the unreleased
+3.2.0 line.
+
+### Added
+
+- Create/update models gain `Tags`, `CampaignId`, `Access` (`LinkAccessInputModel`:
+  `ActiveFrom`, `ExpiresAt`, `MaxVisits`, `FallbackUrl`, write-only `Password`,
+  `RemovePassword` -> `"password": null`), `Routing`, `Variants`, `Utm`, `Pixels`,
+  `PixelsConsentAcknowledged`, `Health`; `ClearAccess` / `ClearUtm` send JSON `null`,
+  an empty list clears routing/variants/pixels.
+- Responses: `Tags`, `CampaignId`, `HasRules`, `HasPassword`, `ExpiresAt`, `Health`;
+  `GetAsync` also `Access`, `Routing`, `Variants`, `Utm`, `Pixels`, `PixelsAcknowledgedAt`.
+- List filters `Tags` (comma-joined) and `CampaignId`.
+- `ShortLinkClient.ListTagsAsync`, `CheckHealthAsync`, `SetRulesAsync`.
+- `LinkCampaignClient` (`/api/link-campaign`): list, get, create, update, `DeleteAsync(id, detach)`.
+- Constants: `LinkDeviceTypes`, `LinkOsFamilies`, `LinkPixelProviders`,
+  `LinkHealthStatuses`, `LinkCampaignColors`.
+
+### Deprecated
+
+- `Tag` on create/update/list requests: use `Tags` (still sent; the API treats it as `tags[0]`).
+
+## Posty5.Core, Posty5.ShortLink, Posty5.QRCode, new Posty5.Webhooks - unreleased (bulk + webhooks, BW)
+
+Needs the API's bulk and webhook releases (an older API answers 404). Additive;
+rides the unreleased 3.2.0 line, so no further version bump. `Posty5.Webhooks`
+starts at 3.2.0 (lockstep).
+
+### Added
+
+- Core: per-request header overloads of `PostAsync`, `PutAsync`, `DeleteAsync`
+  and `GetBytesAsync` (`IDictionary<string,string>? headers`; `X-API-Key` refused).
+  Existing signatures unchanged. `BulkDefaults`, `LinkBulkModels`
+  (`BulkCreateResult`, `LinkBulkJob`, `ExportOptions`, …), `LinkBulkOperations`,
+  `CamelCaseEnumConverter<T>`.
+- ShortLink / QRCode: `CreateManyAsync` (sequential chunks of ≤ 100,
+  `Idempotency-Key: {key}-{chunk}`, one retry with the same key on a network
+  error or 5xx, rows renumbered to input position, `IProgress<BulkProgress>`),
+  `ExportAsync`, `CreateBulkJobAsync`, `ValidateBulkJobAsync` (dry run),
+  `ListBulkJobsAsync`, `GetBulkJobAsync`, `GetBulkJobResultUrlAsync`,
+  `CancelBulkJobAsync`, `WaitForBulkJobAsync`. Rows: `ShortLinkBulkRow`,
+  `QRCodeBulkRow` (`ForUrl`, `ForWifi`, … factories). Cancelling
+  `CreateManyAsync` returns no partial result; chunks already sent stay created.
+- `Posty5.Webhooks`: `WebhookEndpointClient` (list/get/create/update/delete,
+  rotate secret, send test, deliveries, redeliver, event types) and
+  `WebhookSignature.Verify` (Standard Webhooks HMAC-SHA256, fixed-time compare,
+  rotation, 5-minute tolerance) returning a typed `WebhookEvent`;
+  `WebhookSignatureException.Reason`.
+
+## Posty5.QRCode 3.4.0 - unreleased (QR content types)
+
+Needs the API's QR content-types release. Additive minor. Pass 2 also needs the new
+`Posty5.Core` `R2UploadHelper` (Core version bump pending at release).
+
+### Added
+
+- Pass 2: `CreateAppStoreAsync` / `UpdateAppStoreAsync` (`/api/qr-code/appStore`) and
+  `CreateFileAsync(request, Stream, contentType)` / `UpdateFileAsync(id, request, Stream?, contentType?)`:
+  `POST /api/qr-code/file/upload-url` -> PUT to the signed URL (retried once on a network error)
+  -> `POST`/`PUT /api/qr-code/file` with `qrCodeTarget.file.bucketFilePath`. Update without a
+  stream keeps the stored file. Both types are dynamic-only: `Mode = Static` throws
+  `ArgumentException` before any call. An expired URL throws `QRCodeFileUploadExpiredException`.
+  Models `QRCodeAppStoreTargetModel`, `QRCodeFileTargetModel`, `QRCodeFileInputModel`,
+  `QRCodeFileUploadTicketModel`, `QRCodeFileMimeTypes`; `QRCodeTargetModel.AppStore` / `.File`;
+  social codes take up to 12 profiles.
+- `Posty5.Core`: public `R2UploadHelper.UploadAsync` (signed PUT); the private copies in
+  `HtmlHostingClient` and `SocialPublisherPostClient` now call it (behaviour unchanged).
+
+- `CreateVCardAsync`, `CreateEventAsync`, `CreateWhatsAppAsync`, `CreateReviewAsync`,
+  `CreateSocialAsync` and `Update*Async(id, …)` twins (`/api/qr-code/{type}`), through one
+  private builder; they send `qrCodeTarget` only, never `options.text`. `Mode` and `Access`
+  pass through as on the other types.
+- Models: `QRCodeVCardTargetModel` (+ `QRCodeVCardPhoneModel`, `QRCodeVCardAddressModel`),
+  `QRCodeEventTargetModel` (`DateTimeOffset` times, sent as ISO 8601),
+  `QRCodeWhatsAppTargetModel`, `QRCodeReviewTargetModel`, `QRCodeSocialTargetModel`
+  (+ `QRCodeSocialProfileModel`), `QRCodeCreate*/QRCodeUpdate*RequestModel`; string constant
+  classes `QRCodeVCardPhoneKinds`, `QRCodeReviewPlatforms`, `QRCodeSocialPlatforms`.
+- `QRCodeTargetModel` gains `VCard`, `Event`, `WhatsApp`, `Review`, `Social`;
+  `QRCodeTargetType` gains the five values.
+
+## Posty5.QRCode 3.3.0 (dynamic QR codes)
+
+Needs the API's dynamic QR release and `Posty5.Core` 3.2.0. Additive minor.
+
+### Added
+
+- `QRCodeMode` (`Static`, `Dynamic`; string value object, so an unknown mode
+  from a newer API reads back without failing).
+- `QRCodeRequestBaseModel.Mode`: sent as `mode` only when set, on all seven
+  create and seven update methods. Calls without `Mode` send the same JSON as
+  before.
+- `CreateWifiAsync` / `UpdateWifiAsync` throw `ArgumentException` before any
+  call when `Mode` is `Dynamic` (Wi-Fi cannot be dynamic; the API answers 400).
+- `QRCodeModel.Mode` and `QRCodeModel.DynamicSince` (also on
+  `QRCodeFullDetailsModel`), and the `QRCodeListParamsModel.Mode` filter.
+- Scan rules (dynamic codes, Starter+): `QRCodeAccessModel` (`ActiveFrom`,
+  `ExpiresAt`, `MaxVisits`, `FallbackUrl`); `QRCodeRequestBaseModel.Access`
+  (sent as `access` only when set; replaces the stored rules as a whole) and
+  `ClearAccess` (sends `access: null`); `QRCodeModel.Access` on responses.
+
+## Posty5.ShortLink 3.2.0, Posty5.QRCode 3.2.0, Posty5.Core 3.2.0 - unreleased
+
+Link + QR visit analytics (VA), plus the link + QR truth pass (TP) below.
+VA is additive; TP's changes are listed per package at the end of this entry.
+`GetAnalyticsAsync` needs the API's visit-analytics release (an older API
+answers 404). Core is 3.2.0 because `Posty5.Core` 3.1.0 is the MCP release
+(`feat/mcp-wave-2`), which ships first.
+
+### Added
+
+- `ShortLinkClient.GetAnalyticsAsync(id, query?, ct)` -
+  `GET /api/short-link/{id}/analytics`, and
+  `QRCodeClient.GetAnalyticsAsync(id, query?, ct)` -
+  `GET /api/qr-code/{id}/analytics`. Same semantics as the npm SDK's
+  `getAnalytics`.
+- `Posty5.Core.Models`: `LinkAnalyticsQuery` (`From`/`To` sent as
+  `yyyy-MM-dd`, culture-independent; `Interval`; `Tz`; `Breakdown` comma list;
+  `AllBreakdowns` sends `breakdown=all`; `Limit` 1-50, default 10, overflow
+  as key `other`, missing values as `unknown`), the answer
+  `LinkAnalyticsModel` (`Totals`, `Series`, `Breakdowns` keyed by wire name,
+  `Meta` with `Locked`, `Timezone`, `Source`, `AnalyticsStartedAt`,
+  `MaxHistoryDays`), and the value types `LinkAnalyticsInterval` /
+  `LinkAnalyticsBreakdown` (the nine C2 names).
+- `ShortLinkClient.GetStatisticsAsync(query?, ct)` -
+  `GET /api/short-link/statistics`, and `QRCodeClient.GetStatisticsAsync(query?, ct)` -
+  `GET /api/qr-code/statistics`: account-wide counts. Query
+  `LinkStatisticsQuery` (`Period` = `today|7d|30d|month|custom`, or a custom
+  `From`/`To` as `yyyy-MM-dd`; default the last 30 days). Answer
+  `ShortLinkStatisticsModel` / `QRCodeStatisticsModel`: `Range`, and `Data` with
+  `Totals` (`TotalLinks`/`TotalQRCodes`, lifetime `TotalVisitors`,
+  `AvgVisitorsPerLink`/`AvgVisitorsPerQRCode`, plus `VisitsInRange`,
+  `UniqueVisitorsInRange`, `BotVisitsInRange`), `Daily` (UTC days:
+  `CreatedCount`, `VisitorsSum` = visits by people that day) and
+  `TopLinks`/`TopQRCodes` (top ten by visits in the range, each with
+  `VisitsInRange`). With the visit-analytics API, `VisitorsSum` means visits
+  per day, no longer visitors of links created that day.
+- `Posty5.Core.Models`: `LinkStatisticsQuery`, `LinkStatisticsPeriod`,
+  `LinkStatisticsResponse<TData>`, `LinkStatisticsRange`,
+  `LinkStatisticsVisitTotals`, `LinkStatisticsDailyRow`.
+- `Posty5.Core.Helpers.LinkAnalyticsQueryHelper`: the one query builder both
+  clients use, for analytics and statistics. Statistics with `From`/`To` and a
+  non-custom `Period`, or `From` after `To`, throws `ArgumentException` before
+  sending.
+
+### Behaviour
+
+- `AllBreakdowns` together with a non-empty `Breakdown`, or an empty `id`,
+  throws `ArgumentException`, and a `Limit` outside 1-50 throws
+  `ArgumentOutOfRangeException`, before any request. An unset or empty
+  `Breakdown` omits the parameter, and the API then returns every breakdown
+  the plan allows (the same answer as `AllBreakdowns`).
+- Bots are excluded from `Visits` (counted in `BotVisits`); `UniqueVisitors`
+  over more than one day is the sum of daily uniques; data starts on
+  `Meta.AnalyticsStartedAt`.
+- A breakdown the plan does not include, named explicitly, or a `From` older
+  than the plan's history, is the API's feature-lock 403: `Posty5Exception`
+  with `StatusCode == 403` and the API's message (`This feature is not
+  available on your current plan.`; `You Have Not Permission` for a record you
+  may not read) in `ResponseBody` (the core's existing mapping; no plan names
+  in the SDK). `Meta.Locked[].RequiredPlan` is a plan key such as `basic`;
+  `Meta.MaxHistoryDays` is `30` on Free, `null` on Starter and up;
+  `Meta.Source` is `events`, `rollup` or `mixed`. Reading analytics costs no
+  credits.
+- A missing short link or QR code answers **400** (`Posty5ValidationException`,
+  "The Short Link Is Not Found" / "The QR Code Is Not Found"), not 404.
+- `Meta` values and `Series[].Date` are kept as the API's strings, so a value a
+  later API adds cannot fail deserialization and no time-zone conversion can
+  shift a day.
+
+### Posty5.ShortLink 3.2.0 - truth pass (TP)
+
+Link + QR truth pass (TP): the client sends every field the API accepts and
+nothing it rejects. Several fields need the API's truth-pass release; they are
+marked "(API TP)" below and an older API answers 400 to a request that sets them.
+
+#### Added
+
+- `AndroidUrl` / `IosUrl` on `ShortLinkCreateRequestModel` and
+  `ShortLinkUpdateRequestModel` (API TP, S13). Allowed schemes: `https:`,
+  `http:` or an app scheme (`myapp://…`), never `javascript:`/`data:`/
+  `vbscript:`/`file:`/`about:`/`blob:`. Create: a value wins, absent falls back
+  to the target page's `al:*` meta. Update: a value wins and `""` clears;
+  `null` is not sent, so the API re-derives the link when `BaseUrl` changed and
+  keeps it otherwise.
+- `IsEnableLandingPage` on `ShortLinkCreateRequestModel`.
+
+#### Changed
+
+- **`CreateAsync` sends every field.** 3.1.0 and earlier sent only name, base URL, template
+  ID and custom landing ID: `RefId`, `Tag` and `PageInfo` never reached the API.
+  It now sends those plus `IsEnableLandingPage`, `AndroidUrl` and `IosUrl`.
+- **`UpdateAsync` sends an explicit body**: no `IsEnableMonetization` (a 400 in
+  3.1.0 and earlier when set), plus `templateType` and `createdFrom` like `CreateAsync`
+  (the API resets an omitted `createdFrom` to `"api"`). `IsEnableLandingPage`
+  left `null` is not sent, so the API keeps the stored value (API TP; an older
+  API turned the landing page off).
+- **`TemplateId` and `BaseUrl` are `required`** on the create and update
+  models. The API refuses an API-key call without a template ID, so code that
+  left it out never succeeded; code that sets it after construction (instead
+  of in an object initializer) has to move it into the initializer.
+- `UpdateAsync` throws `ArgumentException` for an empty `BaseUrl` instead of
+  sending a request the API rejects.
+- `ShortLinkListParamsModel.PageInfoTitle` is sent as `pageInfo.title`; 3.1.0 and earlier
+  sent `pageinfo.title`, which matched no field.
+
+#### Deprecated
+
+- `IsEnableMonetization` on every short-link model: `[Obsolete]`, `[JsonIgnore]`,
+  never sent and always `null` when read (the API never accepted or returned
+  it). Removed in 4.0.0. A `TreatWarningsAsErrors` build sees CS0618 for code
+  that still sets it.
+- `ShortLinkListParamsModel.Search`, `FromDate`, `ToDate`: the API's short-link
+  search has no such filters; `[Obsolete]` and no longer sent.
+
+#### Documentation
+
+- README: real type names (`ShortLinkCreateRequestModel`, cursor
+  `PaginationParams`, `Items`), landing page and deep-link sections, an
+  "Upgrading to 3.2.0" note; monetization and analytics claims removed.
+
+### Posty5.QRCode 3.2.0 - truth pass (TP)
+
+#### Added
+
+- `IsEnableLandingPage` on `QRCodeRequestBaseModel` (every create and update).
+
+#### Changed
+
+- **The typed create/update methods no longer send `options.text`** for email,
+  WiFi, call, SMS, URL and geolocation codes; they send `qrCodeTarget` only and
+  the API builds the encoded text. 3.1.0 and earlier built it client-side without escaping,
+  so a subject with `&` or a WiFi password with `;` produced a code that opened
+  the wrong thing. Free text still sends `options.text` equal to the text.
+- **`TemplateId` is `required`** on every request model (it was a non-null
+  string defaulting to `""`, which the API refuses for API-key calls).
+
+#### Deprecated
+
+- `IsEnableMonetization` on `QRCodeModel`, `QRCodeRequestBaseModel` and
+  `QRCodeListParamsModel`: `[Obsolete]`, `[JsonIgnore]`, never sent (every
+  payload carried it in 3.1.0 and earlier). Removed in 4.0.0.
+
+#### Documentation
+
+- README and QUICK_REFERENCE use the real type names; "dynamic QR", "scan
+  analytics", "short link" and monetization claims removed; `NumberOfVisitors`
+  documented as visits to the code's Posty5 page (scanning a downloaded image is
+  not counted). Package description no longer says "dynamic".
+
+## Posty5.SocialPublisherPost 4.6.0 - 2026-10-05
+
+### Fixed
+
+- **`ReschedulePostAsync` was refused by the API.** It sent the create routes'
+  `schedule: { type, scheduledAt }` object; the edit route
+  (`PUT /api/social-publisher-post/{id}`) takes `scheduleType` + `scheduledAt`
+  flat and refuses unknown keys. `ReschedulePostRequest` now carries
+  `ScheduleType` and `ScheduledAt` (omitted with "now", which the API requires).
+
+- **`GetStatusAsync` called a route that does not exist.** It sent
+  `GET /api/social-publisher-post/{id}`, which the API has never served (only
+  `PUT` and `DELETE` live there), so every call failed with
+  `Posty5NotFoundException`. It now calls `GET /api/social-publisher-post/{id}/status`,
+  as the npm SDK always has. An empty id is refused before any request.
+- **The comment list never reached the API on short videos and image posts.**
+  `Comments` (added in 4.5.0) was accepted by `PublishShortVideoToWorkspaceAsync`,
+  `PublishShortVideoToAccountAsync`, `CreateImagePostToWorkspaceAsync` and
+  `CreateImagePostToAccountAsync`, but their request bodies only carried the
+  deprecated singular `Comment`, so the list was silently dropped. It is sent now.
+  (The long-video methods were not affected.)
+- `SocialPublisherPostStatusType` gains `Removing`, `Removed` and `RemoveFailed`.
+  Without them, reading a post that had been removed from the platforms threw
+  while deserializing.
+
+### Added
+
+- **`RemovePostAsync(id)`** — `POST /api/social-publisher-post/{id}/remove`: take a
+  *published* post down from every platform it went to, and read the outcome per
+  platform (`RemovePostResult.Results`). Instagram and TikTok cannot delete through
+  their APIs and report `NotSupported`. A removal that fails anywhere it could
+  have succeeded throws `Posty5ValidationException` and charges nothing.
+  `DeletePostAsync` remains the call for a post that has not published yet.
+- **Text posts** — `CreateTextPostToWorkspaceAsync` / `CreateTextPostToAccountAsync`
+  (`POST /text/workspace|account[/{id}]`): a status update with no media for
+  Facebook Pages, Threads and X, with per-platform blocks (`TextPostFacebookConfig`
+  with a link preview, `ThreadsTextConfig`, `TwitterConfig` with an optional
+  poll), comments, hashtags and tracked links. Returns `CreatePostResult`, which
+  lists the platforms skipped (no text surface), refused (X below Pro) and
+  truncated (X).
+- **Stories** — `CreateStoryPostToWorkspaceAsync` / `CreateStoryPostToAccountAsync`
+  (`POST /story/workspace|account`): one image or one video for Facebook Pages and
+  Instagram, **media by URL** in this release. Only the fields of the story's
+  `Kind` are sent, because the API refuses anything else on a story.
+- `CommentRequest.PostToThreads` and `PostToTwitter`.
+- `PostStatusFullDetailsResponse.CreatedFrom`, `AgentOrigin` (the AI assistant
+  that created the post through MCP, when one did) and `StoryExpiresAt`.
+- `createdFrom` follows `Posty5Options.CreatedFrom` (see Posty5.Core 3.1.0); a
+  text post or story may also set its own `CreatedFrom`.
+
+### Documentation
+
+- `ReschedulePostAsync` had lost its XML documentation to `DeletePostAsync`; both
+  are documented again.
+
+## Posty5.Account 3.1.0 - 2026-10-05
+
+New package. `AccountClient` describes the owner of the API key — useful to
+validate a key and to check the balance before a paid call:
+
+| Method | Route |
+| --- | --- |
+| `GetCurrentAsync()` | `GET /api/api-key/current` — key (with its record scope), owner, plan, credits, MCP settings |
+| `GetCreditsAsync()` | `GET /api/user/current/credits` |
+| `GetCreditUsageAsync(filters?, pagination?)` | `GET /api/user/current/credit-usage` (cursor-paged) |
+| `GetCreditUsageSummaryAsync(filters?)` | `GET /api/user/current/credit-usage/summary` |
+| `GetOperationCostsAsync(activeOnly = true)` | `GET /api/plans/operation-costs` (public) |
+
+Versioned with the `Posty5.Core` it requires, as `Posty5.Store` was. Packed by
+the publish workflow.
+
+## Posty5.Core 3.1.0 - 2026-10-05
+
+### Added
+
+- **`X-Posty5-Client: posty5-dotnet/<version>`** on every request, the version
+  read from the `Posty5.Core` assembly (`Posty5ClientIdentity`). The API logs it
+  and trusts nothing because of it.
+- **`Posty5Options.DefaultHeaders`** — headers sent on every request. `X-API-Key`
+  is refused (the constructor throws `ArgumentException`) rather than let a header
+  silently decide which key is used; an `X-Posty5-Client` entry replaces the SDK's
+  own label; content headers are refused.
+- **`Posty5Options.CreatedFrom`** — the `createdFrom` label stamped on every
+  record the clients create. When null, each package keeps the label it has
+  always sent (`CreatedFromDefaults.Package` = `dotnetPackage`,
+  `CreatedFromDefaults.StoreOrder` = `dotnet`). `Posty5HttpClient.ResolveCreatedFrom`
+  is how the clients read it.
+- `AgentOrigin` — the shape the API uses to say which AI assistant created a record.
+
+### Unchanged on purpose
+
+- No retries were added. `Posty5HttpClient` has never retried, so a create cannot
+  be sent twice; `MaxRetries` and `RetryDelayMilliseconds` remain unused.
+
+## Posty5.Store 3.3.0 - 2026-10-05
+
+### Added
+
+- `StoreClient.ListStoresAsync()` / `LookupStoresAsync(term?)` —
+  `GET /api/store/lookup`: the stores the key's owner owns or is staff on, as
+  `StoreLookupItem` (`Id`, and `Name` as `<slug> - <name>`). The only store calls
+  that take no `storeId`. The API returns one page (its default size, normally 10).
+
+### Changed
+
+- `CreateOrderInput.CreatedFrom` is now `string?` and defaults to null; the
+  client fills it in from `Posty5Options.CreatedFrom`, else `"dotnet"` as before.
+
+## Posty5.SocialPublisherWorkspace 3.1.0 - 2026-10-05
+
+### Added
+
+- `SocialPublisherAccountClient` — read the connected social accounts:
+  `ListAsync(params?, pagination?)` (`GET /api/social-publisher-account`),
+  `LookupAsync(term?, platform?)` (`/lookup`) and `GetAsync(id)` (`/{id}`, with the
+  platform profile and the account's default post settings and comments).
+  Read-only: connecting an account is an OAuth sign-in in the dashboard.
+
+### Changed
+
+- `createdFrom` on `CreateAsync` follows `Posty5Options.CreatedFrom`.
+
+## Posty5.QRCode 3.1.0 - 2026-10-05
+
+### Added
+
+- `QRCodeTemplateClient` — `ListUserTemplatesAsync(term?, pagination?)`
+  (`GET /api/qr-code-template/user-lookup`) and
+  `ListPublicTemplatesAsync(term?, schemeType?, pagination?)` (`/public-lookup`):
+  the template ids the create methods take as `TemplateId`.
+
+### Changed
+
+- `createdFrom` on every create follows `Posty5Options.CreatedFrom`.
+
+## Posty5.ShortLink 3.1.0, Posty5.HtmlHosting 3.1.0, Posty5.HtmlHostingVariables 3.1.0 - 2026-10-05
+
+### Changed
+
+- `createdFrom` on create follows `Posty5Options.CreatedFrom` (default unchanged:
+  `dotnetPackage`). Requires `Posty5.Core` 3.1.0.
+
 ## Posty5.Store 3.2.0 - 2026-09-26
 
 The first version of `Posty5.Store` to reach NuGet: earlier versions (up to

@@ -345,7 +345,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
         {
             Name = "Updated Name"+ new Random().Next(),
             Description = "Updated description"
-        });
+        }, 0);
 
         // Assert
         var updated = await _client.GetAsync(workspaceId);
@@ -372,6 +372,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
                 Name = "Updated with Image"+ new Random().Next(),
                 Description = "Now has an image"
             },
+            0,
             imageStream,
             "image/png"
         );
@@ -401,7 +402,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
             Description = "Testing metadata updates",
             Tag = "new-tag",
             RefId = "new-ref"
-        });
+        }, 0);
 
         // Assert - No exception means success
         Assert.True(true);
@@ -422,7 +423,7 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
         });
 
         // Act
-        await _client.DeleteAsync(workspaceId);
+        await _client.DeleteAsync(workspaceId, 0);
 
         // Assert - No exception means success
         // Don't add to cleanup list since we already deleted it
@@ -455,14 +456,14 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
             Name = "Updated Workflow Workspace",
             Description = "Updated in workflow",
             Tag = "workflow-test"
-        });
+        }, 0);
 
         // Verify update
         var updated = await _client.GetAsync(workspaceId);
         Assert.Equal("Updated Workflow Workspace", updated.Name);
 
-        // Delete
-        await _client.DeleteAsync(workspaceId);
+        // Delete, with the version the update produced
+        await _client.DeleteAsync(workspaceId, updated.Version);
     }
 
     [Fact]
@@ -491,13 +492,15 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
                         Name = "Updated Image Workspace",
                         Description = "With new image"
                     },
+                    0,
                     updateStream,
                     "image/png"
                 );
             }
 
-            // Delete
-            await _client.DeleteAsync(workspaceId);
+            // Delete, with the version the update produced
+            var current = await _client.GetAsync(workspaceId);
+            await _client.DeleteAsync(workspaceId, current.Version);
         }
     }
 

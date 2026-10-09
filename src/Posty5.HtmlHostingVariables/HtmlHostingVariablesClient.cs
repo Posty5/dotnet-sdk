@@ -1,3 +1,4 @@
+using Posty5.Core.Configuration;
 using Posty5.Core.Http;
 using Posty5.Core.Models;
 using Posty5.HtmlHostingVariables.Models;
@@ -56,7 +57,7 @@ public class HtmlHostingVariablesClient
             data.Value,
             data.Tag,
             data.RefId,
-            createdFrom = "dotnetPackage"
+            createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
         await _http.PostAsync<object>(BasePath, payload, cancellationToken);
@@ -94,17 +95,20 @@ public class HtmlHostingVariablesClient
     /// <exception cref="ArgumentException">Thrown when key doesn't start with 'pst5_'</exception>
     /// <example>
     /// <code>
-    /// await client.UpdateAsync("variable_id_123", new CreateHtmlHostingVariableRequest
+    /// var variable = await client.GetAsync("variable_id_123");
+    /// var written = await client.UpdateAsync("variable_id_123", new HtmlHostingVariablesCreateRequestModel
     /// {
     ///     Name = "Updated API Key",
     ///     Key = "pst5_api_key",
     ///     Value = "sk_live_789012"
-    /// });
+    /// }, variable.Version);
+    /// // written.Version is the new version for the next write
     /// </code>
     /// </example>
-    public async Task UpdateAsync(
+    public async Task<VersionedWriteResult> UpdateAsync(
         string id,
         HtmlHostingVariablesCreateRequestModel data,
+        long version,
         CancellationToken cancellationToken = default)
     {
         // Validate key prefix
@@ -115,26 +119,30 @@ public class HtmlHostingVariablesClient
                 nameof(data));
         }
 
-        await _http.PutAsync<object>($"{BasePath}/{id}", data, cancellationToken);
+        var response = await _http.PutAsync<object>($"{BasePath}/{id}", data, version, cancellationToken);
+        return new VersionedWriteResult { Id = id, Version = response.Version, Message = response.Message };
     }
 
     /// <summary>
     /// Delete an HTML hosting variable
     /// </summary>
     /// <param name="id">Variable ID to delete</param>
+    /// <param name="version">The variable's version as last read (<see cref="Models.HtmlHostingVariablesVariableModel.Version"/>), sent as <c>If-Match</c></param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Deletion confirmation response</returns>
     /// <example>
     /// <code>
-    /// var result = await client.DeleteAsync("variable_id_123");
+    /// var variable = await client.GetAsync("variable_id_123");
+    /// var result = await client.DeleteAsync("variable_id_123", variable.Version);
     /// Console.WriteLine(result.Message);
     /// </code>
     /// </example>
     public async Task<DeleteResponse> DeleteAsync(
         string id,
+        long version,
         CancellationToken cancellationToken = default)
     {
-        var response = await _http.DeleteAsync<DeleteResponse>($"{BasePath}/{id}", cancellationToken);
+        var response = await _http.DeleteAsync<DeleteResponse>($"{BasePath}/{id}", version, cancellationToken);
         return response.Result ?? new DeleteResponse { Message = "Deleted" };
     }
 

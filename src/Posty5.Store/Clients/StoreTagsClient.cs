@@ -52,17 +52,17 @@ public class StoreTagsClient : StoreClientBase
     }
 
     /// <summary>Update a tag.</summary>
-    public async Task<StoreTag?> UpdateAsync(string storeId, string tagId, UpdateTagInput changes, CancellationToken cancellationToken = default)
+    public async Task<StoreTag?> UpdateAsync(string storeId, string tagId, UpdateTagInput changes, long version, CancellationToken cancellationToken = default)
     {
-        var response = await Http.PutAsync<StoreTag>($"{Base}/{storeId}/{tagId}", changes, cancellationToken);
+        var response = await Http.PutAsync<StoreTag>($"{Base}/{storeId}/{tagId}", changes, version, cancellationToken);
         return response.Result;
     }
 
     /// <summary>Soft-delete a tag and drop its assignments. The products are untouched.</summary>
-    public async Task<object?> DeleteAsync(string storeId, string tagId, CancellationToken cancellationToken = default)
+    public async Task<VersionedWriteResult> DeleteAsync(string storeId, string tagId, long version, CancellationToken cancellationToken = default)
     {
-        var response = await Http.DeleteAsync<object>($"{Base}/{storeId}/{tagId}", cancellationToken);
-        return response.Result;
+        var response = await Http.DeleteAsync<object>($"{Base}/{storeId}/{tagId}", version, cancellationToken);
+        return new VersionedWriteResult { Id = tagId, Message = response.Message };
     }
 
     // ─── Assignments ────────────────────────────────────────────────────────
@@ -123,12 +123,16 @@ public class StoreTagsClient : StoreClientBase
         return response.Result;
     }
 
-    /// <summary>Replace one product's whole tag list — tags left out are unassigned.</summary>
-    public async Task<object?> SetProductTagsAsync(string storeId, string productId, IEnumerable<string> tagIds, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Replace one product's whole tag list — tags left out are unassigned. A
+    /// versioned write on the PRODUCT: <paramref name="productVersion"/> is the
+    /// product's <c>Version</c> as last read; the result carries its new version.
+    /// </summary>
+    public async Task<VersionedWriteResult> SetProductTagsAsync(string storeId, string productId, IEnumerable<string> tagIds, long productVersion, CancellationToken cancellationToken = default)
     {
         var body = new SetProductTagsRequest { TagIds = tagIds.ToList() };
-        var response = await Http.PutAsync<object>($"{Base}/{storeId}/product/{productId}", body, cancellationToken);
-        return response.Result;
+        var response = await Http.PutAsync<object>($"{Base}/{storeId}/product/{productId}", body, productVersion, cancellationToken);
+        return new VersionedWriteResult { Id = productId, Version = response.Version, Message = response.Message };
     }
 
     // ─── Excel ──────────────────────────────────────────────────────────────

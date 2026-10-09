@@ -27,7 +27,7 @@ Posty5 empowers businesses, marketers, and developers to streamline their online
 - **HTTP Client** - System.Net.Http-based client with built-in retry logic using Polly
 - **Authentication** - API key management for secure API communication
 - **Error Handling** - Typed exception classes for robust error management
-- **Type Definitions** - Full C# type support with comprehensive models
+- **Type Definitions** - Full C# type support with comprehensive models, including the `LinkAnalytics*` models shared by `ShortLinkClient.GetAnalyticsAsync` and `QRCodeClient.GetAnalyticsAsync`
 - **Configuration** - Flexible configuration options with dependency injection support
 - **.NET 8.0 Support** - Built with the latest .NET features
 
@@ -148,10 +148,16 @@ var httpClient = serviceProvider.GetRequiredService<Posty5HttpClient>();
 
 ### Posty5Options
 
-| Property | Type     | Default | Description                    |
-| -------- | -------- | ------- | ------------------------------ |
-| `ApiKey` | `string` | `""`    | Your Posty5 API key (required) |
-| `Debug`  | `bool`   | `false` | Enable debug logging           |
+| Property         | Type                          | Default                  | Description |
+| ---------------- | ----------------------------- | ------------------------ | ----------- |
+| `ApiKey`         | `string?`                     | `null`                   | Your Posty5 API key, sent as `X-API-Key` (required for every route except the public ones) |
+| `BaseUrl`        | `string`                      | `https://api.posty5.com` | API origin |
+| `Debug`          | `bool`                        | `false`                  | Enable debug logging |
+| `DefaultHeaders` | `Dictionary<string, string>?` | `null`                   | Headers sent on every request. `X-API-Key` is refused (`ArgumentException`); an `X-Posty5-Client` entry replaces the SDK's label; content headers are refused |
+| `CreatedFrom`    | `string?`                     | `null`                   | The `createdFrom` label on every record the clients create. Null keeps each package's default (`dotnetPackage`; `dotnet` for store orders) |
+
+Every request also carries `X-Posty5-Client: posty5-dotnet/<Posty5.Core version>`
+(`Posty5ClientIdentity.HeaderValue`), which the API logs to tell SDK traffic apart.
 
 ---
 
@@ -225,17 +231,21 @@ The main HTTP client for making API requests.
 
 - Updates the API key for subsequent requests
 
+### Link analytics models (`Posty5.Core.Models`)
+
+`LinkAnalyticsQuery` (`From`, `To`, `Interval`, `Tz`, `Breakdown`, `AllBreakdowns`, `Limit`) and the answer `LinkAnalyticsModel` (`Totals`, `Series`, `Breakdowns`, `Meta`), with the value types `LinkAnalyticsInterval` and `LinkAnalyticsBreakdown`. `LinkStatisticsQuery` / `LinkStatisticsPeriod` and the shared parts of the account-wide statistics answer (`LinkStatisticsResponse<TData>`, `LinkStatisticsRange`, `LinkStatisticsVisitTotals`, `LinkStatisticsDailyRow`) are here too. `Posty5.Core.Helpers.LinkAnalyticsQueryHelper` builds the queries both clients send, so a short link and a QR code are asked the same way. See the `Posty5.ShortLink` / `Posty5.QRCode` READMEs for usage.
+
 ---
 
 ## 🔧 Advanced Usage
 
-### Custom Retry Policy
+### No automatic retries
 
-The client uses Polly for retry logic with the following defaults:
-
-- Maximum 3 retry attempts
-- Exponential backoff: 2^attempt seconds
-- Retries on 408, 429, 500, 502, 503, 504 status codes
+The client does **not** retry. A request that fails — a network error, a 5xx, a
+429 — is reported as an exception and never repeated, so a create can never be
+sent twice. Retry in your own code where an operation is safe to repeat. (The
+`MaxRetries` and `RetryDelayMilliseconds` fields on `Posty5Options` are not
+used.) Requests time out after 120 seconds.
 
 ### Debug Logging
 

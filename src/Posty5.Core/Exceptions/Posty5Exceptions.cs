@@ -75,3 +75,43 @@ public class Posty5RateLimitException : Posty5Exception
         StatusCode = 429;
     }
 }
+
+/// <summary>
+/// Exception thrown when a versioned write is refused because the document
+/// changed since it was read (HTTP 409, code <c>VERSION_CONFLICT</c>).
+/// Read the document again, reapply the change, and write with its new version.
+/// </summary>
+public class Posty5ConflictException : Posty5Exception
+{
+    /// <summary>The stable error code, <c>VERSION_CONFLICT</c>.</summary>
+    public string Code { get; } = Configuration.Posty5ConcurrencyConst.VersionConflictCode;
+
+    /// <summary>The version the API holds now.</summary>
+    public long CurrentVersion { get; }
+
+    /// <summary>The id of the document that conflicted.</summary>
+    public string ResourceId { get; }
+
+    public Posty5ConflictException(string message, long currentVersion, string resourceId, string? responseBody = null)
+        : base(message, 409, responseBody)
+    {
+        CurrentVersion = currentVersion;
+        ResourceId = resourceId;
+    }
+}
+
+/// <summary>
+/// Exception thrown when a versioned route was called without a version
+/// (HTTP 428, code <c>VERSION_REQUIRED</c>). This is a client bug: every SDK
+/// update and delete sends one.
+/// </summary>
+public class Posty5VersionRequiredException : Posty5Exception
+{
+    /// <summary>The stable error code, <c>VERSION_REQUIRED</c>.</summary>
+    public string Code { get; } = Configuration.Posty5ConcurrencyConst.VersionRequiredCode;
+
+    public Posty5VersionRequiredException(string message, string? responseBody = null)
+        : base(message, 428, responseBody)
+    {
+    }
+}

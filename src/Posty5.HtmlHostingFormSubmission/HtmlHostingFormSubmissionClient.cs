@@ -101,13 +101,15 @@ public class HtmlHostingFormSubmissionClient
     /// </summary>
     /// <param name="id">Submission ID</param>
     /// <param name="request">Status change request containing new status, rejection reason, and notes</param>
+    /// <param name="version">The submission's version as last read (<see cref="Models.HtmlHostingFormSubmissionModel.Version"/>), sent as <c>If-Match</c></param>
     /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Response with updated status history</returns>
+    /// <returns>The submission's id and new version</returns>
     /// <exception cref="ArgumentNullException">Thrown when id or request is null</exception>
     /// <exception cref="InvalidOperationException">Thrown when submission not found or user doesn't have permission</exception>
-    public async Task<bool> ChangeStatusAsync(
+    public async Task<VersionedWriteResult> ChangeStatusAsync(
         string id,
         HtmlHostingFormSubmissionChangeStatusRequestModel request,
+        long version,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(id))
@@ -118,22 +120,25 @@ public class HtmlHostingFormSubmissionClient
         var response = await _http.PutAsync<object>(
             $"{BasePath}/{id}/status",
             request,
-            cancellationToken: cancellationToken);
+            version,
+            cancellationToken);
 
-        return response.IsSuccess ? true : false;
+        return new VersionedWriteResult { Id = id, Version = response.Version, Message = response.Message };
     }
 
     /// <summary>
     /// Delete a form submission
     /// </summary>
     /// <param name="id">Submission ID to delete</param>
+    /// <param name="version">The submission's version as last read (<see cref="Models.HtmlHostingFormSubmissionModel.Version"/>), sent as <c>If-Match</c></param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Delete confirmation response</returns>
     public async Task<DeleteResponse> DeleteAsync(
         string id,
+        long version,
         CancellationToken cancellationToken = default)
     {
-        var response = await _http.DeleteAsync<DeleteResponse>($"{BasePath}/{id}", cancellationToken);
+        var response = await _http.DeleteAsync<DeleteResponse>($"{BasePath}/{id}", version, cancellationToken);
         return response.Result ?? new DeleteResponse { Message = "Deleted" };
     }
 }

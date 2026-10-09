@@ -180,7 +180,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
             Value = "updated_value"
         };
 
-        await _client.UpdateAsync(variableId, updateRequest);
+        await _client.UpdateAsync(variableId, updateRequest, list.Items[0].Version);
 
         // Assert
         var updated = await _client.GetAsync(variableId);
@@ -219,7 +219,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
         };
 
         var exception = await Assert.ThrowsAsync<ArgumentException>(
-            () => _client.UpdateAsync(variableId, updateRequest)
+            () => _client.UpdateAsync(variableId, updateRequest, list.Items[0].Version)
         );
 
         Assert.Contains("Key must start with 'pst5_'", exception.Message);
@@ -259,7 +259,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
             RefId = "new-ref"
         };
 
-        await _client.UpdateAsync(variableId, updateRequest);
+        await _client.UpdateAsync(variableId, updateRequest, list.Items[0].Version);
 
         // Assert
         var updated = await _client.GetAsync(variableId);
@@ -294,7 +294,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
         var variableId = list.Items[0].Id;
 
         // Act
-        await _client.DeleteAsync(variableId);
+        await _client.DeleteAsync(variableId, list.Items[0].Version);
 
         // Assert - No exception means success
     }
@@ -509,7 +509,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
             Tag = "workflow-test"
         };
 
-        await _client.UpdateAsync(variableId, updateRequest);
+        await _client.UpdateAsync(variableId, updateRequest, retrieved.Version);
 
         // Verify update
         var updated = await _client.GetAsync(variableId);
@@ -517,7 +517,7 @@ public class HtmlHostingVariablesClientTests : IDisposable
         Assert.Equal("updated_value", updated.Value);
 
         // Delete
-        await _client.DeleteAsync(variableId);
+        await _client.DeleteAsync(variableId, updated.Version);
     }
 
     #endregion

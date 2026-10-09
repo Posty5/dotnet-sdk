@@ -160,8 +160,12 @@ public class ProductSearchParams
 }
 
 /// <summary>Product summary row (search results).</summary>
-public class ProductSummary
+public class ProductSummary : Posty5.Core.Models.IVersioned
 {
+    /// <summary>The document's version (<c>__v</c>); pass it to the next update or delete.</summary>
+    [JsonPropertyName("__v")]
+    public long Version { get; set; }
+
     /// <summary>Product id.</summary>
     [JsonPropertyName("_id")]
     public string? Id { get; set; }

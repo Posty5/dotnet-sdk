@@ -32,8 +32,12 @@ public class StoreCustomerStats
 }
 
 /// <summary>Somebody who has ordered from the store.</summary>
-public class StoreCustomer
+public class StoreCustomer : Posty5.Core.Models.IVersioned
 {
+    /// <summary>The document's version (<c>__v</c>); pass it to the next update or delete.</summary>
+    [JsonPropertyName("__v")]
+    public long Version { get; set; }
+
     /// <summary>Customer id.</summary>
     [JsonPropertyName("_id")]
     public string? Id { get; set; }

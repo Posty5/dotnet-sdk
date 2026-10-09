@@ -1,6 +1,4 @@
 using System.Net;
-using System.Net.Sockets;
-using System.Text;
 using System.Text.Json;
 using Posty5.Core.Configuration;
 using Posty5.Core.Exceptions;
@@ -14,69 +12,17 @@ using Xunit;
 namespace Posty5.Tests.Store;
 
 /// <summary>
-/// A local HTTP server the real <see cref="Posty5HttpClient"/> is pointed at. It
-/// records each request and answers with the API's envelope, so routes, verbs,
-/// query strings and bodies are pinned without the network.
+/// Offline: the real <see cref="Posty5HttpClient"/> against a
+/// <see cref="RecordingServer"/>, so every supplier route is pinned.
 /// </summary>
-internal sealed class RecordingServer : IDisposable
-{
-    private readonly HttpListener _listener = new();
-    private readonly CancellationTokenSource _stop = new();
-
-    public List<(string Method, string PathAndQuery, string Body)> Requests { get; } = new();
-    public string ResultJson { get; set; } = "{}";
-    public HttpStatusCode Status { get; set; } = HttpStatusCode.OK;
-    public string BaseUrl { get; }
-
-    public RecordingServer()
-    {
-        var probe = new TcpListener(IPAddress.Loopback, 0);
-        probe.Start();
-        var port = ((IPEndPoint)probe.LocalEndpoint).Port;
-        probe.Stop();
-
-        BaseUrl = $"http://127.0.0.1:{port}";
-        _listener.Prefixes.Add($"{BaseUrl}/");
-        _listener.Start();
-        _ = Task.Run(LoopAsync);
-    }
-
-    private async Task LoopAsync()
-    {
-        while (!_stop.IsCancellationRequested)
-        {
-            HttpListenerContext context;
-            try { context = await _listener.GetContextAsync(); }
-            catch { return; }
-
-            using var reader = new StreamReader(context.Request.InputStream, Encoding.UTF8);
-            var body = await reader.ReadToEndAsync();
-            lock (Requests) Requests.Add((context.Request.HttpMethod, context.Request.RawUrl ?? "", body));
-
-            var payload = Encoding.UTF8.GetBytes($"{{\"message\":\"ok\",\"result\":{ResultJson}}}");
-            context.Response.StatusCode = (int)Status;
-            context.Response.ContentType = "application/json";
-            await context.Response.OutputStream.WriteAsync(payload);
-            context.Response.Close();
-        }
-    }
-
-    public StoreSuppliersClient Client() =>
-        new(new Posty5HttpClient(new Posty5Options { ApiKey = "test-key", BaseUrl = BaseUrl }));
-
-    public void Dispose()
-    {
-        _stop.Cancel();
-        _listener.Close();
-    }
-}
-
 public class StoreSuppliersRouteTests : IDisposable
 {
     private const string Base = "/api/store-suppliers/s1";
     private readonly RecordingServer _server = new();
 
     public void Dispose() => _server.Dispose();
+
+    private StoreSuppliersClient Client() => new(_server.Http());
 
     [Fact]
     public void StoreClient_ExposesSuppliers()
@@ -88,7 +34,7 @@ public class StoreSuppliersRouteTests : IDisposable
     [Fact]
     public async Task ConnectAsync_SendsCredentialKeysExactly_InTheBody()
     {
-        await _server.Client().ConnectAsync("s1", new ConnectSupplierInput
+        await Client().ConnectAsync("s1", new ConnectSupplierInput
         {
             SupplierKey = "cjdropshipping",
             Credentials = new Dictionary<string, string> { ["apiKey"] = "secret", ["AppSecret"] = "x" },
@@ -110,23 +56,23 @@ public class StoreSuppliersRouteTests : IDisposable
     public async Task ListAsync_UnwrapsItems()
     {
         _server.ResultJson = "{\"items\":[{\"_id\":\"i1\",\"supplierKey\":\"cjdropshipping\",\"hasCredentials\":true}]}";
-        var list = await _server.Client().ListAsync("s1");
+        var list = await Client().ListAsync("s1");
         Assert.Equal("i1", Assert.Single(list).Id);
     }
 
     [Fact]
     public async Task ConnectionRoutes_MapToTheApi()
     {
-        var client = _server.Client();
+        var client = Client();
         await client.GetCatalogueAsync("s1");
-        await client.ReplaceCredentialsAsync("s1", "i1", new ReplaceSupplierCredentialsInput { Credentials = new() { ["apiKey"] = "k" } });
-        await client.UpdateSettingsAsync("s1", "i1", new UpdateSupplierSettingsInput { Settings = new() { ["fromCountryCode"] = "US" } });
-        await client.UpdateAutomationAsync("s1", "i1", new SupplierAutomationInput { Mode = SupplierAutomationModes.Submit });
-        await client.SetEnabledAsync("s1", "i1", false);
+        await client.ReplaceCredentialsAsync("s1", "i1", new ReplaceSupplierCredentialsInput { Credentials = new() { ["apiKey"] = "k" } }, 0);
+        await client.UpdateSettingsAsync("s1", "i1", new UpdateSupplierSettingsInput { Settings = new() { ["fromCountryCode"] = "US" } }, 0);
+        await client.UpdateAutomationAsync("s1", "i1", new SupplierAutomationInput { Mode = SupplierAutomationModes.Submit }, 0);
+        await client.SetEnabledAsync("s1", "i1", false, 0);
         await client.TestAsync("s1", "i1");
         await client.GetBalanceAsync("s1", "i1");
         await client.GetDisconnectImpactAsync("s1", "i1");
-        await client.DisconnectAsync("s1", "i1", force: true);
+        await client.DisconnectAsync("s1", "i1", 0, force: true);
         await client.StartOAuthAsync("s1", new StartSupplierOAuthInput { SupplierKey = "aliexpress" });
 
         Assert.Equal(new[]
@@ -151,7 +97,7 @@ public class StoreSuppliersRouteTests : IDisposable
     public async Task ProductAndLinkRoutes_MapToTheApi()
     {
         _server.ResultJson = "{\"items\":[]}";
-        var client = _server.Client();
+        var client = Client();
         await client.BrowseProductsAsync("s1", "i1", new BrowseSupplierProductsParams { Q = "mug" }, page: 2);
         await client.GetProductAsync("s1", "i1", "p/1");
         await client.ResolveUrlAsync("s1", "i1", "https://cjdropshipping.com/product/x");
@@ -160,9 +106,9 @@ public class StoreSuppliersRouteTests : IDisposable
         await client.GetImportStatusAsync("s1", "job1");
         await client.ListLinksAsync("s1", "prod1");
         await client.CreateLinkAsync("s1", new CreateSupplierLinkInput { ProductId = "prod1", IntegrationId = "i1", SupplierProductId = "p1", Variants = { new SupplierLinkVariantInput { SupplierVariantId = "v1" } } });
-        await client.UpdateLinkAsync("s1", "l1", new UpdateSupplierLinkInput { Sync = new() { [LinkSyncFields.Price] = true } });
+        await client.UpdateLinkAsync("s1", "l1", new UpdateSupplierLinkInput { Sync = new() { [LinkSyncFields.Price] = true } }, 0);
         await client.SyncLinkAsync("s1", "l1");
-        await client.DeleteLinkAsync("s1", "l1");
+        await client.DeleteLinkAsync("s1", "l1", 0);
 
         Assert.Equal(new[]
         {
@@ -183,14 +129,14 @@ public class StoreSuppliersRouteTests : IDisposable
     [Fact]
     public async Task SupplierOrderRoutes_EncodeThePartKey()
     {
-        var client = _server.Client();
+        var client = Client();
         await client.ListSupplierOrdersAsync("s1", new SupplierOrderSearchParams { NeedsReview = true }, new PaginationParams { PageSize = 25 });
         await client.GetSupplierOrderAsync("s1", "so1");
         await client.SubmitGroupAsync("s1", "o1", "supplier:i1", payNow: true);
-        await client.RetryAsync("s1", "so1", acceptCost: true);
-        await client.PayAsync("s1", "so1");
-        await client.CancelAsync("s1", "so1");
-        await client.FulfilGroupManuallyAsync("s1", "o1", "supplier:i1");
+        await client.RetryAsync("s1", "so1", 0, acceptCost: true);
+        await client.PayAsync("s1", "so1", 0);
+        await client.CancelAsync("s1", "so1", 0);
+        await client.FulfilGroupManuallyAsync("s1", "o1", "supplier:i1", 0);
 
         Assert.Equal(new[]
         {
@@ -210,7 +156,7 @@ public class StoreSuppliersRouteTests : IDisposable
     public async Task ListSupplierOrders_PagesByCursor_AndReadsTheListEnvelope()
     {
         _server.ResultJson = "{\"items\":[{\"_id\":\"so2\"}],\"pagination\":{\"nextCursor\":\"c3\",\"previousCursor\":\"c1\",\"hasMore\":true,\"totalCount\":30,\"pageSize\":25}}";
-        var page = await _server.Client().ListSupplierOrdersAsync("s1",
+        var page = await Client().ListSupplierOrdersAsync("s1",
             new SupplierOrderSearchParams { Status = SupplierOrderStatuses.Failed },
             new PaginationParams { Cursor = "c2", PageSize = 25 });
 
@@ -230,11 +176,11 @@ public class StoreSuppliersRouteTests : IDisposable
     public async Task ImportResult_TellsQueuedFromInline()
     {
         _server.ResultJson = "{\"jobId\":\"j1\",\"rows\":null}";
-        var queued = await _server.Client().ImportProductsAsync("s1", "i1", new ImportSupplierProductsInput());
+        var queued = await Client().ImportProductsAsync("s1", "i1", new ImportSupplierProductsInput());
         Assert.True(queued!.IsQueued);
 
         _server.ResultJson = "{\"jobId\":null,\"rows\":[{\"supplierProductId\":\"p1\",\"state\":\"added\"}]}";
-        var inline = await _server.Client().ImportProductsAsync("s1", "i1", new ImportSupplierProductsInput());
+        var inline = await Client().ImportProductsAsync("s1", "i1", new ImportSupplierProductsInput());
         Assert.False(inline!.IsQueued);
         Assert.Equal("added", Assert.Single(inline.Rows!).State);
     }
@@ -243,7 +189,7 @@ public class StoreSuppliersRouteTests : IDisposable
     public async Task PausedOutcome_Throws()
     {
         _server.Status = HttpStatusCode.BadRequest;
-        await Assert.ThrowsAsync<Posty5ValidationException>(() => _server.Client().RetryAsync("s1", "so1"));
+        await Assert.ThrowsAsync<Posty5ValidationException>(() => Client().RetryAsync("s1", "so1", 0));
     }
 }
 
@@ -268,12 +214,19 @@ public class StoreSuppliersLiveTests : IDisposable
     {
         foreach (var linkId in TestConfig.CreatedResources.SupplierLinks.ToList())
         {
-            try { _store.Suppliers.DeleteLinkAsync(StoreId, linkId).GetAwaiter().GetResult(); } catch { /* already gone */ }
+            // No single-link read exists: a link only reaches here when its fact failed
+            // before its own delete, usually still at version 0. Best effort.
+            try { _store.Suppliers.DeleteLinkAsync(StoreId, linkId, 0).GetAwaiter().GetResult(); } catch { /* already gone, or moved on */ }
             TestConfig.CreatedResources.SupplierLinks.Remove(linkId);
         }
         foreach (var productId in TestConfig.CreatedResources.StoreProducts.ToList())
         {
-            try { _store.Products.DeleteAsync(StoreId, productId).GetAwaiter().GetResult(); } catch { /* already gone */ }
+            try
+            {
+                var product = _store.Products.GetAsync(StoreId, productId).GetAwaiter().GetResult();
+                _store.Products.DeleteAsync(StoreId, productId, product?.Version ?? 0).GetAwaiter().GetResult();
+            }
+            catch { /* already gone */ }
             TestConfig.CreatedResources.StoreProducts.Remove(productId);
         }
     }
@@ -398,7 +351,7 @@ public class StoreSuppliersLiveTests : IDisposable
         try
         {
             var changed = await _store.Suppliers.UpdateAutomationAsync(StoreId, IntegrationId,
-                new SupplierAutomationInput { AllowUnpaidOrders = !before.AllowUnpaidOrders });
+                new SupplierAutomationInput { AllowUnpaidOrders = !before.AllowUnpaidOrders }, 0);
             Assert.Equal(!before.AllowUnpaidOrders, changed!.Automation!.AllowUnpaidOrders);
         }
         finally
@@ -410,7 +363,7 @@ public class StoreSuppliersLiveTests : IDisposable
                 MaxCostPerOrder = before.MaxCostPerOrder,
                 MaxCostRatio = before.MaxCostRatio,
                 AllowedCountries = before.AllowedCountries ?? new(),
-            });
+            }, 0);
             Assert.Equal(before.AllowUnpaidOrders, restored!.Automation!.AllowUnpaidOrders);
         }
     }
@@ -435,7 +388,7 @@ public class StoreSuppliersLiveTests : IDisposable
         var updated = await _store.Suppliers.UpdateLinkAsync(StoreId, link.Id!, new UpdateSupplierLinkInput
         {
             Sync = new() { [LinkSyncFields.Price] = false },
-        });
+        }, link.Version);
         Assert.False(updated!.Sync![LinkSyncFields.Price]);
 
         // Never synced (SyncNow = false), so the once-a-minute limit does not apply yet.
@@ -443,7 +396,7 @@ public class StoreSuppliersLiveTests : IDisposable
         Assert.Equal(link.Id, synced?.Link?.Id);
         Assert.NotNull(synced?.Changed);
 
-        await _store.Suppliers.DeleteLinkAsync(StoreId, link.Id!);
+        await _store.Suppliers.DeleteLinkAsync(StoreId, link.Id!, synced?.Link?.Version ?? updated.Version);
         TestConfig.CreatedResources.SupplierLinks.Remove(link.Id!);
     }
 
@@ -485,9 +438,11 @@ public class StoreSuppliersLiveTests : IDisposable
     public async Task RetryAndPay_OnTheTestConnection_MoveNoMoney()
     {
         var row = await FixturePartSupplierOrder();
-        Assert.Contains(SupplierReviewReasons.TestMode, await OutcomeOf(() => _store.Suppliers.RetryAsync(StoreId, row.Id!)));
+        Assert.Contains(SupplierReviewReasons.TestMode, await OutcomeOf(() => _store.Suppliers.RetryAsync(StoreId, row.Id!, row.Version)));
 
-        var paid = await OutcomeOf(() => _store.Suppliers.PayAsync(StoreId, row.Id!));
+        // The retry may have moved the supplier order on: write with its current version.
+        var afterRetry = await _store.Suppliers.GetSupplierOrderAsync(StoreId, row.Id!);
+        var paid = await OutcomeOf(() => _store.Suppliers.PayAsync(StoreId, row.Id!, afterRetry!.Version));
         Assert.DoesNotContain($"\"status\":\"{SupplierOrderStatuses.Confirmed}\"", paid);
     }
 
@@ -495,10 +450,11 @@ public class StoreSuppliersLiveTests : IDisposable
     public async Task CancelThenFulfilManually_EndsTheFixturePart()
     {
         var row = await FixturePartSupplierOrder();
-        await OutcomeOf(() => _store.Suppliers.CancelAsync(StoreId, row.Id!));
+        await OutcomeOf(() => _store.Suppliers.CancelAsync(StoreId, row.Id!, row.Version));
         Assert.Equal(SupplierOrderStatuses.Cancelled, (await _store.Suppliers.GetSupplierOrderAsync(StoreId, row.Id!))?.Status);
 
-        var manual = await _store.Suppliers.FulfilGroupManuallyAsync(StoreId, TestConfig.OrderId, TestConfig.GroupKey);
+        var order = await _store.Orders.GetAsync(StoreId, TestConfig.OrderId);
+        var manual = await _store.Suppliers.FulfilGroupManuallyAsync(StoreId, TestConfig.OrderId, TestConfig.GroupKey, order!.Version);
         Assert.Equal(TestConfig.OrderId, manual?.OrderId);
     }
 

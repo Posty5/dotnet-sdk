@@ -4,16 +4,18 @@
 
 | Path | Purpose |
 | --- | --- |
-| `src/Posty5.Core` | Options, HTTP, exceptions, common response/pagination models, converters. |
+| `src/Posty5.Core` | Options (`Configuration/` incl. `Posty5HttpDefaults`, `CreatedFromDefaults`), HTTP (`Http/` incl. `Posty5ClientIdentity`), exceptions, common response/pagination/`AgentOrigin` models, converters. |
+| `src/Posty5.Account` | Account client (`AccountClient.cs`), its routes (`AccountRoutes.cs`) and `Models/` (who am I, credits, operation costs, string-constant vocabularies). |
 | `src/Posty5.ShortLink` | Short-link client/models. |
-| `src/Posty5.QRCode` | QR client/models. |
+| `src/Posty5.QRCode` | QR client/models; `QRCodeTemplateClient.cs` + `QRCodeTemplateRoutes.cs` for template lookups. |
 | `src/Posty5.HtmlHosting` | HTML hosting client/models. |
 | `src/Posty5.HtmlHostingVariables` | Hosting variables client/models. |
 | `src/Posty5.HtmlHostingFormSubmission` | Submission client/models. |
-| `src/Posty5.SocialPublisherWorkspace` | Social workspace client/models. |
-| `src/Posty5.SocialPublisherPost` | Social post client/models/uploads. |
-| `src/Posty5.Store` | Online store client/models: `StoreClient.cs` facade, `Clients/` (products, orders, tags, customers, shipping, suppliers on `StoreClientBase`), `Models/` (incl. `SupplierConstants.cs` string vocabularies). |
-| `tests/Posty5.Tests` | xUnit integration/client tests and assets. |
+| `src/Posty5.SocialPublisherWorkspace` | Social workspace client/models; `SocialPublisherAccountClient.cs` + `SocialPublisherAccountRoutes.cs` for connected accounts. |
+| `src/Posty5.SocialPublisherPost` | Social post client/models/uploads (`Models/` has one file per post kind: text, story, long video, results). |
+| `src/Posty5.Store` | Online store client/models: `StoreClient.cs` facade (+ `StoreRoutes.cs` for the store lookup), `Clients/` (products, orders, tags, customers, shipping, suppliers on `StoreClientBase`), `Models/` (incl. `SupplierConstants.cs` string vocabularies). |
+| `tests/Posty5.Tests` | xUnit tests and assets: offline route tests on the shared `RecordingServer.cs`, live facts guarded by `[ApiKeyFact]` / `[StoreFixtureFact]`, and the older unguarded `Integration` classes. |
+| `.github/workflows/publish-nuget.yml` | Tag-triggered pack and NuGet push; a new package must be added to its pack list. |
 | `examples` | Consumer usage examples. |
 
 ## Root entrypoints

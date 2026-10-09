@@ -232,18 +232,21 @@ Update workspace details including name, description, and optional logo image.
 **Example:**
 
 ```csharp
-// Update details
-await client.UpdateAsync("workspace-id", new UpdateWorkspaceRequest
+// Update details. The version you read goes as If-Match;
+// a stale one throws Posty5ConflictException.
+var workspace = await client.GetAsync("workspace-id");
+var written = await client.UpdateAsync("workspace-id", new UpdateWorkspaceRequest
 {
     Name = "Updated Workspace Name",
     Description = "New description"
-});
+}, workspace.Version);
 
-// Update with new logo
+// Update with new logo, using the version the last write returned
 using var newLogoStream = File.OpenRead("new-logo.png");
 await client.UpdateAsync(
     "workspace-id",
     new UpdateWorkspaceRequest { Name = "Workspace", Description = "Desc" },
+    written.Version!.Value,
     newLogoStream
 );
 ```
@@ -257,15 +260,42 @@ Delete a workspace.
 **Parameters:**
 
 - `id` (string): Workspace ID to delete
+- `version` (long): The workspace's version as last read (`workspace.Version`), sent as `If-Match`
 
-**Returns:** `Post`
+**Returns:** `Task<DeleteResponse>`
 
 **Example:**
 
 ```csharp
-await client.DeleteAsync("workspace-id-to-delete");
+var workspace = await client.GetAsync("workspace-id-to-delete");
+await client.DeleteAsync("workspace-id-to-delete", workspace.Version);
 Console.WriteLine("Workspace deleted successfully");
 ```
+
+---
+
+### Connected accounts — SocialPublisherAccountClient (3.1.0+)
+
+Read the social accounts connected to Posty5 — the `AccountId` the post
+client's `...ToAccountAsync` methods take. Read-only: connecting an account is an
+OAuth sign-in done in the dashboard. A key with record scope `key` (the default)
+sees the accounts connected with that key; `account` sees all of its owner's.
+
+```csharp
+var accounts = new SocialPublisherAccountClient(httpClient);
+
+var page = await accounts.ListAsync(new SocialPublisherAccountListParamsModel { Platform = "instagram", Status = "active" });
+var matches = await accounts.LookupAsync("shop", platform: "facebook");   // id, name, picture — for a picker
+var details = await accounts.GetAsync(page.Items[0].Id);                  // + platform profile, default settings and comments
+
+// "authenticationExpired" means: reconnect it in the dashboard before publishing.
+```
+
+| Method | Route |
+| --- | --- |
+| `ListAsync(params?, pagination?)` | `GET /api/social-publisher-account` |
+| `LookupAsync(term?, platform?)` | `GET /api/social-publisher-account/lookup` |
+| `GetAsync(id)` | `GET /api/social-publisher-account/{id}` |
 
 ---
 

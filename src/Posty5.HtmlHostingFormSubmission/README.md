@@ -246,13 +246,15 @@ Permanently delete a form submission.
 **Parameters:**
 
 - `id` (string): Submission ID to delete
+- `version` (long): The submission's version as last read (`submission.Version`), sent as `If-Match`
 
-**Returns:** `Task`
+**Returns:** `Task<DeleteResponse>`
 
 **Example:**
 
 ```csharp
-await formSubmissions.DeleteAsync("submission-id-123");
+var submission = await formSubmissions.GetAsync("submission-id-123");
+await formSubmissions.DeleteAsync("submission-id-123", submission.Version);
 Console.WriteLine("Submission deleted");
 ```
 

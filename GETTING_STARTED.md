@@ -193,6 +193,86 @@ await client.ReschedulePostAsync("post_123", "now");
 
 Free, and only valid while the post is still pending with a future publish time.
 
+## Check the key, find the ids, then act
+
+Before a paid call, an integration — or an AI agent driving one — usually needs
+three things: is this key valid and what can it spend, what does the call cost,
+and which id does the call take. Each has one method:
+
+```csharp
+using Posty5.Account;
+
+var account = new AccountClient(httpClient);
+var me = await account.GetCurrentAsync();          // 401 → Posty5AuthenticationException
+var costs = await account.GetOperationCostsAsync(); // live prices, public
+
+var storeId    = (await new StoreClient(httpClient).ListStoresAsync()).First().Id;
+var templateId = (await new QRCodeTemplateClient(httpClient).ListPublicTemplatesAsync()).Items.First().Id;
+var accountId  = (await new SocialPublisherAccountClient(httpClient).ListAsync()).Items.First().Id;
+```
+
+| Need | Method | Route |
+| --- | --- | --- |
+| Who am I: key, owner, plan, credits, MCP settings | `AccountClient.GetCurrentAsync()` | `GET /api/api-key/current` |
+| Balance and per-feature counters | `AccountClient.GetCreditsAsync()` | `GET /api/user/current/credits` |
+| Credit history (cursor-paged) | `AccountClient.GetCreditUsageAsync(filters?, pagination?)` | `GET /api/user/current/credit-usage` |
+| Totals over that history | `AccountClient.GetCreditUsageSummaryAsync(filters?)` | `GET /api/user/current/credit-usage/summary` |
+| Price of every operation | `AccountClient.GetOperationCostsAsync(activeOnly = true)` | `GET /api/plans/operation-costs` |
+| Stores you can manage | `StoreClient.ListStoresAsync()` / `LookupStoresAsync(term?)` | `GET /api/store/lookup` |
+| Connected social accounts | `SocialPublisherAccountClient.ListAsync(params?, pagination?)` / `LookupAsync(term?, platform?)` / `GetAsync(id)` | `GET /api/social-publisher-account[/lookup\|/{id}]` |
+| QR code templates | `QRCodeTemplateClient.ListUserTemplatesAsync(term?, pagination?)` / `ListPublicTemplatesAsync(term?, schemeType?, pagination?)` | `GET /api/qr-code-template/user-lookup`, `/public-lookup` |
+
+### Text posts and stories
+
+```csharp
+var posts = new SocialPublisherPostClient(httpClient);
+
+var text = await posts.CreateTextPostToWorkspaceAsync(new CreateTextPostToWorkspaceRequest
+{
+    WorkspaceId = "workspace_123",
+    Caption = "Our autumn menu is out.",
+    Facebook = new TextPostFacebookConfig { Description = "Our autumn menu is out:", Link = "https://example.com/menu" }
+});
+// YouTube, Instagram and TikTok take no text: they come back in text.SkippedPlatforms.
+
+var story = await posts.CreateStoryPostToAccountAsync(new CreateStoryPostToAccountRequest
+{
+    AccountId = "account_123",
+    Kind = StoryKinds.Video,
+    VideoURL = "https://example.com/story.mp4"   // media by URL in this release
+});
+
+var status = await posts.GetStatusAsync(story.Id);  // GET /{id}/status — fixed in 4.6.0
+var removed = await posts.RemovePostAsync(text.Id); // take a PUBLISHED post down from the platforms
+```
+
+`DeletePostAsync` deletes a post that has **not** published yet; `RemovePostAsync`
+deletes the media of one that **has**, platform by platform (Instagram and TikTok
+cannot delete through their APIs and report `NotSupported`).
+
+## Identifying your integration
+
+Every request carries `X-Posty5-Client: posty5-dotnet/<Posty5.Core version>`, so
+the API's logs can tell SDK traffic apart. Two options let you add to that:
+
+```csharp
+var options = new Posty5Options
+{
+    ApiKey = Environment.GetEnvironmentVariable("POSTY5_API_KEY"),
+
+    // Sent on every request. X-API-Key is refused here (use ApiKey);
+    // an X-Posty5-Client entry replaces the SDK's own label.
+    DefaultHeaders = new() { ["X-Correlation-Id"] = correlationId },
+
+    // Stamped as createdFrom on everything this client creates, for your own filtering.
+    // Null keeps the package defaults: "dotnetPackage", and "dotnet" for store orders.
+    CreatedFrom = "my-crm"
+};
+```
+
+There are no automatic retries: a request that fails is reported, not repeated,
+so a create is never sent twice.
+
 ## Environment Variables
 
 Instead of hardcoding your API key, use environment variables:

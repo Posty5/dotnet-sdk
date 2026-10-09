@@ -92,16 +92,17 @@ public class StoreShippingClient : StoreClientBase
         string storeId,
         string iso,
         UpdateShippingCountryInput changes,
+        long version,
         CancellationToken cancellationToken = default)
     {
-        var response = await Http.PutAsync<ShippingZoneResult>($"{Base}/{storeId}/countries/{iso}", changes, cancellationToken);
+        var response = await Http.PutAsync<ShippingZoneResult>($"{Base}/{storeId}/countries/{iso}", changes, version, cancellationToken);
         return response.Result;
     }
 
     /// <summary>Soft-delete a country and every route under it.</summary>
-    public async Task<RemoveShippingCountryResult?> DeleteCountryAsync(string storeId, string iso, CancellationToken cancellationToken = default)
+    public async Task<RemoveShippingCountryResult?> DeleteCountryAsync(string storeId, string iso, long version, CancellationToken cancellationToken = default)
     {
-        var response = await Http.DeleteAsync<RemoveShippingCountryResult>($"{Base}/{storeId}/countries/{iso}", cancellationToken);
+        var response = await Http.DeleteAsync<RemoveShippingCountryResult>($"{Base}/{storeId}/countries/{iso}", version, cancellationToken);
         return response.Result;
     }
 
@@ -149,30 +150,40 @@ public class StoreShippingClient : StoreClientBase
     /// <summary>
     /// Price or block one governorate or city. A route that ends up saying
     /// nothing — no fee AND delivery allowed — is removed rather than stored, so
-    /// Rate comes back null with Cleared set.
+    /// Rate comes back null with Cleared set. <paramref name="version"/> is the
+    /// route's <c>Version</c> as last read, or 0 for a place with no route yet.
     /// </summary>
     public async Task<UpsertShippingRouteResult?> UpsertRouteAsync(
         string storeId,
         string iso,
         UpsertShippingRouteInput input,
+        long version,
         CancellationToken cancellationToken = default)
     {
-        var response = await Http.PostAsync<UpsertShippingRouteResult>($"{Base}/{storeId}/countries/{iso}/routes", input, cancellationToken);
+        var response = await Http.PostAsync<UpsertShippingRouteResult>($"{Base}/{storeId}/countries/{iso}/routes", input, version, cancellationToken);
         return response.Result;
     }
 
     /// <summary>
     /// Price or block up to 200 places in one call. Each row is applied and
     /// reported independently, so one bad row never discards the rest.
+    /// <paramref name="versions"/> maps every existing route's id to its
+    /// <c>Version</c> as last read; a row that conflicts is reported in
+    /// <see cref="BulkShippingRoutesResult.Skipped"/>.
     /// </summary>
     public async Task<BulkShippingRoutesResult?> BulkUpsertRoutesAsync(
         string storeId,
         string iso,
         IEnumerable<UpsertShippingRouteInput> items,
+        IDictionary<string, long> versions,
         CancellationToken cancellationToken = default)
     {
-        var body = new BulkShippingRoutesRequest { Items = items.ToList() };
-        var response = await Http.PostAsync<BulkShippingRoutesResult>($"{Base}/{storeId}/countries/{iso}/routes/bulk", body, cancellationToken);
+        ArgumentNullException.ThrowIfNull(versions);
+        var body = new Dictionary<string, object?> { ["items"] = items.ToList() };
+        var response = await Http.SendBulkVersionedAsync<BulkShippingRoutesResult>(
+            HttpMethod.Post, $"{Base}/{storeId}/countries/{iso}/routes/bulk", body, versions, cancellationToken);
+        if (response.Result != null && response.Versions != null)
+            response.Result.Versions = response.Versions;
         return response.Result;
     }
 
@@ -180,22 +191,36 @@ public class StoreShippingClient : StoreClientBase
     /// Give every governorate of a country — or every city of one governorate —
     /// the same fee. A fee equal to what those places already inherit clears
     /// their rows instead of writing them: uniformity is what was asked for, and
-    /// the model expresses it by having no rows.
+    /// the model expresses it by having no rows. <paramref name="versions"/> maps
+    /// the id of every route in scope to its <c>Version</c> as last read.
     /// </summary>
     public async Task<ApplyShippingFeeResult?> ApplyFeeAsync(
         string storeId,
         string iso,
         ApplyShippingFeeInput input,
+        IDictionary<string, long> versions,
         CancellationToken cancellationToken = default)
     {
-        var response = await Http.PostAsync<ApplyShippingFeeResult>($"{Base}/{storeId}/countries/{iso}/routes/apply-fee", input, cancellationToken);
+        ArgumentNullException.ThrowIfNull(input);
+        ArgumentNullException.ThrowIfNull(versions);
+        var body = new Dictionary<string, object?>
+        {
+            ["level"] = input.Level,
+            ["governorateCode"] = input.GovernorateCode,
+            ["fee"] = input.Fee,
+            ["isAllowed"] = input.IsAllowed,
+        };
+        var response = await Http.SendBulkVersionedAsync<ApplyShippingFeeResult>(
+            HttpMethod.Post, $"{Base}/{storeId}/countries/{iso}/routes/apply-fee", body, versions, cancellationToken);
+        if (response.Result != null && response.Versions != null)
+            response.Result.Versions = response.Versions;
         return response.Result;
     }
 
     /// <summary>Remove one override, putting the place back on whatever it inherits.</summary>
-    public async Task<ClearShippingRouteResult?> ClearRouteAsync(string storeId, string rateId, CancellationToken cancellationToken = default)
+    public async Task<ClearShippingRouteResult?> ClearRouteAsync(string storeId, string rateId, long version, CancellationToken cancellationToken = default)
     {
-        var response = await Http.DeleteAsync<ClearShippingRouteResult>($"{Base}/{storeId}/routes/{rateId}", cancellationToken);
+        var response = await Http.DeleteAsync<ClearShippingRouteResult>($"{Base}/{storeId}/routes/{rateId}", version, cancellationToken);
         return response.Result;
     }
 
@@ -273,9 +298,10 @@ public class StoreShippingClient : StoreClientBase
         string storeId,
         string profileId,
         UpdateShippingProfileInput changes,
+        long version,
         CancellationToken cancellationToken = default)
     {
-        var response = await Http.PutAsync<ShippingProfile>($"{Base}/{storeId}/profiles/{profileId}", changes, cancellationToken);
+        var response = await Http.PutAsync<ShippingProfile>($"{Base}/{storeId}/profiles/{profileId}", changes, version, cancellationToken);
         return response.Result;
     }
 
@@ -286,9 +312,10 @@ public class StoreShippingClient : StoreClientBase
     public async Task<DeleteShippingProfileResult?> DeleteProfileAsync(
         string storeId,
         string profileId,
+        long version,
         CancellationToken cancellationToken = default)
     {
-        var response = await Http.DeleteAsync<DeleteShippingProfileResult>($"{Base}/{storeId}/profiles/{profileId}", cancellationToken);
+        var response = await Http.DeleteAsync<DeleteShippingProfileResult>($"{Base}/{storeId}/profiles/{profileId}", version, cancellationToken);
         return response.Result;
     }
 
@@ -303,10 +330,11 @@ public class StoreShippingClient : StoreClientBase
         string storeId,
         string profileId,
         IEnumerable<ShippingProfileCondition> conditions,
+        long profileVersion,
         CancellationToken cancellationToken = default)
     {
         var body = new AddShippingProfileConditionsRequest { Conditions = conditions.ToList() };
-        var response = await Http.PostAsync<ShippingProfile>($"{Base}/{storeId}/profiles/{profileId}/conditions", body, cancellationToken);
+        var response = await Http.PostAsync<ShippingProfile>($"{Base}/{storeId}/profiles/{profileId}/conditions", body, profileVersion, cancellationToken);
         return response.Result;
     }
 
@@ -315,10 +343,12 @@ public class StoreShippingClient : StoreClientBase
         string storeId,
         string profileId,
         string conditionKey,
+        long profileVersion,
         CancellationToken cancellationToken = default)
     {
         var response = await Http.DeleteAsync<ShippingProfile>(
             $"{Base}/{storeId}/profiles/{profileId}/conditions/{Uri.EscapeDataString(conditionKey)}",
+            profileVersion,
             cancellationToken);
         return response.Result;
     }
@@ -413,9 +443,10 @@ public class StoreShippingClient : StoreClientBase
     public async Task<ShippingAssignment?> SetDefaultAssignmentAsync(
         string storeId,
         string assignmentId,
+        long version,
         CancellationToken cancellationToken = default)
     {
-        var response = await Http.PutAsync<ShippingAssignment>($"{Base}/{storeId}/assignments/{assignmentId}/default", new { }, cancellationToken);
+        var response = await Http.PutAsync<ShippingAssignment>($"{Base}/{storeId}/assignments/{assignmentId}/default", new { }, version, cancellationToken);
         return response.Result;
     }
 
@@ -423,9 +454,10 @@ public class StoreShippingClient : StoreClientBase
     public async Task<RemoveShippingAssignmentResult?> RemoveAssignmentAsync(
         string storeId,
         string assignmentId,
+        long version,
         CancellationToken cancellationToken = default)
     {
-        var response = await Http.DeleteAsync<RemoveShippingAssignmentResult>($"{Base}/{storeId}/assignments/{assignmentId}", cancellationToken);
+        var response = await Http.DeleteAsync<RemoveShippingAssignmentResult>($"{Base}/{storeId}/assignments/{assignmentId}", version, cancellationToken);
         return response.Result;
     }
 }

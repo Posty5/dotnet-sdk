@@ -1,4 +1,5 @@
 using Posty5.Core.Converts;
+using Posty5.Core.Models;
 using System.Text.Json.Serialization;
 
 namespace Posty5.QRCode.Models;
@@ -167,6 +168,27 @@ public class QRCodeTargetModel
     /// Geolocation configuration (when type is 'geolocation')
     /// </summary>
     public QRCodeGeolocationTargetModel? Geolocation { get; set; }
+
+    /// <summary>vCard configuration (when type is 'vcard')</summary>
+    [JsonPropertyName("vcard")] public QRCodeVCardTargetModel? VCard { get; set; }
+
+    /// <summary>Event configuration (when type is 'event')</summary>
+    public QRCodeEventTargetModel? Event { get; set; }
+
+    /// <summary>WhatsApp configuration (when type is 'whatsapp')</summary>
+    [JsonPropertyName("whatsapp")] public QRCodeWhatsAppTargetModel? WhatsApp { get; set; }
+
+    /// <summary>Review configuration (when type is 'review')</summary>
+    public QRCodeReviewTargetModel? Review { get; set; }
+
+    /// <summary>Social profiles configuration (when type is 'social')</summary>
+    public QRCodeSocialTargetModel? Social { get; set; }
+
+    /// <summary>App store configuration (when type is 'appStore')</summary>
+    public QRCodeAppStoreTargetModel? AppStore { get; set; }
+
+    /// <summary>File configuration (when type is 'file')</summary>
+    public QRCodeFileTargetModel? File { get; set; }
     
     /// <summary>
     /// Free text content (when type is 'freeText')
@@ -177,8 +199,12 @@ public class QRCodeTargetModel
 /// <summary>
 /// QR Code template information
 /// </summary>
-public class QRCodeTemplateModel
+public class QRCodeTemplateModel : Posty5.Core.Models.IVersioned
 {
+    /// <summary>The document's version (<c>__v</c>); pass it to the next update or delete.</summary>
+    [JsonPropertyName("__v")]
+    public long Version { get; set; }
+
     /// <summary>
     /// Template ID
     /// </summary>
@@ -266,8 +292,12 @@ public class QRCodePreviewReasonModel
 /// <summary>
 /// QR Code model
 /// </summary>
-public class QRCodeModel
+public class QRCodeModel : Posty5.Core.Models.IVersioned
 {
+    /// <summary>The document's version (<c>__v</c>); pass it to the next update or delete.</summary>
+    [JsonPropertyName("__v")]
+    public long Version { get; set; }
+
     /// <summary>
     /// MongoDB document ID
     /// </summary>
@@ -301,13 +331,16 @@ public class QRCodeModel
     
     
     /// <summary>
-    /// Number of visitors/scans
+    /// Number of visits to the code's Posty5 page (<see cref="QrCodeLandingPageURL"/>).
+    /// A downloaded QR image encodes its content directly, so scanning it is
+    /// not counted here.
     /// </summary>
     public int? NumberOfVisitors { get; set; }
-    
- 
+
+
     /// <summary>
-    /// Whether landing page is enabled
+    /// Whether the code's Posty5 page shows <see cref="PageInfo"/>. Also
+    /// returned in API-key list results from the API's link-qr truth pass on.
     /// </summary>
     public bool? IsEnableLandingPage { get; set; }
     
@@ -322,12 +355,15 @@ public class QRCodeModel
     public string? LastVisitorDate { get; set; }
     
     /// <summary>
-    /// Whether monetization is enabled
+    /// Never returned by the API; always <c>null</c>.
     /// </summary>
+    [Obsolete(QRCodeConst.MonetizationObsolete)]
+    [JsonIgnore]
     public bool? IsEnableMonetization { get; set; }
-    
+
     /// <summary>
-    /// QR code status (new, pending, approved, rejected)
+    /// QR code status (new, pending, approved, rejected). Also returned in
+    /// API-key list results from the API's link-qr truth pass on.
     /// </summary>
     public QRCodeStatusType Status { get; set; }
     
@@ -347,6 +383,20 @@ public class QRCodeModel
     /// QR code target configuration
     /// </summary>
     public QRCodeTargetModel? QrCodeTarget { get; set; }
+
+    /// <summary>
+    /// <c>static</c>: the image encodes the content itself. <c>dynamic</c>: the image encodes
+    /// <see cref="QrCodeLandingPageURL"/>, which redirects to <see cref="QrCodeTarget"/>, so the
+    /// target can change later without reprinting. Codes stored before dynamic QR codes existed
+    /// come back as <c>static</c>.
+    /// </summary>
+    public QRCodeMode? Mode { get; set; }
+
+    /// <summary>When the code last became dynamic; <c>null</c> for a static code.</summary>
+    public DateTime? DynamicSince { get; set; }
+
+    /// <summary>The code's scan rules; <c>null</c> when it has none.</summary>
+    public QRCodeAccessModel? Access { get; set; }
     
     /// <summary>
     /// Preview reasons (moderation scores)
@@ -418,9 +468,11 @@ public class QRCodeRequestBaseModel
     public string? Name { get; set; }
     
     /// <summary>
-    /// Template ID
+    /// QR code template ID. Required on create and update for API-key callers,
+    /// which every SDK call is: the API answers "Template Id Is Required"
+    /// without it. Your template IDs are on the dashboard's QR code templates page.
     /// </summary>
-    public string TemplateId { get; set; } = string.Empty;
+    public required string TemplateId { get; set; }
     
     /// <summary>
     /// External reference ID for filtering/tracking
@@ -438,14 +490,63 @@ public class QRCodeRequestBaseModel
     public string? CustomLandingId { get; set; }
     
     /// <summary>
-    /// Enable monetization (default: false)
+    /// Whether the code's Posty5 page shows <see cref="PageInfo"/>. Omitted
+    /// (<c>null</c>): the API stores <c>false</c> on create and keeps the stored
+    /// value on update.
     /// </summary>
-    public bool? IsEnableMonetization { get; set; }
-    
+    public bool? IsEnableLandingPage { get; set; }
+
     /// <summary>
-    /// Page information (required when monetization is enabled)
+    /// Page information. <see cref="QRCodePageInfoModel.Title"/> is required
+    /// when <see cref="IsEnableLandingPage"/> is <c>true</c>.
     /// </summary>
     public QRCodePageInfoModel? PageInfo { get; set; }
+
+    /// <summary>
+    /// Never accepted by the API; ignored and never sent.
+    /// </summary>
+    [Obsolete(QRCodeConst.MonetizationObsolete)]
+    [JsonIgnore]
+    public bool? IsEnableMonetization { get; set; }
+
+    /// <summary>
+    /// <see cref="QRCodeMode.Static"/> or <see cref="QRCodeMode.Dynamic"/>. Omitted (<c>null</c>):
+    /// the API creates a static code, and an update keeps the stored mode. Wi-Fi codes cannot be
+    /// dynamic: the Wi-Fi methods throw <see cref="ArgumentException"/> before any call.
+    /// </summary>
+    public QRCodeMode? Mode { get; set; }
+
+    /// <summary>
+    /// Scan rules (dynamic codes only, Starter plan and above). Omitted (<c>null</c>): an update
+    /// keeps the stored rules. A sent object replaces the stored rules as a whole, so a property
+    /// left <c>null</c> in it is cleared. The API answers 400 for a static code and 403 below Starter.
+    /// </summary>
+    public QRCodeAccessModel? Access { get; set; }
+
+    /// <summary>
+    /// <c>true</c> sends <c>access: null</c>, removing every scan rule. Needed because a
+    /// <c>null</c> <see cref="Access"/> means "keep". Takes precedence over <see cref="Access"/>.
+    /// </summary>
+    [JsonIgnore]
+    public bool ClearAccess { get; set; }
+}
+
+/// <summary>
+/// Scan rules of a dynamic QR code. Every property is optional; with none set the code is never gated.
+/// </summary>
+public class QRCodeAccessModel
+{
+    /// <summary>Scans before this moment (UTC) go to <see cref="FallbackUrl"/> or are refused.</summary>
+    public DateTime? ActiveFrom { get; set; }
+
+    /// <summary>Scans from this moment (UTC) go to <see cref="FallbackUrl"/> or are refused. Must be after <see cref="ActiveFrom"/>.</summary>
+    public DateTime? ExpiresAt { get; set; }
+
+    /// <summary>Number of scans allowed (1 or more); later scans go to <see cref="FallbackUrl"/> or are refused.</summary>
+    public int? MaxVisits { get; set; }
+
+    /// <summary>An http(s) URL (up to 2048 characters) that gated scans are sent to.</summary>
+    public string? FallbackUrl { get; set; }
 }
 
 /// <summary>
@@ -668,14 +769,19 @@ public class QRCodeListParamsModel
     public string? RefId { get; set; }
     
     /// <summary>
-    /// Filter by monetization enabled
+    /// No such filter exists; ignored and never sent.
     /// </summary>
+    [Obsolete(QRCodeConst.MonetizationObsolete)]
+    [JsonIgnore]
     public bool? IsEnableMonetization { get; set; }
     
     /// <summary>
     /// Filter by status (new, pending, approved, rejected)
     /// </summary>
     public QRCodeStatusType? Status { get; set; }
+
+    /// <summary>Filter by mode (static or dynamic)</summary>
+    public QRCodeMode? Mode { get; set; }
     
     /// <summary>
     /// Filter by created from source
@@ -696,12 +802,35 @@ public readonly record struct QRCodeTargetType (string Value)
     public static readonly QRCodeTargetType Sms = new("sms");
     public static readonly QRCodeTargetType Url = new("url");
     public static readonly QRCodeTargetType Geolocation = new("geolocation");
+    public static readonly QRCodeTargetType VCard = new("vcard");
+    public static readonly QRCodeTargetType Event = new("event");
+    public static readonly QRCodeTargetType WhatsApp = new("whatsapp");
+    public static readonly QRCodeTargetType Review = new("review");
+    public static readonly QRCodeTargetType Social = new("social");
+    public static readonly QRCodeTargetType AppStore = new("appStore");
+    public static readonly QRCodeTargetType File = new("file");
 
     public override string ToString ( ) => Value;
 }
 
 
 
+
+/// <summary>
+/// QR code mode. Serialised as <c>"static"</c> / <c>"dynamic"</c>; an unknown value from a newer
+/// API reads back as-is instead of failing.
+/// </summary>
+[JsonConverter(typeof(QRCodeModeConverter))]
+public readonly record struct QRCodeMode (string Value)
+{
+    /// <summary>The image encodes the content itself (the default).</summary>
+    public static readonly QRCodeMode Static = new("static");
+    /// <summary>The image encodes a Posty5 link that redirects to the target.</summary>
+    public static readonly QRCodeMode Dynamic = new("dynamic");
+
+    /// <summary>The wire value, <c>"static"</c> or <c>"dynamic"</c>.</summary>
+    public override string ToString ( ) => Value;
+}
 
 [JsonConverter(typeof(StringValueObjectConverter<QRCodeStatusType>))]
 public readonly record struct QRCodeStatusType (string Value)
@@ -723,4 +852,77 @@ public class DeleteResponse
     /// Success message
     /// </summary>
     public string Message { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Account-wide QR-code statistics (<c>GET /api/qr-code/statistics</c>):
+/// the resolved <see cref="LinkStatisticsResponse{TData}.Range"/> plus
+/// <see cref="QRCodeStatisticsDataModel"/>.
+/// </summary>
+public class QRCodeStatisticsModel : LinkStatisticsResponse<QRCodeStatisticsDataModel>
+{
+}
+
+/// <summary>The <c>data</c> of <see cref="QRCodeStatisticsModel"/>.</summary>
+public class QRCodeStatisticsDataModel
+{
+    /// <summary>Lifetime QR code count and counters, plus the visit totals in the range.</summary>
+    public QRCodeStatisticsTotalsModel Totals { get; set; } = new();
+
+    /// <summary>One row per UTC day that had a QR code created or a visit to a code's Posty5 page, oldest first.</summary>
+    public List<LinkStatisticsDailyRow> Daily { get; set; } = new();
+
+    /// <summary>The ten QR codes with the most visits in the range, most first; codes with no visit in the range are left out.</summary>
+    public List<QRCodeStatisticsTopQRCodeModel> TopQRCodes { get; set; } = new();
+}
+
+/// <summary>Totals of <see cref="QRCodeStatisticsDataModel"/>.</summary>
+public class QRCodeStatisticsTotalsModel : LinkStatisticsVisitTotals
+{
+    /// <summary>Your QR codes (lifetime, deleted ones excluded).</summary>
+    public long TotalQRCodes { get; set; }
+
+    /// <summary><see cref="LinkStatisticsVisitTotals.TotalVisitors"/> / <see cref="TotalQRCodes"/> (0 with no links).</summary>
+    public double AvgVisitorsPerQRCode { get; set; }
+}
+
+/// <summary>One of <see cref="QRCodeStatisticsDataModel.TopQRCodes"/>.</summary>
+public class QRCodeStatisticsTopQRCodeModel
+{
+    /// <summary>Database ID</summary>
+    [JsonPropertyName("_id")]
+    public string? Id { get; set; }
+
+    /// <summary>QR code name</summary>
+    public string? Name { get; set; }
+
+    /// <summary>Lifetime visit counter</summary>
+    public long? NumberOfVisitors { get; set; }
+
+    /// <summary>Creation time</summary>
+    public DateTime? CreatedAt { get; set; }
+
+    /// <summary>Visits by people in the range (bots excluded).</summary>
+    public long VisitsInRange { get; set; }
+}
+
+/// <summary>
+/// Reads and writes <see cref="QRCodeMode"/> as its string value. Unlike the shared
+/// <c>StringValueObjectConverter</c>, an unknown value is kept as-is instead of failing, so a
+/// mode added by a newer API does not break deserialising a whole response.
+/// </summary>
+public sealed class QRCodeModeConverter : JsonConverter<QRCodeMode>
+{
+    /// <inheritdoc />
+    public override QRCodeMode Read(ref System.Text.Json.Utf8JsonReader reader, Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
+    {
+        var value = reader.GetString() ?? string.Empty;
+        if (string.Equals(value, QRCodeMode.Static.Value, StringComparison.OrdinalIgnoreCase)) return QRCodeMode.Static;
+        if (string.Equals(value, QRCodeMode.Dynamic.Value, StringComparison.OrdinalIgnoreCase)) return QRCodeMode.Dynamic;
+        return new QRCodeMode(value);
+    }
+
+    /// <inheritdoc />
+    public override void Write(System.Text.Json.Utf8JsonWriter writer, QRCodeMode value, System.Text.Json.JsonSerializerOptions options)
+        => writer.WriteStringValue(value.Value);
 }

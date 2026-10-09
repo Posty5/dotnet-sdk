@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-19",
+  "generated_at": "2026-10-05",
   "project": "dotnet-sdk",
   "excluded_generated_or_local": [
     "node_modules",
@@ -20,12 +20,32 @@
       "role": "Solution"
     },
     {
+      "path": ".github/workflows/publish-nuget.yml",
+      "role": "Tag-triggered pack + NuGet push; every package (incl. Posty5.Store, Posty5.Account) must be in its pack list."
+    },
+    {
       "path": "src/Posty5.Core/Configuration/Posty5Options.cs",
       "role": "Core options"
     },
     {
+      "path": "src/Posty5.Core/Configuration/Posty5HttpDefaults.cs",
+      "role": "Header names/values every request carries (X-API-Key, X-Posty5-Client, posty5-dotnet)."
+    },
+    {
+      "path": "src/Posty5.Core/Configuration/CreatedFromDefaults.cs",
+      "role": "Package createdFrom labels used when Posty5Options.CreatedFrom is null (dotnetPackage; dotnet for store orders)."
+    },
+    {
       "path": "src/Posty5.Core/Http/HttpClient.cs",
       "role": "Core HTTP client"
+    },
+    {
+      "path": "src/Posty5.Core/Http/Posty5ClientIdentity.cs",
+      "role": "posty5-dotnet/<Posty5.Core version> for X-Posty5-Client, read from the assembly."
+    },
+    {
+      "path": "src/Posty5.Core/Models/AgentOrigin.cs",
+      "role": "AgentOrigin: which AI assistant created a record via MCP (mirrors the API IAgentOrigin)."
     },
     {
       "path": "src",
@@ -40,16 +60,96 @@
       "role": "Examples"
     },
     {
+      "path": "src/Posty5.Core/Models/LinkAnalyticsModels.cs",
+      "role": "Link/QR analytics (VA, C2): LinkAnalyticsQuery, LinkAnalyticsModel and its parts, LinkAnalyticsInterval/LinkAnalyticsBreakdown value types."
+    },
+    {
+      "path": "src/Posty5.Core/Models/LinkStatisticsModels.cs",
+      "role": "Account-wide /statistics (VA): LinkStatisticsQuery, LinkStatisticsPeriod, LinkStatisticsResponse<TData>, range, shared visit totals, UTC daily row."
+    },
+    {
+      "path": "src/Posty5.Core/Helpers/LinkAnalyticsQueryHelper.cs",
+      "role": "Builds {basePath}/{id}/analytics and {basePath}/statistics with their queries (yyyy-MM-dd dates, breakdown comma list or 'all', period); used by ShortLinkClient and QRCodeClient."
+    },
+    {
+      "path": "src/Posty5.Core/Configuration/LinkAnalyticsConst.cs",
+      "role": "Internal wire names of the analytics endpoint: path segment, query keys, date format, 'all'."
+    },
+    {
       "path": "src/Posty5.Core",
       "role": "Options, HTTP, exceptions, common response/pagination models, converters."
+    },
+    {
+      "path": "src/Posty5.Account",
+      "role": "Posty5.Account package: AccountClient, AccountRoutes, Models (AccountInfo, credits, operation costs, constants)."
+    },
+    {
+      "path": "src/Posty5.Account/AccountClient.cs",
+      "role": "AccountClient: GetCurrentAsync, GetCreditsAsync, GetCreditUsageAsync, GetCreditUsageSummaryAsync, GetOperationCostsAsync."
+    },
+    {
+      "path": "src/Posty5.Account/AccountRoutes.cs",
+      "role": "The five account routes (/api/api-key/current, /api/user/current/*, /api/plans/operation-costs)."
     },
     {
       "path": "src/Posty5.ShortLink",
       "role": "Short-link client/models."
     },
     {
+      "path": "src/Posty5.ShortLink/ShortLinkConst.cs",
+      "role": "Short-link fixed values: base path, templateType/createdFrom, pageInfo.title filter key, [Obsolete] texts."
+    },
+    {
+      "path": "src/Posty5.ShortLink/ShortLinkClient.Controls.cs",
+      "role": "Short link controls (SC): ListTagsAsync (GET /tags), CheckHealthAsync (POST /{id}/health-check), SetRulesAsync (partial PUT; reads the link when baseUrl/templateId missing)."
+    },
+    {
+      "path": "src/Posty5.ShortLink/LinkCampaignClient.cs",
+      "role": "Link campaigns CRUD on /api/link-campaign; DeleteAsync(id, detach)."
+    },
+    {
+      "path": "src/Posty5.ShortLink/Helpers/ShortLinkRequestBodyHelper.cs",
+      "role": "Builds short-link bodies as dictionaries so explicit JSON nulls (ClearAccess, ClearUtm, RemovePassword) survive the WhenWritingNull serializer."
+    },
+    {
+      "path": "src/Posty5.ShortLink/Models/LinkRulesModels.cs",
+      "role": "Access/routing/variant/UTM/pixel/health models, constants (LinkDeviceTypes, LinkOsFamilies, LinkPixelProviders, LinkHealthStatuses), LinkRulesSectionsModel / ShortLinkControlsRequestModel bases."
+    },
+    {
+      "path": "src/Posty5.ShortLink/Models/LinkCampaignModels.cs",
+      "role": "Link campaign models and LinkCampaignColors."
+    },
+    {
+      "path": "tests/Posty5.Tests/ShortLinkControlsTests.cs",
+      "role": "Offline (RecordingServer): password/utm/access nulls, tags query, health-check route, campaign routes."
+    },
+    {
       "path": "src/Posty5.QRCode",
       "role": "QR client/models."
+    },
+    {
+      "path": "src/Posty5.QRCode/QRCodeTemplateClient.cs",
+      "role": "QRCodeTemplateClient: ListUserTemplatesAsync, ListPublicTemplatesAsync (/api/qr-code-template/*-lookup); routes in QRCodeTemplateRoutes.cs."
+    },
+    {
+      "path": "src/Posty5.QRCode/QRCodeClient.ContentTypes.cs",
+      "role": "QR content types (vcard/event/whatsapp/review/social/appStore/file): Create*/Update*Async through SendContentTypeAsync; qrCodeTarget only; file upload flow UploadQRCodeFileAsync."
+    },
+    {
+      "path": "src/Posty5.QRCode/QRCodeFileUploadExpiredException.cs",
+      "role": "Thrown when the 60 s signed upload URL of a file code expired before the PUT finished."
+    },
+    {
+      "path": "src/Posty5.Core/Http/R2UploadHelper.cs",
+      "role": "Shared public signed-URL PUT (UploadAsync) used by QRCode, HtmlHosting and SocialPublisherPost."
+    },
+    {
+      "path": "src/Posty5.QRCode/Models/QRCodeContentTypeModels.cs",
+      "role": "Content-type target/request models and platform/phone-kind constant classes."
+    },
+    {
+      "path": "src/Posty5.QRCode/QRCodeConst.cs",
+      "role": "QR fixed values: the [Obsolete] text for IsEnableMonetization."
     },
     {
       "path": "src/Posty5.HtmlHosting",
@@ -68,8 +168,24 @@
       "role": "Social workspace client/models."
     },
     {
+      "path": "src/Posty5.SocialPublisherWorkspace/SocialPublisherAccountClient.cs",
+      "role": "SocialPublisherAccountClient: ListAsync, LookupAsync, GetAsync (/api/social-publisher-account), read-only; routes in SocialPublisherAccountRoutes.cs."
+    },
+    {
       "path": "src/Posty5.SocialPublisherPost",
       "role": "Social post client/models/uploads."
+    },
+    {
+      "path": "src/Posty5.SocialPublisherPost/Models/TextPostModels.cs",
+      "role": "Text post requests (workspace/account) and the Facebook/Threads/X blocks."
+    },
+    {
+      "path": "src/Posty5.SocialPublisherPost/Models/StoryPostModels.cs",
+      "role": "Story requests (workspace/account), URL media; StoryKinds in StoryKinds.cs."
+    },
+    {
+      "path": "src/Posty5.SocialPublisherPost/Models/PostResultModels.cs",
+      "role": "CreatePostResult (text/story) and RemovePostResult/PlatformRemovalResult."
     },
     {
       "path": "src/Posty5.Store",
@@ -77,7 +193,15 @@
     },
     {
       "path": "src/Posty5.Store/StoreClient.cs",
-      "role": "StoreClient facade: six sub-clients and the four shorthands."
+      "role": "StoreClient facade: ListStoresAsync/LookupStoresAsync, six sub-clients and the four shorthands."
+    },
+    {
+      "path": "src/Posty5.Store/StoreRoutes.cs",
+      "role": "Routes StoreClient calls itself (/api/store/lookup)."
+    },
+    {
+      "path": "src/Posty5.Store/Models/StoreLookupModels.cs",
+      "role": "StoreLookupItem (id + \"<slug> - <name>\")."
     },
     {
       "path": "src/Posty5.Store/Clients/StoreClientBase.cs",
@@ -129,15 +253,63 @@
     },
     {
       "path": "tests/Posty5.Tests/StoreSuppliersClientTests.cs",
-      "role": "Suppliers route tests (local HttpListener) and fixture-gated live facts."
+      "role": "Suppliers route tests (shared RecordingServer) and fixture-gated live facts."
+    },
+    {
+      "path": "tests/Posty5.Tests/RecordingServer.cs",
+      "role": "Shared offline test server: the real Posty5HttpClient against a local HttpListener; records verb, path+query, body and headers; status, result and message of the answer are settable."
+    },
+    {
+      "path": "tests/Posty5.Tests/CoreHeadersAndOriginTests.cs",
+      "role": "Offline: X-Posty5-Client, DefaultHeaders rules, createdFrom resolution (ShortLink, Store orders)."
+    },
+    {
+      "path": "tests/Posty5.Tests/AccountClientTests.cs",
+      "role": "Offline route/shape tests + [ApiKeyFact] live facts for AccountClient."
+    },
+    {
+      "path": "tests/Posty5.Tests/SocialPublisherPostRouteTests.cs",
+      "role": "Offline: GetStatusAsync /{id}/status, RemovePostAsync, text and story bodies, comments list on short video/image."
+    },
+    {
+      "path": "tests/Posty5.Tests/SocialPublisherAccountClientTests.cs",
+      "role": "Offline route tests + live fact for SocialPublisherAccountClient."
+    },
+    {
+      "path": "tests/Posty5.Tests/QRCodeTemplateClientTests.cs",
+      "role": "Offline route tests + live fact for QRCodeTemplateClient."
+    },
+    {
+      "path": "tests/Posty5.Tests/StoreLookupTests.cs",
+      "role": "Offline route tests + live fact for StoreClient.ListStoresAsync/LookupStoresAsync."
     },
     {
       "path": "tests/Posty5.Tests/StoreFixtureFactAttribute.cs",
       "role": "[StoreFixtureFact]: a live store fact reported as skipped when its POSTY5_TEST_* fixture is missing."
     },
     {
+      "path": "tests/Posty5.Tests/ApiKeyFactAttribute.cs",
+      "role": "[ApiKeyFact]: a live read-only fact reported as skipped when POSTY5_API_KEY is not set."
+    },
+    {
+      "path": "tests/Posty5.Tests/LinkQrTruthPassFactAttribute.cs",
+      "role": "[LinkQrTruthPassFact]: a live short-link/QR fact skipped unless POSTY5_TEST_LINK_QR_TP=true (API carries the link-qr truth pass)."
+    },
+    {
+      "path": "tests/Posty5.Tests/LinkQrVisitAnalyticsFactAttribute.cs",
+      "role": "[LinkQrVisitAnalyticsFact]: a live GetAnalyticsAsync fact skipped unless POSTY5_TEST_LINK_QR_VA=true (API serves the analytics endpoints)."
+    },
+    {
+      "path": "tests/Posty5.Tests/ShortLinkClientTests.cs",
+      "role": "Live short-link tests, TP-gated live facts, and ShortLinkClientPayloadTests (offline body/query capture via RecordingServer)."
+    },
+    {
+      "path": "tests/Posty5.Tests/QRCodeClientTests.cs",
+      "role": "Live QR tests, a TP-gated refId fact, and QRCodeClientPayloadTests (offline body/query capture via RecordingServer)."
+    },
+    {
       "path": "tests/Posty5.Tests/TestConfig.cs",
-      "role": "Test options, env lookup, store fixture reads (HasStoreFixture), cleanup lists."
+      "role": "Test options, env lookup (Env, IsSet), store fixture reads (HasStoreFixture), cleanup lists."
     },
     {
       "path": "tests/Posty5.Tests",

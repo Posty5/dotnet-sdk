@@ -5,8 +5,12 @@ namespace Posty5.HtmlHostingVariables.Models;
 /// <summary>
 /// HTML hosting variable model
 /// </summary>
-public class HtmlHostingVariablesVariableModel
+public class HtmlHostingVariablesVariableModel : Posty5.Core.Models.IVersioned
 {
+    /// <summary>The document's version (<c>__v</c>); pass it to the next update or delete.</summary>
+    [JsonPropertyName("__v")]
+    public long Version { get; set; }
+
     /// <summary>
     /// MongoDB document ID
     /// </summary>
