@@ -95,12 +95,14 @@ public class HtmlHostingVariablesClient
     /// <exception cref="ArgumentException">Thrown when key doesn't start with 'pst5_'</exception>
     /// <example>
     /// <code>
-    /// await client.UpdateAsync("variable_id_123", new CreateHtmlHostingVariableRequest
+    /// var variable = await client.GetAsync("variable_id_123");
+    /// var written = await client.UpdateAsync("variable_id_123", new HtmlHostingVariablesCreateRequestModel
     /// {
     ///     Name = "Updated API Key",
     ///     Key = "pst5_api_key",
     ///     Value = "sk_live_789012"
-    /// });
+    /// }, variable.Version);
+    /// // written.Version is the new version for the next write
     /// </code>
     /// </example>
     public async Task<VersionedWriteResult> UpdateAsync(
@@ -130,7 +132,8 @@ public class HtmlHostingVariablesClient
     /// <returns>Deletion confirmation response</returns>
     /// <example>
     /// <code>
-    /// var result = await client.DeleteAsync("variable_id_123");
+    /// var variable = await client.GetAsync("variable_id_123");
+    /// var result = await client.DeleteAsync("variable_id_123", variable.Version);
     /// Console.WriteLine(result.Message);
     /// </code>
     /// </example>

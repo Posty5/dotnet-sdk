@@ -232,18 +232,21 @@ Update workspace details including name, description, and optional logo image.
 **Example:**
 
 ```csharp
-// Update details
-await client.UpdateAsync("workspace-id", new UpdateWorkspaceRequest
+// Update details. The version you read goes as If-Match;
+// a stale one throws Posty5ConflictException.
+var workspace = await client.GetAsync("workspace-id");
+var written = await client.UpdateAsync("workspace-id", new UpdateWorkspaceRequest
 {
     Name = "Updated Workspace Name",
     Description = "New description"
-});
+}, workspace.Version);
 
-// Update with new logo
+// Update with new logo, using the version the last write returned
 using var newLogoStream = File.OpenRead("new-logo.png");
 await client.UpdateAsync(
     "workspace-id",
     new UpdateWorkspaceRequest { Name = "Workspace", Description = "Desc" },
+    written.Version!.Value,
     newLogoStream
 );
 ```
@@ -257,13 +260,15 @@ Delete a workspace.
 **Parameters:**
 
 - `id` (string): Workspace ID to delete
+- `version` (long): The workspace's version as last read (`workspace.Version`), sent as `If-Match`
 
-**Returns:** `Post`
+**Returns:** `Task<DeleteResponse>`
 
 **Example:**
 
 ```csharp
-await client.DeleteAsync("workspace-id-to-delete");
+var workspace = await client.GetAsync("workspace-id-to-delete");
+await client.DeleteAsync("workspace-id-to-delete", workspace.Version);
 Console.WriteLine("Workspace deleted successfully");
 ```
 

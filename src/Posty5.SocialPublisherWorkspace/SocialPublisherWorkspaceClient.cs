@@ -185,15 +185,16 @@ public class SocialPublisherWorkspaceClient
     /// <example>
     /// <code>
     /// // Update without changing image
-    /// await client.UpdateAsync("workspace-id", new UpdateWorkspaceRequest
+    /// var workspace = await client.GetAsync("workspace-id");
+    /// var written = await client.UpdateAsync("workspace-id", new SocialPublisherWorkspaceUpdateRequestModel
     /// {
     ///     Name = "Updated Name",
     ///     Description = "Updated description"
-    /// });
+    /// }, workspace.Version);
     /// 
-    /// // Update with new image
+    /// // Update with new image, using the version the last write returned
     /// using var newLogo = File.OpenRead("new-logo.png");
-    /// await client.UpdateAsync("workspace-id", request, newLogo);
+    /// await client.UpdateAsync("workspace-id", request, written.Version!.Value, newLogo);
     /// </code>
     /// </example>
     public async Task<VersionedWriteResult> UpdateAsync(

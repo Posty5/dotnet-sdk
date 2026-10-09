@@ -415,6 +415,7 @@ Update an existing page with a new HTML file.
 var updatedContent = "<html><body><h1>Content has been updated!</h1></body></html>";
 using var fileStream = new MemoryStream(Encoding.UTF8.GetBytes(updatedContent));
 
+var page = await htmlHosting.GetAsync("page-id-123");
 var updated = await htmlHosting.UpdateWithFileAsync(
     "page-id-123",
     new UpdateHtmlPageFileRequest
@@ -422,8 +423,10 @@ var updated = await htmlHosting.UpdateWithFileAsync(
         Name = "Updated Landing Page",
         FileName = "landing-v2.html"
     },
+    page.Version, // sent as If-Match; a stale version throws Posty5ConflictException
     fileStream
 );
+// updated.Version is the page's new version
 
 Console.WriteLine($"Updated URL: {updated.ShorterLink}");
 ```
@@ -447,6 +450,7 @@ Update a page to use a different GitHub file or update GitHub settings.
 **Example:**
 
 ```csharp
+var page = await htmlHosting.GetAsync("page-id-123");
 var updated = await htmlHosting.UpdateWithGithubFileAsync(
     "page-id-123",
     new UpdateHtmlPageGithubRequest
@@ -457,7 +461,8 @@ var updated = await htmlHosting.UpdateWithGithubFileAsync(
             FileURL = "https://github.com/username/repo/blob/main/updated.html"
         },
         IsEnableMonetization = false
-    }
+    },
+    page.Version
 );
 ```
 
@@ -492,13 +497,15 @@ Permanently delete an HTML page.
 **Parameters:**
 
 - `id` (string): HTML page ID to delete
+- `version` (long): The page's version as last read (`page.Version`), sent as `If-Match`
 
-**Returns:** `Task`
+**Returns:** `Task<VersionedWriteResult>`
 
 **Example:**
 
 ```csharp
-await htmlHosting.DeleteAsync("page-id-123");
+var page = await htmlHosting.GetAsync("page-id-123");
+await htmlHosting.DeleteAsync("page-id-123", page.Version);
 Console.WriteLine("Page deleted successfully");
 ```
 

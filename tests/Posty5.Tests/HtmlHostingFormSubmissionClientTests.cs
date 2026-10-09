@@ -430,7 +430,7 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
         };
 
         // Act
-        var result = await _client.ChangeStatusAsync(submissionId, request, 0);
+        var result = await _client.ChangeStatusAsync(submissionId, request, listResult.Items[0].Version);
 
         // Assert
         Assert.NotNull(result);
@@ -460,7 +460,7 @@ public class HtmlHostingFormSubmissionClientTests : IDisposable
         };
 
         // Act
-        var result = await _client.ChangeStatusAsync(submissionId, request, 0);
+        var result = await _client.ChangeStatusAsync(submissionId, request, listResult.Items[0].Version);
 
         // Assert
         Assert.NotNull(result);

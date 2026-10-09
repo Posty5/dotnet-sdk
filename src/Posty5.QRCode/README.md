@@ -422,13 +422,13 @@ var qr = await qrCodes.CreateURLAsync(new QRCodeCreateURLRequestModel
     Url = new QRCodeUrlTargetModel { Url = "https://example.com/menu" }
 });
 
-// Later: same printed image, new destination.
-await qrCodes.UpdateURLAsync(qr.Id!, new QRCodeUpdateURLRequestModel
+// Later: same printed image, new destination. Pass the version you hold.
+qr = await qrCodes.UpdateURLAsync(qr.Id!, new QRCodeUpdateURLRequestModel
 {
     Name = "Menu",
     TemplateId = "template_123",
     Url = new QRCodeUrlTargetModel { Url = "https://example.com/menu-autumn" }
-});
+}, qr.Version);
 ```
 
 #### Scan rules (dynamic codes, Starter plan and above)
@@ -450,7 +450,7 @@ await qrCodes.UpdateURLAsync(qr.Id!, new QRCodeUpdateURLRequestModel
         ExpiresAt = new DateTime(2026, 12, 31, 0, 0, 0, DateTimeKind.Utc),
         FallbackUrl = "https://example.com/offer-ended"
     }
-});
+}, qr.Version);
 ```
 
 ---
@@ -626,13 +626,14 @@ await qrCodeClient.CreateAppStoreAsync(new QRCodeCreateAppStoreRequestModel
 **Example (Update URL):**
 
 ```csharp
+var current = await qrCodes.GetAsync("qr-code-id-123");
 await qrCodes.UpdateURLAsync("qr-code-id-123", new QRCodeUpdateURLRequestModel
 {
     Name = "Summer Sale - Extended",
     TemplateId = "template-123",
     Url = new QRCodeUrlTargetModel { Url = "https://example.com/extended" },
     Tag = "summer-sale"
-});
+}, current.Version);
 ```
 
 ---
@@ -644,7 +645,8 @@ await qrCodes.UpdateURLAsync("qr-code-id-123", new QRCodeUpdateURLRequestModel
 **Example:**
 
 ```csharp
-await qrCodes.DeleteAsync("qr-code-id-123");
+var qrCode = await qrCodes.GetAsync("qr-code-id-123");
+await qrCodes.DeleteAsync("qr-code-id-123", qrCode.Version);
 ```
 
 ---

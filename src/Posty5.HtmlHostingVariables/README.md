@@ -106,6 +106,7 @@ var companyName = await variables.GetAsync("variable-id-123");
 Console.WriteLine($"Company: {companyName.Value}");
 
 // Update variable value
+// Pass the version you read (sent as If-Match); a stale one throws Posty5ConflictException
 await variables.UpdateAsync("variable-id-123", new CreateHtmlHostingVariableRequest
 {
     Name = "Company Name",
@@ -113,7 +114,7 @@ await variables.UpdateAsync("variable-id-123", new CreateHtmlHostingVariableRequ
     Value = "Acme Corp (Updated)",
     Tag = "",
     RefId = ""
-});
+}, companyName.Version);
 
 // Use in HTML page: {{pst5_company_name}} will be replaced with "Acme Corp (Updated)"
 ```
@@ -259,14 +260,16 @@ Update an existing variable's name, key, or value. The key must still start with
 
 ```csharp
 // Update variable value
-await variables.UpdateAsync("variable-id-123", new CreateHtmlHostingVariableRequest
+var supportEmail = await variables.GetAsync("variable-id-123");
+var written = await variables.UpdateAsync("variable-id-123", new CreateHtmlHostingVariableRequest
 {
     Name = "Support Email",
     Key = "pst5_support_email",
     Value = "help@acme.com", // Changed from support@acme.com
     Tag = "",
     RefId = ""
-});
+}, supportEmail.Version);
+// written.Version is the new version for the next write
 ```
 
 ---
@@ -278,13 +281,15 @@ Permanently delete a variable. Once deleted, the variable key will no longer be 
 **Parameters:**
 
 - `id` (string): Variable ID to delete
+- `version` (long): The variable's version as last read (`variable.Version`), sent as `If-Match`
 
-**Returns:** `Task`
+**Returns:** `Task<DeleteResponse>`
 
 **Example:**
 
 ```csharp
-await variables.DeleteAsync("variable-id-123");
+var variable = await variables.GetAsync("variable-id-123");
+await variables.DeleteAsync("variable-id-123", variable.Version);
 Console.WriteLine("Variable deleted");
 ```
 

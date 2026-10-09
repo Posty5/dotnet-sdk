@@ -462,8 +462,8 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
         var updated = await _client.GetAsync(workspaceId);
         Assert.Equal("Updated Workflow Workspace", updated.Name);
 
-        // Delete
-        await _client.DeleteAsync(workspaceId, 0);
+        // Delete, with the version the update produced
+        await _client.DeleteAsync(workspaceId, updated.Version);
     }
 
     [Fact]
@@ -498,8 +498,9 @@ public class SocialPublisherWorkspaceClientTests : IDisposable
                 );
             }
 
-            // Delete
-            await _client.DeleteAsync(workspaceId, 0);
+            // Delete, with the version the update produced
+            var current = await _client.GetAsync(workspaceId);
+            await _client.DeleteAsync(workspaceId, current.Version);
         }
     }
 

@@ -228,7 +228,7 @@ public class ShortLinkClientTests : IDisposable
         Assert.True(read.IsSupportAndroidDeepUrl);
 
         // Same BaseUrl, no deep-link keys: the stored values are kept.
-        await _client.UpdateAsync(created.Id!, new ShortLinkUpdateRequestModel
+        var renamed = await _client.UpdateAsync(created.Id!, new ShortLinkUpdateRequestModel
         {
             Name = "Renamed",
             BaseUrl = "https://posty5.com",
@@ -242,7 +242,7 @@ public class ShortLinkClientTests : IDisposable
             BaseUrl = "https://posty5.com",
             TemplateId = TestConfig.TemplateId,
             AndroidUrl = ""
-        }, created.Version);
+        }, renamed.Version); // the version the previous write returned
         var cleared = await _client.GetAsync(created.Id!);
         Assert.True(string.IsNullOrEmpty(cleared.AndroidUrl));
         Assert.False(cleared.IsSupportAndroidDeepUrl ?? false);

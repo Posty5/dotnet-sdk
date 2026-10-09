@@ -214,12 +214,19 @@ public class StoreSuppliersLiveTests : IDisposable
     {
         foreach (var linkId in TestConfig.CreatedResources.SupplierLinks.ToList())
         {
-            try { _store.Suppliers.DeleteLinkAsync(StoreId, linkId, 0).GetAwaiter().GetResult(); } catch { /* already gone */ }
+            // No single-link read exists: a link only reaches here when its fact failed
+            // before its own delete, usually still at version 0. Best effort.
+            try { _store.Suppliers.DeleteLinkAsync(StoreId, linkId, 0).GetAwaiter().GetResult(); } catch { /* already gone, or moved on */ }
             TestConfig.CreatedResources.SupplierLinks.Remove(linkId);
         }
         foreach (var productId in TestConfig.CreatedResources.StoreProducts.ToList())
         {
-            try { _store.Products.DeleteAsync(StoreId, productId, 0).GetAwaiter().GetResult(); } catch { /* already gone */ }
+            try
+            {
+                var product = _store.Products.GetAsync(StoreId, productId).GetAwaiter().GetResult();
+                _store.Products.DeleteAsync(StoreId, productId, product?.Version ?? 0).GetAwaiter().GetResult();
+            }
+            catch { /* already gone */ }
             TestConfig.CreatedResources.StoreProducts.Remove(productId);
         }
     }
@@ -381,7 +388,7 @@ public class StoreSuppliersLiveTests : IDisposable
         var updated = await _store.Suppliers.UpdateLinkAsync(StoreId, link.Id!, new UpdateSupplierLinkInput
         {
             Sync = new() { [LinkSyncFields.Price] = false },
-        }, 0);
+        }, link.Version);
         Assert.False(updated!.Sync![LinkSyncFields.Price]);
 
         // Never synced (SyncNow = false), so the once-a-minute limit does not apply yet.
@@ -389,7 +396,7 @@ public class StoreSuppliersLiveTests : IDisposable
         Assert.Equal(link.Id, synced?.Link?.Id);
         Assert.NotNull(synced?.Changed);
 
-        await _store.Suppliers.DeleteLinkAsync(StoreId, link.Id!, 0);
+        await _store.Suppliers.DeleteLinkAsync(StoreId, link.Id!, synced?.Link?.Version ?? updated.Version);
         TestConfig.CreatedResources.SupplierLinks.Remove(link.Id!);
     }
 
@@ -431,9 +438,11 @@ public class StoreSuppliersLiveTests : IDisposable
     public async Task RetryAndPay_OnTheTestConnection_MoveNoMoney()
     {
         var row = await FixturePartSupplierOrder();
-        Assert.Contains(SupplierReviewReasons.TestMode, await OutcomeOf(() => _store.Suppliers.RetryAsync(StoreId, row.Id!, 0)));
+        Assert.Contains(SupplierReviewReasons.TestMode, await OutcomeOf(() => _store.Suppliers.RetryAsync(StoreId, row.Id!, row.Version)));
 
-        var paid = await OutcomeOf(() => _store.Suppliers.PayAsync(StoreId, row.Id!, 0));
+        // The retry may have moved the supplier order on: write with its current version.
+        var afterRetry = await _store.Suppliers.GetSupplierOrderAsync(StoreId, row.Id!);
+        var paid = await OutcomeOf(() => _store.Suppliers.PayAsync(StoreId, row.Id!, afterRetry!.Version));
         Assert.DoesNotContain($"\"status\":\"{SupplierOrderStatuses.Confirmed}\"", paid);
     }
 
@@ -441,10 +450,11 @@ public class StoreSuppliersLiveTests : IDisposable
     public async Task CancelThenFulfilManually_EndsTheFixturePart()
     {
         var row = await FixturePartSupplierOrder();
-        await OutcomeOf(() => _store.Suppliers.CancelAsync(StoreId, row.Id!, 0));
+        await OutcomeOf(() => _store.Suppliers.CancelAsync(StoreId, row.Id!, row.Version));
         Assert.Equal(SupplierOrderStatuses.Cancelled, (await _store.Suppliers.GetSupplierOrderAsync(StoreId, row.Id!))?.Status);
 
-        var manual = await _store.Suppliers.FulfilGroupManuallyAsync(StoreId, TestConfig.OrderId, TestConfig.GroupKey, 0);
+        var order = await _store.Orders.GetAsync(StoreId, TestConfig.OrderId);
+        var manual = await _store.Suppliers.FulfilGroupManuallyAsync(StoreId, TestConfig.OrderId, TestConfig.GroupKey, order!.Version);
         Assert.Equal(TestConfig.OrderId, manual?.OrderId);
     }
 

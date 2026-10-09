@@ -457,7 +457,8 @@ it could have succeeded throws `Posty5ValidationException` and charges nothing.
 Use `DeletePostAsync` for a post that has not published yet.
 
 ```csharp
-var removed = await client.RemovePostAsync("post_123");
+var post = await client.GetStatusAsync("post_123");
+var removed = await client.RemovePostAsync("post_123", post.Version);
 foreach (var (platform, outcome) in removed.Results)
     Console.WriteLine($"{platform}: {(outcome.Success ? "removed" : outcome.Error)}");
 ```

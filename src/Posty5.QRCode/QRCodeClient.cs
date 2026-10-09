@@ -453,12 +453,13 @@ public partial class QRCodeClient
     /// <returns>Updated QR code with ID and landing page URL</returns>
     /// <example>
     /// <code>
+    /// var existing = await qrCodeClient.GetAsync("qr_code_id");
     /// var qrCode = await qrCodeClient.UpdateFreeTextAsync("qr_code_id", new QRCodeUpdateFreeTextRequestModel
     /// {
     ///     Name = "Updated Text QR",
     ///     TemplateId = "template_123",
     ///     Text = "Updated text content"
-    /// });
+    /// }, existing.Version);
     /// </code>
     /// </example>
     public async Task<QRCodeModel> UpdateFreeTextAsync(
@@ -510,6 +511,7 @@ public partial class QRCodeClient
     /// <returns>Updated QR code with ID and landing page URL</returns>
     /// <example>
     /// <code>
+    /// var existing = await qrCodeClient.GetAsync("qr_code_id");
     /// var qrCode = await qrCodeClient.UpdateEmailAsync("qr_code_id", new QRCodeUpdateEmailRequestModel
     /// {
     ///     Name = "Contact Us",
@@ -520,7 +522,7 @@ public partial class QRCodeClient
     ///         Subject = "Inquiry from QR Code",
     ///         Body = "Hello, I would like to know more about..."
     ///     }
-    /// });
+    /// }, existing.Version);
     /// </code>
     /// </example>
     public async Task<QRCodeModel> UpdateEmailAsync(
@@ -568,6 +570,7 @@ public partial class QRCodeClient
     /// <returns>Updated QR code with ID and landing page URL</returns>
     /// <example>
     /// <code>
+    /// var existing = await qrCodeClient.GetAsync("qr_code_id");
     /// var qrCode = await qrCodeClient.UpdateWifiAsync("qr_code_id", new QRCodeUpdateWifiRequestModel
     /// {
     ///     Name = "Office WiFi",
@@ -578,7 +581,7 @@ public partial class QRCodeClient
     ///         AuthenticationType = "WPA",
     ///         Password = "secret123"
     ///     }
-    /// });
+    /// }, existing.Version);
     /// </code>
     /// </example>
     public async Task<QRCodeModel> UpdateWifiAsync(
@@ -629,6 +632,7 @@ public partial class QRCodeClient
     /// <returns>Updated QR code with ID and landing page URL</returns>
     /// <example>
     /// <code>
+    /// var existing = await qrCodeClient.GetAsync("qr_code_id");
     /// var qrCode = await qrCodeClient.UpdateCallAsync("qr_code_id", new QRCodeUpdateCallRequestModel
     /// {
     ///     Name = "Call Support",
@@ -637,7 +641,7 @@ public partial class QRCodeClient
     ///     {
     ///         PhoneNumber = "+1234567890"
     ///     }
-    /// });
+    /// }, existing.Version);
     /// </code>
     /// </example>
     public async Task<QRCodeModel> UpdateCallAsync(
@@ -685,6 +689,7 @@ public partial class QRCodeClient
     /// <returns>Updated QR code with ID and landing page URL</returns>
     /// <example>
     /// <code>
+    /// var existing = await qrCodeClient.GetAsync("qr_code_id");
     /// var qrCode = await qrCodeClient.UpdateSMSAsync("qr_code_id", new QRCodeUpdateSMSRequestModel
     /// {
     ///     Name = "Text Us",
@@ -694,7 +699,7 @@ public partial class QRCodeClient
     ///         PhoneNumber = "+1234567890",
     ///         Message = "I scanned your QR code!"
     ///     }
-    /// });
+    /// }, existing.Version);
     /// </code>
     /// </example>
     public async Task<QRCodeModel> UpdateSMSAsync(
@@ -742,6 +747,7 @@ public partial class QRCodeClient
     /// <returns>Updated QR code with ID and landing page URL</returns>
     /// <example>
     /// <code>
+    /// var existing = await qrCodeClient.GetAsync("qr_code_id");
     /// var qrCode = await qrCodeClient.UpdateURLAsync("qr_code_id", new QRCodeUpdateURLRequestModel
     /// {
     ///     Name = "Website Link",
@@ -749,7 +755,7 @@ public partial class QRCodeClient
     ///     Url = new QRCodeUrlTargetModel { Url = "https://example.com" },
     ///     Tag = "marketing",
     ///     RefId = "CAMPAIGN-001"
-    /// });
+    /// }, existing.Version);
     /// </code>
     /// </example>
     public async Task<QRCodeModel> UpdateURLAsync(
@@ -797,6 +803,7 @@ public partial class QRCodeClient
     /// <returns>Updated QR code with ID and landing page URL</returns>
     /// <example>
     /// <code>
+    /// var existing = await qrCodeClient.GetAsync("qr_code_id");
     /// var qrCode = await qrCodeClient.UpdateGeolocationAsync("qr_code_id", new QRCodeUpdateGeolocationRequestModel
     /// {
     ///     Name = "Our Office Location",
@@ -806,7 +813,7 @@ public partial class QRCodeClient
     ///         Latitude = "40.7128",
     ///         Longitude = "-74.0060"
     ///     }
-    /// });
+    /// }, existing.Version);
     /// </code>
     /// </example>
     public async Task<QRCodeModel> UpdateGeolocationAsync(
@@ -979,7 +986,8 @@ public partial class QRCodeClient
     /// <returns>Deletion confirmation response</returns>
     /// <example>
     /// <code>
-    /// var result = await qrCodeClient.DeleteAsync("qr123");
+    /// var qr = await qrCodeClient.GetAsync("qr123");
+    /// var result = await qrCodeClient.DeleteAsync("qr123", qr.Version);
     /// Console.WriteLine(result.Message); // "Deleted" or success message
     /// </code>
     /// </example>

@@ -155,7 +155,8 @@ public partial class QRCodeClient
     /// <param name="cancellationToken">Cancellation token</param>
     /// <example>
     /// <code>
-    /// await qrCodeClient.UpdateFileAsync("qr_code_id", new QRCodeUpdateFileRequestModel { Name = "Menu", TemplateId = "template_123", File = new() { FileName = "menu-2026.pdf" } });
+    /// var existing = await qrCodeClient.GetAsync("qr_code_id");
+    /// await qrCodeClient.UpdateFileAsync("qr_code_id", new QRCodeUpdateFileRequestModel { Name = "Menu", TemplateId = "template_123", File = new() { FileName = "menu-2026.pdf" } }, existing.Version);
     /// </code>
     /// </example>
     public async Task<QRCodeModel> UpdateFileAsync(string id, QRCodeUpdateFileRequestModel data, long version, Stream? content = null, string? contentType = null, CancellationToken cancellationToken = default)

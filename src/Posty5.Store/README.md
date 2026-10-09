@@ -78,14 +78,19 @@ only the part they name, so a stock-sync job and a merchant editing the
 description never overwrite each other:
 
 ```csharp
-await store.Products.UpdateStockAsync(storeId, productId, new ProductStockInput { Stock = 42 });
-await store.Products.UpdatePriceAsync(storeId, productId, new ProductPriceInput { Price = 18, CompareAtPrice = 25 });
-await store.Products.UpdateSeoAsync(storeId, productId, new ProductSeoInput
+// Every write sends the version you read as If-Match and returns the new one.
+var product = await store.Products.GetAsync(storeId, productId);
+product = await store.Products.UpdateStockAsync(storeId, productId, new ProductStockInput { Stock = 42 }, product!.Version);
+product = await store.Products.UpdatePriceAsync(storeId, productId, new ProductPriceInput { Price = 18, CompareAtPrice = 25 }, product!.Version);
+product = await store.Products.UpdateSeoAsync(storeId, productId, new ProductSeoInput
 {
     Seo = new ProductSeoFields { Title = "Classic Tee", MetaDescription = "100% cotton" },
     Slug = "classic-tee",
-});
+}, product!.Version);
 ```
+
+A stale version throws `Posty5ConflictException` (its `CurrentVersion` is the
+stored one): read the product again, reapply the change, and retry.
 
 Sections: `UpdateBasicInformationAsync`, `UpdateMediaAsync`, `UpdatePriceAsync`,
 `UpdateStockAsync`, `UpdateVariantsAsync`, `UpdateTagsAsync`, `UpdateSeoAsync`,
@@ -142,7 +147,7 @@ var order = await store.Orders.CreateAsync(storeId, new CreateOrderInput
     OrderSource = "facebook",
 });
 
-await store.Orders.UpdateStatusAsync(storeId, order!.Id!, "confirmed", "Called the customer");
+order = await store.Orders.UpdateStatusAsync(storeId, order!.Id!, "confirmed", order.Version, "Called the customer");
 await store.Orders.AddInternalNoteAsync(storeId, order.Id!, "Wants evening delivery");
 
 var stats = await store.Orders.StatisticsAsync(storeId, new OrderStatisticsParams { Days = 30 });
@@ -166,7 +171,8 @@ parts rather than set by hand. List rows carry `FulfilmentSummary`, and
 ```csharp
 var tag = await store.Tags.CreateAsync(storeId, new CreateTagInput { Name = "Summer", AutoRemoveAfterDays = 90 });
 await store.Tags.AssignProductsAsync(storeId, tag!.Id!, new[] { productId });
-await store.Tags.SetProductTagsAsync(storeId, productId, new[] { tag.Id! });
+var tagged = await store.Products.GetAsync(storeId, productId);
+await store.Tags.SetProductTagsAsync(storeId, productId, new[] { tag.Id! }, tagged!.Version); // the product's version
 var summer = await store.Tags.ResolveProductsAsync(storeId, new[] { tag.Id! }, limit: 12);
 ```
 
@@ -243,8 +249,9 @@ represents.
 Per-product surcharges are separate, and always charged **per unit**:
 
 ```csharp
+var product = await store.Products.GetAsync(storeId, productId);
 await store.Products.UpdateShippingAsync(storeId, productId,
-    new ProductShippingInput { ExtraFeePerUnit = 5, Note = "Bulky" });
+    new ProductShippingInput { ExtraFeePerUnit = 5, Note = "Bulky" }, product!.Version);
 ```
 
 ## Suppliers
@@ -267,7 +274,8 @@ var connection = await store.Suppliers.ConnectAsync(storeId, new ConnectSupplier
 
 // 2. Decide what it may do on its own — every connection starts on "manual".
 await store.Suppliers.UpdateAutomationAsync(storeId, connection!.Id!,
-    new SupplierAutomationInput { Mode = SupplierAutomationModes.Submit, MaxCostPerOrder = 50 });
+    new SupplierAutomationInput { Mode = SupplierAutomationModes.Submit, MaxCostPerOrder = 50 },
+    connection.Version);
 
 // 3. Browse, preview, import.
 var page = await store.Suppliers.BrowseProductsAsync(storeId, connection.Id!, new BrowseSupplierProductsParams { Q = "mug" });

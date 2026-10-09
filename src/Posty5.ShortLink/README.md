@@ -119,12 +119,13 @@ foreach (var link in page.Items)
     Console.WriteLine($"{link.Name}: {link.NumberOfVisitors} visits");
 }
 
-// Update the destination (the short link stays the same)
-await shortLinks.UpdateAsync(shortLink.Id!, new ShortLinkUpdateRequestModel
+// Update the destination (the short link stays the same).
+// The version you read goes as If-Match; a stale one throws Posty5ConflictException.
+shortLink = await shortLinks.UpdateAsync(shortLink.Id!, new ShortLinkUpdateRequestModel
 {
     BaseUrl = "https://example.com/updated-campaign-page",
     TemplateId = "your-template-id"
-});
+}, shortLink.Version);
 ```
 
 ---
@@ -288,11 +289,12 @@ A custom slug cannot be changed after creation.
 
 ```csharp
 // Update destination URL (most common use case)
+var link = await shortLinks.GetAsync("link-id-123");
 await shortLinks.UpdateAsync("link-id-123", new ShortLinkUpdateRequestModel
 {
     BaseUrl = "https://example.com/new-destination",
     TemplateId = "your-template-id"
-});
+}, link.Version);
 ```
 
 ---
@@ -395,7 +397,8 @@ Permanently delete a short link. The short URL will no longer work.
 **Example:**
 
 ```csharp
-await shortLinks.DeleteAsync("link-id-123");
+var link = await shortLinks.GetAsync("link-id-123");
+await shortLinks.DeleteAsync("link-id-123", link.Version);
 ```
 
 ---
@@ -510,11 +513,11 @@ await shortLinkClient.SetRulesAsync(link.Id!, new LinkRulesUpdateModel
         new LinkVariantModel { Url = "https://example.com/b", Weight = 50 }
     },
     ClearUtm = true
-});
+}, link.Version);
 
 var tags = await shortLinkClient.ListTagsAsync("sp");
 await shortLinkClient.CheckHealthAsync(link.Id!);           // 202, one per link per 10 min
-await campaigns.DeleteAsync(campaign.Id!, detach: true);
+await campaigns.DeleteAsync(campaign.Id!, campaign.Version, detach: true);
 ```
 
 A `null` property is never sent (it keeps the stored value). To clear, use an

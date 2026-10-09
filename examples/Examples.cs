@@ -130,7 +130,7 @@ public class Examples
             Name = "Updated Campaign Name",
             BaseUrl = details.BaseUrl!,
             TemplateId = templateId
-        });
+        }, details.Version); // the version just read, sent as If-Match
         Console.WriteLine("Updated short link");
 
         // List short links by reference ID
@@ -174,7 +174,7 @@ public class Examples
         await htmlHostingClient.UpdateAsync(page.Id!, new UpdateHtmlHostingRequest
         {
             HtmlContent = htmlContent.Replace("Welcome", "Hello")
-        });
+        }, page.Version);
         Console.WriteLine("Updated HTML content");
         
         // List pages
