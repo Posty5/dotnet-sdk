@@ -4,6 +4,37 @@ All notable changes to the Posty5 .NET SDK will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Posty5.QRCode 4.1.0 - unreleased (QR design and export, QD)
+
+Needs the API's QR design and export release (live on the test stack 2026-10-17)
+and `Posty5.QRCode` 4.0.0 (versioned writes). Additive minor; `Posty5.Core` is unchanged.
+
+### Added
+
+- `QRCodeClient.RenderAsync(id, QrRenderOptions?)` -> `FileResponse` (PNG, SVG or PDF;
+  print presets, DPI, size, download), `GetExportUrlAsync(id, QrExportUrlOptions?)`
+  -> `QrExportUrlModel` (signed link, 1 hour), `CheckScannabilityAsync(QrScannabilityRequest)`
+  -> `QrScannabilityReportModel` (verdict, checks, symbol).
+- `QRCodeTemplateClient.CreateAsync`, `UpdateAsync(id, request, version)` (`If-Match`),
+  `GetAsync`, `ListAsync(name?, pagination?)`, `DeleteAsync(id, version)`, `RenderAsync`,
+  `GetDesignCatalogueAsync`, `GetLogoUploadUrlAsync(fileType, fileSize)` and
+  `UploadLogoAsync(stream, fileType)` (signed PUT through `R2UploadHelper`).
+- `QRCodeOptionsModel` gains the v2 design fields: `DesignVersion`, `DotShape`,
+  `EyeFrameShape`, `EyeBallShape`, `Fill` (`QrFillModel`), `BackgroundTransparent`,
+  `Frame` (`QrFrameModel`), `LogoSource`, `LogoExcavate`, `Posty5Logo`, and
+  `AdditionalProperties` (unknown keys round-trip). String vocabularies:
+  `QrDotShapes`, `QrEyeFrameShapes`, `QrEyeBallShapes`, `QrFillTypes`, `QrFrameIds`,
+  `QrLogoSources`, `QrRenderFormats`, `QrPrintPresetIds`, `QrLogoMimeTypes`,
+  `QrScannabilityStatuses`, `QrScannabilityCheckCodes`.
+- Models `QRCodeTemplateDetailsModel`, `QRCodeTemplateRequestModel`,
+  `QrDesignCatalogueModel` (+ item and limits models), `QrLogoUploadUrlModel`;
+  `QRCodeTemplateModel` gains `CreatedAt` / `UpdatedAt`.
+
+### Fixed
+
+- `QRCodeOptionsModel.PO_*`, `PI_*`, `AI` and `AO` now use the API's wire names
+  (they were read as `pO_TL`, `ai`, ... and so always came back null).
+
 ## Versioned writes (optimistic concurrency) - unreleased majors
 
 `Posty5.Core` 4.0.0, `Posty5.ShortLink` 4.0.0, `Posty5.QRCode` 4.0.0,

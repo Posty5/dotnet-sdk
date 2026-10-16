@@ -19,7 +19,7 @@
     },
     {
       "name": "qr-code",
-      "purpose": "Create/update seven QR types plus get/list/delete; QRCodeTemplateClient lists user and public templates; bulk create, export, bulk jobs with ZIP (QRCodeClient.Bulk.cs).",
+      "purpose": "Create/update seven QR types plus get/list/delete; QRCodeTemplateClient lists user and public templates and (QD 4.1.0) creates/updates/gets/lists/deletes/renders designs, reads the design catalogue and uploads logos; QRCodeClient.Design.cs renders, signs export links and checks scannability; bulk create, export, bulk jobs with ZIP (QRCodeClient.Bulk.cs).",
       "primary_path": "src/Posty5.QRCode"
     },
     {

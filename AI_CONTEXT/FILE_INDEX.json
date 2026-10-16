@@ -129,7 +129,27 @@
     },
     {
       "path": "src/Posty5.QRCode/QRCodeTemplateClient.cs",
-      "role": "QRCodeTemplateClient: ListUserTemplatesAsync, ListPublicTemplatesAsync (/api/qr-code-template/*-lookup); routes in QRCodeTemplateRoutes.cs."
+      "role": "QRCodeTemplateClient: ListUserTemplatesAsync, ListPublicTemplatesAsync (/api/qr-code-template/*-lookup); QD 4.1.0 Create/Update(If-Match)/Get/List/Delete/Render, GetDesignCatalogueAsync, GetLogoUploadUrlAsync, UploadLogoAsync; routes in QRCodeTemplateRoutes.cs."
+    },
+    {
+      "path": "src/Posty5.QRCode/QRCodeClient.Design.cs",
+      "role": "QD: RenderAsync (FileResponse), GetExportUrlAsync, CheckScannabilityAsync on /api/qr-code; routes in QRCodeRoutes.cs, query from QrRenderQueryHelper.cs."
+    },
+    {
+      "path": "src/Posty5.QRCode/QrRenderQueryHelper.cs",
+      "role": "Render/export-url query builder (invariant culture) and id guard, shared by QRCodeClient and QRCodeTemplateClient."
+    },
+    {
+      "path": "src/Posty5.QRCode/Models/QrDesignModels.cs",
+      "role": "QD models: fill, frame, render/export options, export link, design catalogue, logo upload target."
+    },
+    {
+      "path": "src/Posty5.QRCode/Models/QrDesignConstants.cs",
+      "role": "QD string vocabularies: shapes, fill types, frames, logo sources, formats, print presets, logo MIME types, scannability statuses/codes."
+    },
+    {
+      "path": "src/Posty5.QRCode/Models/QrScannabilityModels.cs",
+      "role": "Scannability request (one source) and K5 report models."
     },
     {
       "path": "src/Posty5.QRCode/QRCodeClient.ContentTypes.cs",
