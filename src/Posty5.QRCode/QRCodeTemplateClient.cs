@@ -220,7 +220,7 @@ public class QRCodeTemplateClient
         CancellationToken cancellationToken = default)
     {
         QrRenderQueryHelper.RequireId(id, nameof(id));
-        return _http.GetBytesAsync(QRCodeTemplateRoutes.Render(id), QrRenderQueryHelper.ToQueryParams(options), cancellationToken);
+        return _http.GetBytesAsync(QRCodeTemplateRoutes.Render(id), QrRenderQueryHelper.ToQueryParams(options, withDownload: true), cancellationToken);
     }
 
     /// <summary>

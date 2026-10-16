@@ -43,7 +43,7 @@ public partial class QRCodeClient
         CancellationToken cancellationToken = default)
     {
         QrRenderQueryHelper.RequireId(id, nameof(id));
-        return _http.GetBytesAsync(QRCodeRoutes.Render(id), QrRenderQueryHelper.ToQueryParams(options), cancellationToken);
+        return _http.GetBytesAsync(QRCodeRoutes.Render(id), QrRenderQueryHelper.ToQueryParams(options, withDownload: true), cancellationToken);
     }
 
     /// <summary>
@@ -75,7 +75,7 @@ public partial class QRCodeClient
         QrRenderQueryHelper.RequireId(id, nameof(id));
         var response = await _http.GetAsync<QrExportUrlModel>(
             QRCodeRoutes.ExportUrl(id),
-            QrRenderQueryHelper.ToQueryParams(options),
+            QrRenderQueryHelper.ToQueryParams(options, withDownload: false),
             cancellationToken);
 
         return response.Result ?? throw new InvalidOperationException("The export link was not returned");

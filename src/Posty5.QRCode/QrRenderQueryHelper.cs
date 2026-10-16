@@ -13,11 +13,12 @@ internal static class QrRenderQueryHelper
     private const string DownloadFlag = "1";
 
     /// <summary>
-    /// The query for <paramref name="options"/>; unset properties are left out, and
-    /// <see cref="QrRenderOptions.Download"/> adds <c>download</c>. Numbers are written
+    /// The query for <paramref name="options"/>; unset properties are left out. With
+    /// <paramref name="withDownload"/> (the render routes), <see cref="QrRenderOptions.Download"/>
+    /// adds <c>download</c>; the export-url route never takes it. Numbers are written
     /// in the invariant culture, whatever the caller's culture is.
     /// </summary>
-    public static Dictionary<string, object?> ToQueryParams(QrExportUrlOptions? options)
+    public static Dictionary<string, object?> ToQueryParams(QrExportUrlOptions? options, bool withDownload)
     {
         var query = new Dictionary<string, object?>();
         if (options == null) return query;
@@ -27,7 +28,7 @@ internal static class QrRenderQueryHelper
         if (options.CustomMm.HasValue) query["customMm"] = options.CustomMm.Value.ToString(CultureInfo.InvariantCulture);
         if (options.Dpi.HasValue) query["dpi"] = options.Dpi.Value.ToString(CultureInfo.InvariantCulture);
         if (options.SizePx.HasValue) query["sizePx"] = options.SizePx.Value.ToString(CultureInfo.InvariantCulture);
-        if (options is QrRenderOptions { Download: true }) query["download"] = DownloadFlag;
+        if (withDownload && options is QrRenderOptions { Download: true }) query["download"] = DownloadFlag;
 
         return query;
     }
