@@ -188,6 +188,84 @@ public class AccountClientRouteTests : IDisposable
     {
         Assert.Throws<ArgumentNullException>(() => new AccountClient(null!));
     }
+
+    // ── Credit transfers (read-only; sending is session-only) ────────────────
+
+    [Fact]
+    public async Task GetCreditTransferEligibilityAsync_ReadsSendAndReceiveStatus()
+    {
+        _server.ResultJson = """
+        { "canSend": false, "sendRefusal": { "code": "PLAN_REQUIRED", "message": "This feature is not available on your current plan.", "requiredPlan": "enterprise" },
+          "spendable": 2000, "transferable": 2000, "minAmount": 100, "maxAmount": 2000,
+          "canReceive": true, "freeReceiveLimit": 1, "freeReceivesUsed": 0 }
+        """;
+
+        var eligibility = await Client().GetCreditTransferEligibilityAsync();
+
+        Assert.Equal("GET /api/credit-transfers/eligibility", Single());
+        Assert.False(eligibility.CanSend);
+        Assert.Equal(CreditTransferRefusalCodes.PlanRequired, eligibility.SendRefusal!.Code);
+        Assert.Equal("enterprise", eligibility.SendRefusal.RequiredPlan);
+        Assert.Equal(1, eligibility.FreeReceiveLimit);
+        Assert.Null(eligibility.DailyRemaining);
+    }
+
+    [Fact]
+    public async Task ListCreditTransfersAsync_SendsFiltersAndReadsAMaskedRow()
+    {
+        _server.ResultJson = """
+        { "items": [ { "_id": "t1", "__v": 2, "direction": "received", "amount": 500, "note": "Thanks",
+            "status": "completed", "counterparty": { "displayName": "Ahmed N.", "emailMasked": "a***d@g***.com" },
+            "createdAt": "2026-10-17T10:00:00Z", "completedAt": "2026-10-17T10:00:01Z" } ],
+          "pagination": { "nextCursor": null, "hasMore": false, "pageSize": 10 } }
+        """;
+
+        var page = await Client().ListCreditTransfersAsync(
+            new CreditTransferListParams { Direction = CreditTransferDirections.Received, Status = CreditTransferStatuses.Completed },
+            new PaginationParams { PageSize = 10 });
+
+        Assert.Equal("GET /api/credit-transfers?direction=received&status=completed&pageSize=10", Single());
+        var row = Assert.Single(page.Items);
+        Assert.Equal("t1", row.Id);
+        Assert.Equal(2, row.Version);
+        Assert.Equal(500m, row.Amount);
+        Assert.Equal("a***d@g***.com", row.Counterparty.EmailMasked);
+        Assert.Null(row.ReversedAt);
+    }
+
+    [Fact]
+    public async Task GetCreditTransferAsync_ReadsOneTransfer()
+    {
+        _server.ResultJson = """{ "_id": "t1", "direction": "sent", "amount": 100, "status": "reversed", "counterparty": { "displayName": "", "emailMasked": "b*@x***.io" }, "reversedAt": "2026-10-18T00:00:00Z" }""";
+
+        var transfer = await Client().GetCreditTransferAsync("t1");
+
+        Assert.Equal("GET /api/credit-transfers/t1", Single());
+        Assert.Equal(CreditTransferStatuses.Reversed, transfer.Status);
+        Assert.NotNull(transfer.ReversedAt);
+    }
+
+    [Fact]
+    public async Task CreditUsageSummary_ReadsTransferTotalsAndKinds()
+    {
+        _server.ResultJson = """
+        { "balance": 10, "remaining": 10, "debt": 0, "granted": 0, "purchased": 10, "used": 0,
+          "remainingBreakdown": { "monthly": 0, "purchased": 10 },
+          "range": { "operations": 0, "creditsSpent": 0, "creditsOwed": 0, "creditsAdded": 500, "creditsTransferredIn": 500, "creditsTransferredOut": 0 } }
+        """;
+
+        var summary = await Client().GetCreditUsageSummaryAsync(new CreditUsageListParams { Kind = CreditUsageKinds.TransferIn });
+
+        Assert.Equal("GET /api/user/current/credit-usage/summary?kind=transferIn", Single());
+        Assert.Equal(500m, summary.Range.CreditsTransferredIn);
+        Assert.Equal(0m, summary.Range.CreditsTransferredOut);
+    }
+
+    [Fact]
+    public void AccountClient_OffersNoWayToSendATransfer()
+    {
+        Assert.Null(typeof(AccountClient).GetMethod("SendCreditTransferAsync"));
+    }
 }
 
 /// <summary>

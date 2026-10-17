@@ -331,6 +331,14 @@ public class Examples
             .FirstOrDefault(o => o.FeaturePath == "socialMediaPublisher.textPost");
         Console.WriteLine($"A text post costs {textPostCost?.Cost} {costs.Currency}");
 
+        // Credit transfers are read-only with an API key: can I send (Business only), and what came in?
+        var transferStatus = await account.GetCreditTransferEligibilityAsync();
+        Console.WriteLine($"Can send credits: {transferStatus.CanSend}; can receive: {transferStatus.CanReceive}");
+        var received = await account.ListCreditTransfersAsync(
+            new Posty5.Account.Models.CreditTransferListParams { Direction = Posty5.Account.Models.CreditTransferDirections.Received },
+            new PaginationParams { PageSize = 5 });
+        Console.WriteLine($"Latest transfers received: {received.Items.Count}");
+
         // The ids the other calls take
         var stores = await new StoreClient(httpClient).ListStoresAsync();
         Console.WriteLine($"Stores: {string.Join(", ", stores.Select(s => $"{s.Name} ({s.Id})"))}");

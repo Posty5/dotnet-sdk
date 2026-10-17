@@ -235,6 +235,12 @@ public class CreditRangeTotals
     /// <summary>Credits those charges still owe (deferred, unpaid).</summary>
     public decimal CreditsOwed { get; set; }
 
-    /// <summary>Credits added — grants, carry-overs and refunds.</summary>
+    /// <summary>Credits added — grants, carry-overs, refunds and transfers received.</summary>
     public decimal CreditsAdded { get; set; }
+
+    /// <summary>Credits received from other Posty5 accounts.</summary>
+    public decimal CreditsTransferredIn { get; set; }
+
+    /// <summary>Credits sent to other Posty5 accounts — never counted as spent.</summary>
+    public decimal CreditsTransferredOut { get; set; }
 }

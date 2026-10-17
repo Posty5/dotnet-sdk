@@ -4,6 +4,31 @@ All notable changes to the Posty5 .NET SDK will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Posty5.Store 4.1.0 - unreleased (store test mode)
+
+Needs the API's store-test-mode release. Additive minor; no breaking change.
+
+### Added
+
+- `IsTest` (`bool?`) on `StoreOrderSummary` and `StoreOrder`: placed while the store was in test mode — never fulfilled, removed when the store is published. Skip it when syncing real sales.
+- `IsDemo` (`bool?`) on `StoreOrderSummary`, `StoreOrder`, `ProductSummary`, `StoreCustomer` and `StoreTag`: added by the store's demo data, removed at publish unless edited.
+- No publish/launch method, by design: it irreversibly deletes data and needs the owner's typed confirmation in the store control panel.
+
+## Posty5.Account 3.3.0 - unreleased (credit transfers)
+
+Needs the API's credit-transfer release. Additive minor; `Posty5.Core` is unchanged.
+
+### Added
+
+- `AccountClient.GetCreditTransferEligibilityAsync()`, `ListCreditTransfersAsync(CreditTransferListParams?, PaginationParams?)`
+  and `GetCreditTransferAsync(id)` — read-only: sending stays in the Posty5 dashboard
+  (an API key cannot send; the API answers 403 `SESSION_REQUIRED`).
+- Models `CreditTransfer`, `CreditTransferCounterparty`, `CreditTransferEligibility`,
+  `CreditTransferRefusal`, `CreditTransferListParams`; string vocabularies
+  `CreditTransferDirections`, `CreditTransferStatuses`, `CreditTransferRefusalCodes`.
+- `CreditUsageKinds.TransferOut` / `TransferIn`; `CreditRangeTotals.CreditsTransferredIn`
+  / `CreditsTransferredOut`.
+
 ## Posty5.QRCode 4.1.0 - unreleased (QR design and export, QD)
 
 Needs the API's QR design and export release (live on the test stack 2026-10-17)

@@ -86,6 +86,14 @@ the same whether it is called from this SDK, the dashboard or an MCP assistant.
 | `GetCreditUsageAsync(filters?, pagination?)` | `GET /api/user/current/credit-usage` |
 | `GetCreditUsageSummaryAsync(filters?)` | `GET /api/user/current/credit-usage/summary` |
 | `GetOperationCostsAsync(activeOnly = true)` | `GET /api/plans/operation-costs` (public) |
+| `GetCreditTransferEligibilityAsync()` | `GET /api/credit-transfers/eligibility` |
+| `ListCreditTransfersAsync(filters?, pagination?)` | `GET /api/credit-transfers` |
+| `GetCreditTransferAsync(id)` | `GET /api/credit-transfers/{id}` |
+
+**Credit transfers are read-only here.** A Business user sends credits from the
+Posty5 dashboard; an API key cannot send (the API answers 403
+`SESSION_REQUIRED`). A Free account can receive one transfer. Counterparties
+come back masked.
 
 Every method takes an optional `CancellationToken`.
 

@@ -55,6 +55,22 @@ public class OrderStatisticsParams : OrderSearchParams
 /// <summary>Order summary row (search results).</summary>
 public class StoreOrderSummary : Posty5.Core.Models.IVersioned
 {
+    /// <summary>
+    /// Placed while the store was in test mode (<c>isTest</c>). Test orders are never
+    /// fulfilled and are removed when the store is published; a sync of real sales
+    /// should skip them. <c>null</c> on older API responses: treat as <c>false</c>.
+    /// </summary>
+    [JsonPropertyName("isTest")]
+    public bool? IsTest { get; set; }
+
+    /// <summary>
+    /// Added by the store's demo data (<c>isDemo</c>). Demo records are removed when the
+    /// store is published (test mode to live), unless the merchant edited them.
+    /// <c>null</c> on older API responses: treat as <c>false</c>.
+    /// </summary>
+    [JsonPropertyName("isDemo")]
+    public bool? IsDemo { get; set; }
+
     /// <summary>The document's version (<c>__v</c>); pass it to the next update or delete.</summary>
     [JsonPropertyName("__v")]
     public long Version { get; set; }
@@ -204,6 +220,22 @@ public class StoreOrderTotals
 /// </summary>
 public class StoreOrder : Posty5.Core.Models.IVersioned
 {
+    /// <summary>
+    /// Placed while the store was in test mode (<c>isTest</c>). Test orders are never
+    /// fulfilled and are removed when the store is published; a sync of real sales
+    /// should skip them. <c>null</c> on older API responses: treat as <c>false</c>.
+    /// </summary>
+    [JsonPropertyName("isTest")]
+    public bool? IsTest { get; set; }
+
+    /// <summary>
+    /// Added by the store's demo data (<c>isDemo</c>). Demo records are removed when the
+    /// store is published (test mode to live), unless the merchant edited them.
+    /// <c>null</c> on older API responses: treat as <c>false</c>.
+    /// </summary>
+    [JsonPropertyName("isDemo")]
+    public bool? IsDemo { get; set; }
+
     /// <summary>The document's version (<c>__v</c>); pass it to the next update or delete.</summary>
     [JsonPropertyName("__v")]
     public long Version { get; set; }

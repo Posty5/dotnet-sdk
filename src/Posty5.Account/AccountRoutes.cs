@@ -22,4 +22,10 @@ internal static class AccountRoutes
 
     /// <summary>The live price of every operation, grouped by module. Public.</summary>
     public const string OperationCosts = "/api/plans/operation-costs";
+
+    /// <summary>The key owner's credit transfers (read-only for an API key); <c>/{id}</c> for one.</summary>
+    public const string CreditTransfers = "/api/credit-transfers";
+
+    /// <summary>Whether the key owner can send or receive credit transfers.</summary>
+    public const string CreditTransferEligibility = "/api/credit-transfers/eligibility";
 }

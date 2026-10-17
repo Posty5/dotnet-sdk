@@ -162,6 +162,14 @@ public class ProductSearchParams
 /// <summary>Product summary row (search results).</summary>
 public class ProductSummary : Posty5.Core.Models.IVersioned
 {
+    /// <summary>
+    /// Added by the store's demo data (<c>isDemo</c>). Demo records are removed when the
+    /// store is published (test mode to live), unless the merchant edited them.
+    /// <c>null</c> on older API responses: treat as <c>false</c>.
+    /// </summary>
+    [JsonPropertyName("isDemo")]
+    public bool? IsDemo { get; set; }
+
     /// <summary>The document's version (<c>__v</c>); pass it to the next update or delete.</summary>
     [JsonPropertyName("__v")]
     public long Version { get; set; }

@@ -48,6 +48,12 @@ public static class CreditUsageKinds
 
     /// <summary>Credits returned to the payer.</summary>
     public const string Refund = "refund";
+
+    /// <summary>Credits sent to another Posty5 account (or taken back by a reversal).</summary>
+    public const string TransferOut = "transferOut";
+
+    /// <summary>Credits received from another Posty5 account (or returned by a refund or reversal).</summary>
+    public const string TransferIn = "transferIn";
 }
 
 /// <summary>Which way credits moved on a ledger row (<see cref="CreditUsageEntry.Direction"/>).</summary>
