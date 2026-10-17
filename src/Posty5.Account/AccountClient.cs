@@ -165,6 +165,72 @@ public class AccountClient
     }
 
     /// <summary>
+    /// Whether the key owner can send credits to another Posty5 account
+    /// (Business plan only), how many, and whether they can still receive one
+    /// (<c>GET /api/credit-transfers/eligibility</c>).
+    /// </summary>
+    /// <remarks>
+    /// Read-only. Sending is done from the Posty5 dashboard by a signed-in
+    /// person; an API key cannot send (the API answers 403
+    /// <see cref="CreditTransferRefusalCodes.SessionRequired"/>). A Free account
+    /// can receive one transfer.
+    /// </remarks>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The send and receive status.</returns>
+    public async Task<CreditTransferEligibility> GetCreditTransferEligibilityAsync(CancellationToken cancellationToken = default)
+    {
+        var response = await _http.GetAsync<CreditTransferEligibility>(AccountRoutes.CreditTransferEligibility, cancellationToken: cancellationToken);
+        return response.Result ?? new CreditTransferEligibility();
+    }
+
+    /// <summary>
+    /// Credits the key owner sent to or received from other Posty5 accounts,
+    /// newest first (<c>GET /api/credit-transfers</c>). Counterparties are masked.
+    /// </summary>
+    /// <param name="filters">Filters; all optional.</param>
+    /// <param name="pagination">Cursor and page size; the API's default page size applies when null.</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>A page of transfers.</returns>
+    public async Task<PaginationResponse<CreditTransfer>> ListCreditTransfersAsync(
+        CreditTransferListParams? filters = null,
+        PaginationParams? pagination = null,
+        CancellationToken cancellationToken = default)
+    {
+        var queryParams = new Dictionary<string, object?>();
+        if (!string.IsNullOrEmpty(filters?.Direction))
+            queryParams["direction"] = filters.Direction;
+        if (!string.IsNullOrEmpty(filters?.Status))
+            queryParams["status"] = filters.Status;
+        if (!string.IsNullOrEmpty(filters?.FromDate))
+            queryParams["fromDate"] = filters.FromDate;
+        if (!string.IsNullOrEmpty(filters?.ToDate))
+            queryParams["toDate"] = filters.ToDate;
+        if (pagination != null)
+        {
+            if (!string.IsNullOrEmpty(pagination.Cursor))
+                queryParams["cursor"] = pagination.Cursor;
+            queryParams["pageSize"] = pagination.PageSize;
+        }
+
+        var response = await _http.GetAsync<PaginationResponse<CreditTransfer>>(AccountRoutes.CreditTransfers, queryParams, cancellationToken);
+        return response.Result ?? new PaginationResponse<CreditTransfer>();
+    }
+
+    /// <summary>
+    /// One transfer the key owner sent or received (<c>GET /api/credit-transfers/{id}</c>).
+    /// A transfer they are not a party to answers 404.
+    /// </summary>
+    /// <param name="id">The transfer id.</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The transfer.</returns>
+    public async Task<CreditTransfer> GetCreditTransferAsync(string id, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("A transfer id is required", nameof(id));
+        var response = await _http.GetAsync<CreditTransfer>($"{AccountRoutes.CreditTransfers}/{Uri.EscapeDataString(id)}", cancellationToken: cancellationToken);
+        return response.Result ?? throw new InvalidOperationException("The API returned no credit transfer");
+    }
+
+    /// <summary>
     /// The query string for the credit history and its summary. Booleans go as
     /// the lower-case strings the API reads.
     /// </summary>

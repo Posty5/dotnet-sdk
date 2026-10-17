@@ -506,3 +506,11 @@ linking, syncing and every supplier-order action are free.
 ## License
 
 MIT
+
+## Test orders and demo data
+
+A store that is not published yet is in test mode. Its orders carry `IsTest = true`; records added by the demo data carry `IsDemo = true`. Both are removed when the owner publishes the store, so filter them out when you count real sales:
+
+```csharp
+var realOrders = page.Items.Where(o => o.IsTest != true && o.IsDemo != true);
+```

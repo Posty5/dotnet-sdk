@@ -29,6 +29,10 @@ internal sealed class RecordingServer : IDisposable
     public HttpStatusCode Status { get; set; } = HttpStatusCode.OK;
     /// <summary>When set, sent as the whole response body instead of the envelope (e.g. an error with a <c>code</c>).</summary>
     public string? RawBody { get; set; }
+    /// <summary>When set, sent as the whole response body as bytes (a file download), with <see cref="ResponseContentType"/>.</summary>
+    public byte[]? RawBytes { get; set; }
+    /// <summary>The response's <c>Content-Type</c>.</summary>
+    public string ResponseContentType { get; set; } = "application/json";
     /// <summary>Extra headers on every response, e.g. <c>ETag</c> or <c>X-Posty5-Concurrency</c>.</summary>
     public Dictionary<string, string> ResponseHeaders { get; } = new();
     public string BaseUrl { get; }
@@ -67,11 +71,11 @@ internal sealed class RecordingServer : IDisposable
                 Headers.Add(headers);
             }
 
-            var payload = Encoding.UTF8.GetBytes(RawBody ?? $"{{\"message\":{JsonSerializer.Serialize(Message)},\"result\":{ResultJson}}}");
+            var payload = RawBytes ?? Encoding.UTF8.GetBytes(RawBody ?? $"{{\"message\":{JsonSerializer.Serialize(Message)},\"result\":{ResultJson}}}");
             context.Response.StatusCode = (int)Status;
             foreach (var (name, value) in ResponseHeaders)
                 context.Response.Headers[name] = value;
-            context.Response.ContentType = "application/json";
+            context.Response.ContentType = ResponseContentType;
             await context.Response.OutputStream.WriteAsync(payload);
             context.Response.Close();
         }

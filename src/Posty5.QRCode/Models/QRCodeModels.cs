@@ -230,47 +230,130 @@ public class QRCodeTemplateModel : Posty5.Core.Models.IVersioned
     /// QR code download URL
     /// </summary>
     public string? QrCodeDownloadURL { get; set; }
+
+    /// <summary>Creation time.</summary>
+    public DateTime? CreatedAt { get; set; }
+
+    /// <summary>Last update time.</summary>
+    public DateTime? UpdatedAt { get; set; }
 }
 
 /// <summary>
-/// QR Code styling options
+/// A QR design: the legacy EasyQRCode fields plus the v2 design fields
+/// (shapes, gradient fill, frame, logo source). Any v2 field makes the design
+/// v2 (<see cref="DesignVersion"/> 2, set by the API); legacy designs keep
+/// rendering exactly as before.
 /// </summary>
+/// <remarks>
+/// <para>Shape, frame, fill-type and logo-source values are plain strings with
+/// the known values in <see cref="QrDotShapes"/>, <see cref="QrEyeFrameShapes"/>,
+/// <see cref="QrEyeBallShapes"/>, <see cref="QrFillTypes"/>, <see cref="QrFrameIds"/>
+/// and <see cref="QrLogoSources"/>, so a value added by a newer API reads back
+/// unchanged instead of failing.</para>
+/// <para>Keys this class does not name are kept in <see cref="AdditionalProperties"/>
+/// and sent back on update, so a design round-trips intact.</para>
+/// <para>Updating a v2 design without <see cref="DesignVersion"/> keeps its stored
+/// v2 fields; send <c>DesignVersion = 1</c> to remove them.</para>
+/// </remarks>
 public class QRCodeOptionsModel
 {
+    /// <summary>The content the image encodes. Written by the API; a value sent by a client is ignored.</summary>
     public string? Text { get; set; }
+    /// <summary>Stored width in px (10-600). The render size is a separate render parameter.</summary>
     public int? Width { get; set; }
+    /// <summary>Stored height in px.</summary>
     public int? Height { get; set; }
+    /// <summary>Error correction, EasyQRCode numbering: L = 1, M = 0, Q = 3, H = 2.</summary>
     public int? CorrectLevel { get; set; }
+    /// <summary>Data module scale, 0-1.</summary>
     public double? DotScale { get; set; }
+    /// <summary>Horizontal timing pattern scale.</summary>
     public double? DotScaleTiming_H { get; set; }
+    /// <summary>Vertical timing pattern scale.</summary>
     public double? DotScaleTiming_V { get; set; }
+    /// <summary>Alignment pattern outer scale.</summary>
     public double? DotScaleAO { get; set; }
+    /// <summary>Alignment pattern inner scale.</summary>
     public double? DotScaleAI { get; set; }
+    /// <summary>Quiet zone (margin) in px.</summary>
     public int? QuietZone { get; set; }
+    /// <summary>Quiet zone colour.</summary>
     public string? QuietZoneColor { get; set; }
+    /// <summary>Foreground colour (v2: used when <see cref="Fill"/> is absent).</summary>
     public string? ColorDark { get; set; }
+    /// <summary>Background colour; ignored when <see cref="BackgroundTransparent"/> is true.</summary>
     public string? ColorLight { get; set; }
-    public string? PO_TL { get; set; }
-    public string? PO_TR { get; set; }
-    public string? PO_BL { get; set; }
-    public string? PI_TL { get; set; }
-    public string? PI_TR { get; set; }
-    public string? PI_BL { get; set; }
-    public string? AI { get; set; }
-    public string? AO { get; set; }
-    public string? Timing_V { get; set; }
-    public string? Timing_H { get; set; }
+    /// <summary>Top-left eye frame colour.</summary>
+    [JsonPropertyName("PO_TL")] public string? PO_TL { get; set; }
+    /// <summary>Top-right eye frame colour.</summary>
+    [JsonPropertyName("PO_TR")] public string? PO_TR { get; set; }
+    /// <summary>Bottom-left eye frame colour.</summary>
+    [JsonPropertyName("PO_BL")] public string? PO_BL { get; set; }
+    /// <summary>Top-left eye ball colour.</summary>
+    [JsonPropertyName("PI_TL")] public string? PI_TL { get; set; }
+    /// <summary>Top-right eye ball colour.</summary>
+    [JsonPropertyName("PI_TR")] public string? PI_TR { get; set; }
+    /// <summary>Bottom-left eye ball colour.</summary>
+    [JsonPropertyName("PI_BL")] public string? PI_BL { get; set; }
+    /// <summary>Alignment pattern inner colour.</summary>
+    [JsonPropertyName("AI")] public string? AI { get; set; }
+    /// <summary>Alignment pattern outer colour.</summary>
+    [JsonPropertyName("AO")] public string? AO { get; set; }
+    /// <summary>Vertical timing pattern colour.</summary>
+    [JsonPropertyName("timing_V")] public string? Timing_V { get; set; }
+    /// <summary>Horizontal timing pattern colour.</summary>
+    [JsonPropertyName("timing_H")] public string? Timing_H { get; set; }
+    /// <summary>Legacy title strip text. A v2 design may not carry both a title and a <see cref="Frame"/>.</summary>
     public string? Title { get; set; }
+    /// <summary>Legacy title font.</summary>
     public string? TitleFont { get; set; }
+    /// <summary>Legacy title colour.</summary>
     public string? TitleColor { get; set; }
+    /// <summary>Legacy title background colour.</summary>
     public string? TitleBackgroundColor { get; set; }
+    /// <summary>Legacy title strip height.</summary>
     public int? TitleHeight { get; set; }
+    /// <summary>Legacy title offset.</summary>
     public int? TitleTop { get; set; }
+    /// <summary>
+    /// Logo URL: a library logo, your own upload (<see cref="QRCodeTemplateClient.UploadLogoAsync"/>)
+    /// or any image URL, which the API re-hosts on the Posty5 CDN when the design is saved.
+    /// </summary>
     public string? Logo { get; set; }
+    /// <summary>Logo width.</summary>
     public int? LogoWidth { get; set; }
+    /// <summary>Logo height.</summary>
     public int? LogoHeight { get; set; }
+    /// <summary>Logo background colour.</summary>
     public string? LogoBackgroundColor { get; set; }
+    /// <summary>Whether the logo background is transparent.</summary>
     public bool? LogoBackgroundTransparent { get; set; }
+
+    /// <summary>A library logo stored by the template editor; renderers read <c>Logo ?? Posty5Logo</c>.</summary>
+    public string? Posty5Logo { get; set; }
+
+    /// <summary>1 (legacy engine) or 2 (Posty5 design engine). Absent reads as 1; the API sets 2 when any v2 field is present.</summary>
+    public int? DesignVersion { get; set; }
+    /// <summary>Data module shape (v2), see <see cref="QrDotShapes"/>.</summary>
+    public string? DotShape { get; set; }
+    /// <summary>Eye (position pattern) outer ring shape (v2), see <see cref="QrEyeFrameShapes"/>.</summary>
+    public string? EyeFrameShape { get; set; }
+    /// <summary>Eye centre shape (v2), see <see cref="QrEyeBallShapes"/>.</summary>
+    public string? EyeBallShape { get; set; }
+    /// <summary>Solid or gradient fill of the data modules (v2). Eyes keep their <c>PO_*</c>/<c>PI_*</c> colours and fall back to the first stop.</summary>
+    public QrFillModel? Fill { get; set; }
+    /// <summary>Transparent background (v2); <see cref="ColorLight"/> is ignored when true.</summary>
+    public bool? BackgroundTransparent { get; set; }
+    /// <summary>A frame with a call to action (v2).</summary>
+    public QrFrameModel? Frame { get; set; }
+    /// <summary>How <see cref="Logo"/> was chosen (v2), see <see cref="QrLogoSources"/>.</summary>
+    public string? LogoSource { get; set; }
+    /// <summary>Clear the modules under the logo (v2; the API's default is true).</summary>
+    public bool? LogoExcavate { get; set; }
+
+    /// <summary>Design keys this class does not name, kept so a design read from the API is sent back intact.</summary>
+    [JsonExtensionData]
+    public Dictionary<string, System.Text.Json.JsonElement>? AdditionalProperties { get; set; }
 }
 
 /// <summary>

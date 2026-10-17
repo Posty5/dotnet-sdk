@@ -108,6 +108,16 @@
       "source": "src/Posty5.QRCode/QRCodeTemplateClient.cs"
     },
     {
+      "name": "QR designs: template CRUD, render, design catalogue, logo upload (QD)",
+      "owner": "qr-code",
+      "source": "src/Posty5.QRCode/QRCodeTemplateClient.cs"
+    },
+    {
+      "name": "QR render (PNG/SVG/PDF, print presets), signed export links, scannability check (QD)",
+      "owner": "qr-code",
+      "source": "src/Posty5.QRCode/QRCodeClient.Design.cs"
+    },
+    {
       "name": "Text posts and stories (URL media)",
       "owner": "social-publisher-post",
       "source": "src/Posty5.SocialPublisherPost/SocialPublisherPostClient.cs"

@@ -651,10 +651,10 @@ await qrCodes.DeleteAsync("qr-code-id-123", qrCode.Version);
 
 ---
 
-### Templates — QRCodeTemplateClient (3.1.0+)
+### Templates — QRCodeTemplateClient (3.1.0+, designs 4.1.0)
 
-The template ids every create method takes as `TemplateId`. Read-only; a
-template is designed in the dashboard.
+The template ids every create method takes as `TemplateId`, and (4.1.0) your own
+designs: create, update, render, the design catalogue and logo upload.
 
 ```csharp
 var templates = new QRCodeTemplateClient(httpClient);
@@ -668,8 +668,99 @@ var templateId = mine.Items.FirstOrDefault()?.Id ?? shared.Items.First().Id;
 | --- | --- |
 | `ListUserTemplatesAsync(term?, pagination?)` | `GET /api/qr-code-template/user-lookup` |
 | `ListPublicTemplatesAsync(term?, schemeType?, pagination?)` | `GET /api/qr-code-template/public-lookup` |
+| `CreateAsync(request)` | `POST /api/qr-code-template` |
+| `UpdateAsync(id, request, version)` | `PUT /api/qr-code-template` (`_id` in the body, `If-Match`) |
+| `GetAsync(id)` | `GET /api/qr-code-template/{id}` (yours, with its design) |
+| `ListAsync(name?, pagination?)` | `GET /api/qr-code-template` (yours, with usage counts) |
+| `DeleteAsync(id, version)` | `DELETE /api/qr-code-template/{id}` (refused while in use) |
+| `RenderAsync(id, QrRenderOptions?)` | `GET /api/qr-code-template/{id}/render` -> `FileResponse` (yours or public) |
+| `GetDesignCatalogueAsync()` | `GET /api/qr-code-template/design-catalogue` (no API key needed) |
+| `GetLogoUploadUrlAsync(fileType, fileSize)` | `POST /api/qr-code-template/logo-upload-url` |
+| `UploadLogoAsync(stream, fileType)` | the above, then the PUT; returns the logo URL |
 
-Both page by cursor (`PaginationParams`, `Pagination.NextCursor`).
+The lists page by cursor (`PaginationParams`, `Pagination.NextCursor`).
+
+### Designs, rendering and print export (4.1.0)
+
+A design (`QRCodeOptionsModel`) keeps the classic fields and adds dot and eye
+shapes, a solid or gradient `Fill`, a `Frame` with a call to action, a transparent
+background and the logo source. Any of them makes the design v2; classic designs
+render exactly as before. Shape, frame and preset values are strings (the known
+ones are in `QrDotShapes`, `QrEyeFrameShapes`, `QrEyeBallShapes`, `QrFillTypes`,
+`QrFrameIds`, `QrLogoSources`, `QrRenderFormats`, `QrPrintPresetIds`), so a value a
+newer API adds reads back unchanged. Keys the model does not name are kept in
+`AdditionalProperties` and sent back on update.
+
+```csharp
+await using var logo = File.OpenRead("logo.png");
+var logoUrl = await templates.UploadLogoAsync(logo, QrLogoMimeTypes.Png); // paid plans
+
+var created = await templates.CreateAsync(new QRCodeTemplateRequestModel
+{
+    Name = "Menu card",
+    Options = new QRCodeOptionsModel
+    {
+        CorrectLevel = 2, // H (EasyQRCode numbering: L=1 M=0 Q=3 H=2)
+        DotShape = QrDotShapes.Rounded,
+        EyeFrameShape = QrEyeFrameShapes.Leaf,
+        EyeBallShape = QrEyeBallShapes.Circle,
+        Fill = new QrFillModel
+        {
+            Type = QrFillTypes.Linear,
+            Rotation = 45,
+            Stops = { new() { Offset = 0, Color = "#0059f7" }, new() { Offset = 1, Color = "#7a00f7" } }
+        },
+        Frame = new QrFrameModel { Id = QrFrameIds.BannerBottom, Text = "Scan for menu" },
+        Logo = logoUrl,
+        LogoSource = QrLogoSources.Upload
+    }
+});
+
+// Will it scan? Warns only; nothing is blocked.
+var report = await qrCodeClient.CheckScannabilityAsync(new QrScannabilityRequest
+{
+    TemplateId = created.Id,
+    PresetId = QrPrintPresetIds.Sticker3cm
+});
+Console.WriteLine(report.Verdict); // good | warning | poor
+
+// Render a QR code: PNG (every plan), SVG / PDF / print PNG (vector export)
+var pdf = await qrCodeClient.RenderAsync("qr-id", new QrRenderOptions
+{
+    Format = QrRenderFormats.Pdf,
+    PresetId = QrPrintPresetIds.Flyer5cm,
+    Download = true
+});
+await File.WriteAllBytesAsync(pdf.FileName ?? "qr.pdf", pdf.Data);
+
+var png300 = await qrCodeClient.RenderAsync("qr-id", new QrRenderOptions
+{
+    PresetId = QrPrintPresetIds.Sticker3cm,
+    Dpi = 300
+});
+
+// A signed link (1 hour) for a browser, an email or a workflow step
+var link = await qrCodeClient.GetExportUrlAsync("qr-id", new QrExportUrlOptions { Format = QrRenderFormats.Svg });
+```
+
+| Method | Route |
+| --- | --- |
+| `RenderAsync(id, QrRenderOptions?)` | `GET /api/qr-code/{id}/render` -> `FileResponse` (`Data`, `ContentType`, `FileName`) |
+| `GetExportUrlAsync(id, QrExportUrlOptions?)` | `GET /api/qr-code/{id}/export-url` -> `{ Url, ExpiresAt }` |
+| `CheckScannabilityAsync(request)` | `POST /api/qr-code/scannability-check`: exactly one of `QrCodeId`, `TemplateId`, `Options` + `Text` |
+
+- Render options: `Format` (`png`/`svg`/`pdf`), `PresetId` (`sticker-3cm` 30 mm,
+  `business-card` 25 mm, `flyer-5cm` 50 mm, `table-tent-8cm` 80 mm, `poster-15cm`
+  150 mm, `custom` + `CustomMm` 20-500), `Dpi` (150/300/600, with a preset),
+  `SizePx` (64-6000), `Download` (attachment name in `FileName`). A PDF defaults to
+  `flyer-5cm`. The largest raster edge is 6000 px; the file is buffered in memory.
+- SVG, PDF, a print preset, a DPI or a PNG over 2048 px need vector export on the
+  account's plan; otherwise a `Posty5Exception` with `StatusCode` 403 carries the
+  API's message (`This feature is not available on your current plan.`). Logo
+  upload also needs a paid plan. Shapes, gradients and frames work on every plan.
+  Rendering, export links, scannability and logo upload use no credits.
+- A QR code renders only for the API key that created it (as `GetAsync`); a
+  template renders when it is yours or public.
 
 ---
 
