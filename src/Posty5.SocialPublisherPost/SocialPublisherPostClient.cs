@@ -1,5 +1,6 @@
 ﻿using System.Net.Http.Headers;
 using Posty5.Core.Configuration;
+using Posty5.Core.Helpers;
 using Posty5.Core.Http;
 using Posty5.Core.Models;
 using Posty5.SocialPublisherPost.Models;
@@ -57,6 +58,7 @@ public class SocialPublisherPostClient
                 queryParams["refId"] = listParams.RefId;
             if (!string.IsNullOrEmpty(listParams.Tag))
                 queryParams["tag"] = listParams.Tag;
+            QueryDateHelper.AddCreatedAtRange(queryParams, listParams.FromDate, listParams.ToDate);
         }
 
         if (pagination != null)

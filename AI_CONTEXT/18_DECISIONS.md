@@ -59,6 +59,8 @@ otherwise versioned independently (SocialPublisherPost is on 4.x).
 
 **Status:** decided 2026-10-05 (link-qr truth pass). `ShortLinkListParamsModel.Search`, `FromDate`, `ToDate` were sent but the API's short-link search reads none of them (`api/.../short-link/module.ts` search filter lists). They are `[Obsolete]` and dropped from the query rather than kept as silent no-ops; adding real filters is an API change, not an SDK one.
 
+**Partly superseded 2026-10-22 (redesign-dashboards SDK-02, see D20):** the API added the created-at filter (`fromDate` / `toDate`, API-03), so `FromDate` / `ToDate` are revived in ShortLink 4.1.0. `Search` stays obsolete and unsent.
+
 ## D12 - Fields the API requires for API-key callers use the C# `required` modifier.
 
 **Status:** decided 2026-10-05 (link-qr truth pass, TP-D7). `TemplateId` (short-link and QR request models) and short-link `BaseUrl` are `required`, so a request without them fails to compile - the .NET form of the npm SDK's non-optional property and the feature's acceptance criterion 6. Cost: a caller that assigns them after construction must move them into the object initializer.
@@ -90,5 +92,9 @@ otherwise versioned independently (SocialPublisherPost is on 4.x).
 ## D19 - QR designs extend `QRCodeOptionsModel`; vocabularies are string constants.
 
 **Status:** decided 2026-10-17 (QR design and export, `.agent/tasks/qr-design-and-export`, .NET row of K7). The task plan asked for a separate K1 options class with string-enum converters. Instead the v2 fields were added to the existing `QRCodeOptionsModel` (additive, so `QRCodeFullDetailsModel.Options` and template designs share one type and 4.1.0 stays a minor), with `[JsonExtensionData]` so unknown keys round-trip, and shapes/frames/presets are `string` properties with constants in `Models/QrDesignConstants.cs` (pattern "String vocabularies as constants", 17_PATTERNS): an unknown server value reads back as its string with no converter. The same change gives `PO_*`, `PI_*`, `AI`, `AO` explicit `[JsonPropertyName]`s; under the camel-case policy they had been `pO_TL`, `ai`, … and never matched. `QRCodeTemplateClient.ListAsync` uses cursor pagination like every other list: the route answers through `DBService.search` (cursor grid contract) although the swagger schema still shows `page`/`totalPages`.
+
+## D20 - List date filters are `DateTime?` and formatted once, in Posty5.Core.
+
+**Status:** decided 2026-10-22 (redesign-dashboards SDK-02, `.agent/tasks/redesign-dashboards/dotnet-sdk/list-date-filters/plan.md`). The API's short-link, QR code and HTML hosting lists gained `fromDate` / `toDate` (created-at, `yyyy-MM-dd`, applied only as a pair, whole UTC days; API-03), and the post list always had them. The short-link `FromDate` / `ToDate` obsoleted by D11 are revived with their `DateTime?` type, so old callers keep compiling, and QRCode, HtmlHosting and SocialPublisherPost get the same `DateTime?` pair, so the four share one type. `Posty5.Account` keeps its `string?` pair (not changed). The pair is not enforced client-side; the API decides. Every query date goes through `Posty5.Core.Helpers.QueryDateHelper` (invariant culture; workspace rule "dates through one helper"), which also serves `LinkAnalyticsQueryHelper`; that makes the four packages need Core 4.1.0.
 
 Do not invent historical rationale. Record evidence-based current decisions and label unknown rationale explicitly.

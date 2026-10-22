@@ -4,7 +4,36 @@ All notable changes to the Posty5 .NET SDK will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Posty5.Store 4.1.0 - unreleased (store test mode)
+## Posty5.ShortLink 4.1.0, Posty5.QRCode 4.2.0, Posty5.HtmlHosting 4.1.0, Posty5.SocialPublisherPost 5.1.0, Posty5.Core 4.1.0 - unreleased (list date filters)
+
+Additive minors (redesign-dashboards SDK-02). Needs the API release with the
+list date filters (API-03) for short links, QR codes and HTML pages; the post
+list has always accepted them. Against an older API the dates are ignored.
+Each of the four packages needs `Posty5.Core` 4.1.0 (`QueryDateHelper`).
+
+### Added
+
+- `FromDate` / `ToDate` (`DateTime?`) on `QRCodeListParamsModel`,
+  `HtmlHostingListPagesParamsModel` and `ListPostsParams`. `ListAsync` sends
+  them as `fromDate` / `toDate`, `yyyy-MM-dd` (date part only, invariant
+  culture), each only when set. The API applies the created-at window only
+  when both are sent and rounds it to whole UTC days; the SDK does not enforce
+  the pair.
+- `Posty5.Core.Helpers.QueryDateHelper`: `FormatDate(DateTime)` and
+  `AddCreatedAtRange(query, from, to)`, the one place a query date is
+  formatted. The link analytics query now formats its dates through it (same
+  output).
+- Decision: `DateTime?` on all four packages, to match the revived short-link
+  pair and keep one type across them. `Posty5.Account`'s `string?`
+  `FromDate` / `ToDate` stay as they are.
+
+### Changed
+
+- `ShortLinkListParamsModel.FromDate` / `ToDate` are no longer `[Obsolete]` or
+  `[JsonIgnore]`: `ListAsync` now sends them (they were documented as "never
+  sent" because the API had no date range). Same `DateTime?` type, so code that
+  set them still compiles, and now filters. `Search` stays obsolete.
+
 
 Needs the API's store-test-mode release. Additive minor; no breaking change.
 

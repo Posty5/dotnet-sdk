@@ -1,4 +1,5 @@
 using Posty5.Core.Configuration;
+using Posty5.Core.Helpers;
 using Posty5.Core.Http;
 using Posty5.Core.Models;
 using Posty5.HtmlHosting.Models;
@@ -153,6 +154,7 @@ public class HtmlHostingClient
                 queryParams["isTemp"] = listParams.IsTemp.Value;
             if (listParams.IsCachedInLocalStorage.HasValue)
                 queryParams["isCachedInLocalStorage"] = listParams.IsCachedInLocalStorage.Value;
+            QueryDateHelper.AddCreatedAtRange(queryParams, listParams.FromDate, listParams.ToDate);
         }
 
         if (pagination != null)

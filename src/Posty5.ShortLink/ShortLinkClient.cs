@@ -67,8 +67,9 @@ public partial class ShortLinkClient
                 queryParams["status"] = listParams.Status.Value.ToString();
             if (listParams.IsForDeepLink.HasValue)
                 queryParams["isForDeepLink"] = listParams.IsForDeepLink.Value;
-            // IsEnableMonetization, Search, FromDate and ToDate are obsolete: the
-            // API has no such filters, so they are never sent.
+            QueryDateHelper.AddCreatedAtRange(queryParams, listParams.FromDate, listParams.ToDate);
+            // IsEnableMonetization and Search are obsolete: the API has no such
+            // filters, so they are never sent.
         }
 
         if (pagination != null)

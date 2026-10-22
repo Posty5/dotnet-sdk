@@ -127,6 +127,5 @@ public static class LinkAnalyticsQueryHelper
     }
 
     /// <summary>The date part only, culture-independent: no time-zone conversion.</summary>
-    private static string FormatDate(DateTime value) =>
-        value.ToString(LinkAnalyticsConst.DateFormat, CultureInfo.InvariantCulture);
+    private static string FormatDate(DateTime value) => QueryDateHelper.FormatDate(value);
 }

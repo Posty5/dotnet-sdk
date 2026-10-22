@@ -1048,6 +1048,7 @@ public partial class QRCodeClient
                 queryParams["mode"] = listParams.Mode.Value.ToString();
             if (!string.IsNullOrEmpty(listParams.CreatedFrom))
                 queryParams["createdFrom"] = listParams.CreatedFrom;
+            QueryDateHelper.AddCreatedAtRange(queryParams, listParams.FromDate, listParams.ToDate);
         }
 
         if (pagination != null)
