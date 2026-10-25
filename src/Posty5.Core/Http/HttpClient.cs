@@ -109,10 +109,22 @@ public class Posty5HttpClient : IDisposable
                     $"{Posty5HttpDefaults.ApiKeyHeader} cannot be set through DefaultHeaders. Use Posty5Options.ApiKey or SetApiKey.",
                     nameof(Posty5Options.DefaultHeaders));
 
-            // Contains() answers false for a name that is not a request header,
-            // where Remove() would throw — the TryAdd below reports that case.
-            if (_httpClient.DefaultRequestHeaders.Contains(name))
-                _httpClient.DefaultRequestHeaders.Remove(name);
+            // Contains() and Remove() throw for a name that is not a request
+            // header: InvalidOperationException ("Misused header name") for a
+            // content header such as Content-Type, FormatException for a
+            // malformed name. Report both as the SDK's own refusal.
+            try
+            {
+                if (_httpClient.DefaultRequestHeaders.Contains(name))
+                    _httpClient.DefaultRequestHeaders.Remove(name);
+            }
+            catch (Exception ex) when (ex is InvalidOperationException or FormatException)
+            {
+                throw new ArgumentException(
+                    $"'{name}' cannot be sent as a default request header: it is a content header or not a valid header name. Content headers are set by the SDK on each request body.",
+                    nameof(Posty5Options.DefaultHeaders),
+                    ex);
+            }
             if (!_httpClient.DefaultRequestHeaders.TryAddWithoutValidation(name, value))
                 throw new ArgumentException(
                     $"'{name}' cannot be sent as a default request header.",
