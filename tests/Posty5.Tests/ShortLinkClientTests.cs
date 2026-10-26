@@ -10,7 +10,6 @@ using Posty5.Core.Configuration;
 using Posty5.Core.Exceptions;
 using Posty5.Core.Http;
 using Posty5.Core.Models;
-using Posty5.Tests.Store;
 
 namespace Posty5.Tests.Integration;
 

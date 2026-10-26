@@ -52,10 +52,9 @@ public class Posty5Options
     /// accepts any string).
     /// </summary>
     /// <remarks>
-    /// When null or blank, each package keeps the label it has always sent
-    /// (<see cref="CreatedFromDefaults.Package"/> for the tool clients,
-    /// <see cref="CreatedFromDefaults.StoreOrder"/> for store orders). A value set
-    /// on an individual request, where the request model has one, wins over this.
+    /// When null or blank, the clients keep the label they have always sent
+    /// (<see cref="CreatedFromDefaults.Package"/>). A value set on an individual
+    /// request, where the request model has one, wins over this.
     /// </remarks>
     public string? CreatedFrom { get; set; }
 

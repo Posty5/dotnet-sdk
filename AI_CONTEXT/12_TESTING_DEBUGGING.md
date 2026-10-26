@@ -20,47 +20,29 @@
 local `HttpListener` that records each request — verb, path+query, body and
 headers — and answers with the API envelope (`ResultJson`, `Status`), so every
 route is pinned without the network. `_server.Http(options?)` builds a client
-on it. Used by `StoreSuppliersRouteTests`, `CoreHeadersAndOriginTests`
+on it. Used by `CoreHeadersAndOriginTests`
 (X-Posty5-Client, DefaultHeaders, createdFrom), `AccountClientRouteTests`,
 `SocialPublisherPostRouteTests` (status `/{id}/status`, remove, text, story,
-comments list), `SocialPublisherAccountClientRouteTests`,
-`QRCodeTemplateClientRouteTests` and `StoreLookupRouteTests`.
+comments list), `SocialPublisherAccountClientRouteTests` and
+`QRCodeTemplateClientRouteTests`.
 
 Live read-only facts for those clients use `[ApiKeyFact]`
 (`tests/Posty5.Tests/ApiKeyFactAttribute.cs`): skipped, naming the variable,
 when `POSTY5_API_KEY` is not set. They need an API with the mcp-server wave-1
-routes (`/api/api-key/current`, `/api/store/lookup`, …).
+routes (`/api/api-key/current`, …).
 
 Run only the offline classes (after approval):
 `dotnet test tests/Posty5.Tests/Posty5.Tests.csproj --filter "FullyQualifiedName~RouteTests|FullyQualifiedName~CoreHeadersAndOriginTests"`.
 
-## Store dropshipping tests
-
-`tests/Posty5.Tests/StoreSuppliersClientTests.cs` has an offline class
-(`StoreSuppliersRouteTests`) on the shared `RecordingServer` described above.
-
-The live class (`StoreSuppliersLiveTests`) uses `[StoreFixtureFact(...)]`
-(`tests/Posty5.Tests/StoreFixtureFactAttribute.cs`): a fact whose fixture is not
-set is reported as **skipped**, naming the missing variable, instead of passing
-silently. Variables are read from the User scope, then the process
-(`TestConfig.Env`).
-
-| Variable | Enables |
-| --- | --- |
-| `POSTY5_API_KEY` + `POSTY5_TEST_STORE_ID` | Every live fact: catalogue/list, supplier order queue + get, orders `NeedsAttention` + `FulfilmentGroups`, links list. |
-| `POSTY5_TEST_SUPPLIER_INTEGRATION_ID` (a **test-mode** connection) | Balance, test, browse, automation round trip (restored in `finally`). |
-| + `POSTY5_TEST_SUPPLIER_PRODUCT_ID` | Preview import. |
-| + `POSTY5_TEST_PRODUCT_ID` | Create → update → sync → delete link (cleanup in `Dispose`). |
-| `POSTY5_TEST_ALLOW_CHARGES=true` | Import one draft (charges credits; deleted in `Dispose`). |
-| `POSTY5_TEST_ORDER_ID` + `POSTY5_TEST_GROUP_KEY` | Submit, retry, pay on the test-mode part; each must answer `testMode`. |
-| + `POSTY5_TEST_ALLOW_PART_TAKEOVER=true` | Cancel, then fulfil manually — ends the fixture part; re-make it afterwards. |
-
-Never run by any fact: connect, replace credentials, disconnect, set enabled.
+Fact variables are read from the User scope, then the process
+(`TestConfig.Env`). `POSTY5_TEST_ALLOW_CHARGES=true` (with
+`POSTY5_BULK_TEMPLATE_ID`) lets `[BulkChargeFact]` create, and be charged for,
+records.
 
 ## Short-link and QR payload tests (link-qr truth pass)
 
 `ShortLinkClientPayloadTests` and `QRCodeClientPayloadTests` (in
-`ShortLinkClientTests.cs` / `QRCodeClientTests.cs`) reuse the store tests'
+`ShortLinkClientTests.cs` / `QRCodeClientTests.cs`) use the shared
 `RecordingServer` to pin what goes on the wire: no `isEnableMonetization` ever,
 every create field, omitted-when-null update keys, the `pageInfo.title` list key,
 no client-built `options.text` for structured QR types.

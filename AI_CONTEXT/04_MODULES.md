@@ -12,7 +12,6 @@
 | `html-hosting-form-submission` | Submission get/navigation/list/status/delete. | `src/Posty5.HtmlHostingFormSubmission` |
 | `social-publisher-workspace` | Workspace CRUD/list and logo upload; connected social accounts (read-only). | `src/Posty5.SocialPublisherWorkspace` |
 | `social-publisher-post` | Video/image/text/story publishing, post status/list, reschedule, delete (unpublished), remove (published). | `src/Posty5.SocialPublisherPost` |
-| `store` | Store lookup, catalogue, orders, tags, customers, shipping, dropshipping suppliers. | `src/Posty5.Store` |
 
 ## Editing rule
 

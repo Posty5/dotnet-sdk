@@ -59,10 +59,9 @@ var summary = await account.GetCreditUsageSummaryAsync(
 Console.WriteLine($"{summary.Range.Operations} charges, {summary.Range.CreditsSpent} credits spent");
 ```
 
-The history lists every row the owner pays for — including operations a
-store's staff performed (`CreditUsageEntry.Actor`). `FromDate` and `ToDate`
-(`yyyy-MM-dd`) only apply together. `StoreId` narrows the history; the summary
-does not filter by store.
+The history lists every row the owner pays for; `CreditUsageEntry.Actor` names
+who performed the operation. `FromDate` and `ToDate` (`yyyy-MM-dd`) only apply
+together.
 
 ## Prices
 

@@ -206,7 +206,6 @@ var account = new AccountClient(httpClient);
 var me = await account.GetCurrentAsync();          // 401 → Posty5AuthenticationException
 var costs = await account.GetOperationCostsAsync(); // live prices, public
 
-var storeId    = (await new StoreClient(httpClient).ListStoresAsync()).First().Id;
 var templateId = (await new QRCodeTemplateClient(httpClient).ListPublicTemplatesAsync()).Items.First().Id;
 var accountId  = (await new SocialPublisherAccountClient(httpClient).ListAsync()).Items.First().Id;
 ```
@@ -218,7 +217,6 @@ var accountId  = (await new SocialPublisherAccountClient(httpClient).ListAsync()
 | Credit history (cursor-paged) | `AccountClient.GetCreditUsageAsync(filters?, pagination?)` | `GET /api/user/current/credit-usage` |
 | Totals over that history | `AccountClient.GetCreditUsageSummaryAsync(filters?)` | `GET /api/user/current/credit-usage/summary` |
 | Price of every operation | `AccountClient.GetOperationCostsAsync(activeOnly = true)` | `GET /api/plans/operation-costs` |
-| Stores you can manage | `StoreClient.ListStoresAsync()` / `LookupStoresAsync(term?)` | `GET /api/store/lookup` |
 | Connected social accounts | `SocialPublisherAccountClient.ListAsync(params?, pagination?)` / `LookupAsync(term?, platform?)` / `GetAsync(id)` | `GET /api/social-publisher-account[/lookup\|/{id}]` |
 | QR code templates | `QRCodeTemplateClient.ListUserTemplatesAsync(term?, pagination?)` / `ListPublicTemplatesAsync(term?, schemeType?, pagination?)` | `GET /api/qr-code-template/user-lookup`, `/public-lookup` |
 
@@ -265,7 +263,7 @@ var options = new Posty5Options
     DefaultHeaders = new() { ["X-Correlation-Id"] = correlationId },
 
     // Stamped as createdFrom on everything this client creates, for your own filtering.
-    // Null keeps the package defaults: "dotnetPackage", and "dotnet" for store orders.
+    // Null keeps the package default: "dotnetPackage".
     CreatedFrom = "my-crm"
 };
 ```

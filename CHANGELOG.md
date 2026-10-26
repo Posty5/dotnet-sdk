@@ -4,6 +4,37 @@ All notable changes to the Posty5 .NET SDK will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Posty5.Core 5.0.0, Posty5.Account 4.0.0; Posty5.Store removed - unreleased (the store moved to StorVilo)
+
+The Online Store Builder left Posty5 on 2026-10-26 (owner decision D22): it is
+now StorVilo (storvilo.com), a separate platform with its own .NET SDK,
+**`StorVilo.Sdk`** on NuGet. Ships with the Posty5 API release that removes the
+store, which waits for StorVilo's production launch.
+
+### Removed (breaking)
+
+- **`Posty5.Store`**: the whole package (`StoreClient` with its products,
+  orders, tags, customers, shipping and suppliers clients, and their models)
+  moved to `StorVilo.Sdk`. No further `Posty5.Store` version ships, and it is
+  no longer packed by `.github/workflows/publish-nuget.yml`. The Posty5 API stops
+  serving the store routes in the same release, so existing `Posty5.Store`
+  versions stop working against it.
+- **`Posty5.Core` 5.0.0**: `CreatedFromDefaults.StoreOrder` (`"dotnet"`, the
+  label store orders were stamped with) is removed. `CreatedFromDefaults.Package`
+  (`"dotnetPackage"`) is the only package label.
+- **`Posty5.Account` 4.0.0**: `CreditUsageListParams.StoreId` is removed;
+  `GetCreditUsageAsync` no longer sends `storeId` (the API drops that filter).
+  Store wording is gone from the `CreditUsageEntry.Actor` and `CreditReference`
+  docs; the properties are unchanged.
+
+The other packages have no API change. Packed from this release, they depend on
+`Posty5.Core` 5.0.0.
+
+### Release steps (owner)
+
+- Deprecate every `Posty5.Store` version on NuGet (reason: legacy), naming
+  `StorVilo.Sdk` as the alternate package. Not done by this change.
+
 ## Posty5.ShortLink 4.1.0, Posty5.QRCode 4.2.0, Posty5.HtmlHosting 4.1.0, Posty5.SocialPublisherPost 5.1.0, Posty5.Core 4.1.0 - unreleased (list date filters)
 
 Additive minors (redesign-dashboards SDK-02). Needs the API release with the

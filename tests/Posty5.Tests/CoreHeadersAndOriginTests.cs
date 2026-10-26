@@ -4,8 +4,6 @@ using Posty5.Core.Configuration;
 using Posty5.Core.Http;
 using Posty5.ShortLink;
 using Posty5.ShortLink.Models;
-using Posty5.Store;
-using Posty5.Store.Models;
 using Xunit;
 
 namespace Posty5.Tests.Unit;
@@ -167,23 +165,5 @@ public class CoreHeadersAndOriginTests : IDisposable
 
         using var body = JsonDocument.Parse(_server.Requests.Single().Body);
         Assert.Equal("my-crm", body.RootElement.GetProperty("createdFrom").GetString());
-    }
-
-    [Fact]
-    public async Task StoreOrderCreate_KeepsItsOwnDefault_TakesTheOption_AndLetsTheRequestWin()
-    {
-        _server.ResultJson = "{\"_id\":\"o1\"}";
-
-        await new StoreClient(_server.Http()).Orders.CreateAsync("s1", new CreateOrderInput());
-        await new StoreClient(_server.Http(new Posty5Options { ApiKey = "k", CreatedFrom = "my-crm" })).Orders.CreateAsync("s1", new CreateOrderInput());
-        await new StoreClient(_server.Http(new Posty5Options { ApiKey = "k", CreatedFrom = "my-crm" })).Orders.CreateAsync("s1", new CreateOrderInput { CreatedFrom = "pos" });
-
-        var labels = _server.Requests.Select(r =>
-        {
-            using var body = JsonDocument.Parse(r.Body);
-            return body.RootElement.GetProperty("createdFrom").GetString();
-        });
-        Assert.Equal(new[] { "dotnet", "my-crm", "pos" }, labels);
-        Assert.All(_server.Requests, r => Assert.Equal("POST /api/store-orders/s1", $"{r.Method} {r.PathAndQuery}"));
     }
 }

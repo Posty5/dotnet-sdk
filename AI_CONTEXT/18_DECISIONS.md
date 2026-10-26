@@ -45,6 +45,10 @@ orders keep `dotnet` (`CreatedFromDefaults`); normalising the two spellings is a
 server-side follow-up of the mcp-server feature. A request model that carries its
 own `CreatedFrom` (store orders, text posts, stories) wins over the option.
 
+**Partly superseded 2026-10-26 (D21):** `Posty5.Store` and
+`CreatedFromDefaults.StoreOrder` (`dotnet`) are gone; `dotnetPackage` is the only
+package label left.
+
 ## D09 - New packages are versioned with the Core they require.
 
 **Status:** observed (Posty5.Store was born at 3.0.0 with Core 3.0.0) and
@@ -96,5 +100,9 @@ otherwise versioned independently (SocialPublisherPost is on 4.x).
 ## D20 - List date filters are `DateTime?` and formatted once, in Posty5.Core.
 
 **Status:** decided 2026-10-22 (redesign-dashboards SDK-02, `.agent/tasks/redesign-dashboards/dotnet-sdk/list-date-filters/plan.md`). The API's short-link, QR code and HTML hosting lists gained `fromDate` / `toDate` (created-at, `yyyy-MM-dd`, applied only as a pair, whole UTC days; API-03), and the post list always had them. The short-link `FromDate` / `ToDate` obsoleted by D11 are revived with their `DateTime?` type, so old callers keep compiling, and QRCode, HtmlHosting and SocialPublisherPost get the same `DateTime?` pair, so the four share one type. `Posty5.Account` keeps its `string?` pair (not changed). The pair is not enforced client-side; the API decides. Every query date goes through `Posty5.Core.Helpers.QueryDateHelper` (invariant culture; workspace rule "dates through one helper"), which also serves `LinkAnalyticsQueryHelper`; that makes the four packages need Core 4.1.0.
+
+## D21 - The Online Store Builder left Posty5: `Posty5.Store` is removed.
+
+**Status:** decided 2026-10-26 (owner decision D22 of `.agent/tasks/storvilo-separation/plan.md`, phase P9, `.agent/tasks/remove-online-store/plan.md`). The store moved to StorVilo (storvilo.com), a separate platform with its own .NET SDK, `StorVilo.Sdk` on NuGet. `src/Posty5.Store`, its solution entry, pack line, examples and tests are deleted. The store-only code in the other packages goes with it, as majors: `CreatedFromDefaults.StoreOrder` (Posty5.Core 5.0.0) and `CreditUsageListParams.StoreId`, the credit-history store filter (Posty5.Account 4.0.0; the API drops its `meta.storeId` filter in the same phase). The generic versioned-write transport in Core (`PatchAsync`, `SendBulkVersionedAsync`, `VersionedBulkResult`, `VersionedBulkSkippedItem`) stays although the store was its only in-repo caller. The owner deprecates `Posty5.Store` on NuGet in favour of `StorVilo.Sdk` at release (CHANGELOG).
 
 Do not invent historical rationale. Record evidence-based current decisions and label unknown rationale explicitly.

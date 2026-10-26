@@ -154,7 +154,7 @@ var httpClient = serviceProvider.GetRequiredService<Posty5HttpClient>();
 | `BaseUrl`        | `string`                      | `https://api.posty5.com` | API origin |
 | `Debug`          | `bool`                        | `false`                  | Enable debug logging |
 | `DefaultHeaders` | `Dictionary<string, string>?` | `null`                   | Headers sent on every request. `X-API-Key` is refused (`ArgumentException`); an `X-Posty5-Client` entry replaces the SDK's label; content headers are refused |
-| `CreatedFrom`    | `string?`                     | `null`                   | The `createdFrom` label on every record the clients create. Null keeps each package's default (`dotnetPackage`; `dotnet` for store orders) |
+| `CreatedFrom`    | `string?`                     | `null`                   | The `createdFrom` label on every record the clients create. Null keeps the package default (`dotnetPackage`) |
 
 Every request also carries `X-Posty5-Client: posty5-dotnet/<Posty5.Core version>`
 (`Posty5ClientIdentity.HeaderValue`), which the API logs to tell SDK traffic apart.

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-05",
+  "generated_at": "2026-10-26",
   "project": "dotnet-sdk",
   "modules": [
     {
@@ -51,11 +51,6 @@
       "name": "social-publisher-post",
       "purpose": "Video/image/text/story publishing, post status (/{id}/status), reschedule, delete (unpublished) and remove (published) from platforms.",
       "primary_path": "src/Posty5.SocialPublisherPost"
-    },
-    {
-      "name": "store",
-      "purpose": "Online Store management: store lookup (ListStoresAsync/LookupStoresAsync, no storeId), products (incl. per-section saves, clone, Excel, AI), orders (incl. dropshipping parts), tags, customers, shipping and dropshipping suppliers. Split into six sub-clients on StoreClient. Packed by CI since 3.2.0.",
-      "primary_path": "src/Posty5.Store"
     }
   ]
 }

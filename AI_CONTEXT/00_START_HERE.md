@@ -4,7 +4,7 @@
 
 ## What this project does
 
-Ten NuGet-ready .NET projects — Posty5.Core plus nine feature packages with typed clients/models for links, QR codes, hosting, variables, form submissions, social publishing, the online store, and the account (key owner, credits, prices).
+Ten NuGet-ready .NET projects — Posty5.Core plus nine feature packages with typed clients/models for links, QR codes, hosting, variables, form submissions, social publishing, webhooks, and the account (key owner, credits, prices).
 
 ## Quick facts
 

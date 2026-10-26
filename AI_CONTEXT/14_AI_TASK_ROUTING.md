@@ -4,7 +4,6 @@
 | --- | --- | --- |
 | core; Posty5Options, Posty5HttpClient, errors, response/pagination, X-Posty5-Client, DefaultHeaders, createdFrom | `04_MODULES.md`, `15_RISKY_AREAS.md` | `src/Posty5.Core` |
 | account; who am I, API key, credits, credit usage, operation costs, prices | `04_MODULES.md`, `05_API_SURFACE.md` | `src/Posty5.Account` |
-| store; store lookup, products, orders, tags, customers, shipping, suppliers | `04_MODULES.md`, `12_TESTING_DEBUGGING.md` | `src/Posty5.Store` |
 | short-link; Short-link list/get/create/update/delete. | `04_MODULES.md`, `15_RISKY_AREAS.md` | `src/Posty5.ShortLink` |
 | qr-code; Create/update seven QR types, QR templates | `04_MODULES.md`, `15_RISKY_AREAS.md` | `src/Posty5.QRCode` |
 | html-hosting; File/GitHub create/update and hosting | `04_MODULES.md`, `15_RISKY_AREAS.md` | `src/Posty5.HtmlHosting` |

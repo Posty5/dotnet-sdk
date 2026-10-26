@@ -80,12 +80,6 @@ public class CreditUsageListParams
     /// <summary><c>false</c> lists deferred charges not yet paid; <c>true</c> only paid ones.</summary>
     public bool? Settled { get; set; }
 
-    /// <summary>
-    /// Only operations charged for this store. Applied by the history; the
-    /// summary does not filter by store.
-    /// </summary>
-    public string? StoreId { get; set; }
-
     /// <summary>Created-at range start, <c>yyyy-MM-dd</c>. Only applied together with <see cref="ToDate"/>.</summary>
     public string? FromDate { get; set; }
 
@@ -137,8 +131,8 @@ public class CreditUsageEntry
     public CreditReference? Reference { get; set; }
 
     /// <summary>
-    /// Who performed the operation, when it was not the payer — e.g. a store's
-    /// staff member. Null for system and visitor-triggered rows.
+    /// Who performed the operation, when the row records one. Null for system
+    /// and visitor-triggered rows.
     /// </summary>
     [JsonPropertyName("actorUserId")]
     public CreditUsageActor? Actor { get; set; }
@@ -153,17 +147,17 @@ public class CreditUsageEntry
 /// <summary>The record a credit-ledger row links back to.</summary>
 public class CreditReference
 {
-    /// <summary>What kind of record, e.g. <c>storeOrder</c>, <c>shortLink</c>, <c>socialPost</c>.</summary>
+    /// <summary>What kind of record, e.g. <c>shortLink</c>, <c>socialPost</c>.</summary>
     public string? Type { get; set; }
 
     /// <summary>The record's id.</summary>
     public string? Id { get; set; }
 
-    /// <summary>A label for it, e.g. an order number.</summary>
+    /// <summary>A label for it.</summary>
     public string? Label { get; set; }
 }
 
-/// <summary>The user who performed an operation on someone else's credits.</summary>
+/// <summary>The user who performed an operation.</summary>
 public class CreditUsageActor
 {
     /// <summary>The user's id.</summary>

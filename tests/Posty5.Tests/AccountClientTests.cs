@@ -92,14 +92,13 @@ public class AccountClientRouteTests : IDisposable
                 OperationType = "textPost",
                 Kind = CreditUsageKinds.Charge,
                 Settled = false,
-                StoreId = "s1",
                 FromDate = "2026-10-01",
                 ToDate = "2026-10-31",
             },
             new PaginationParams { Cursor = "c1", PageSize = 25 });
 
         Assert.Equal(
-            "GET /api/user/current/credit-usage?module=socialMediaPublisher&operationType=textPost&kind=charge&settled=false&storeId=s1&fromDate=2026-10-01&toDate=2026-10-31&cursor=c1&pageSize=25",
+            "GET /api/user/current/credit-usage?module=socialMediaPublisher&operationType=textPost&kind=charge&settled=false&fromDate=2026-10-01&toDate=2026-10-31&cursor=c1&pageSize=25",
             Single());
     }
 
@@ -118,9 +117,9 @@ public class AccountClientRouteTests : IDisposable
     {
         _server.ResultJson = """
         { "items": [ {
-            "_id": "r1", "kind": "charge", "direction": "out", "signedCredits": "-25", "module": "onlineStore",
-            "operationType": "orderReceived", "reason": "Order ORD-0042", "credits": 25, "balanceBefore": 100, "balanceAfter": 75,
-            "settled": true, "reference": { "type": "storeOrder", "id": "o42", "label": "ORD-0042" },
+            "_id": "r1", "kind": "charge", "direction": "out", "signedCredits": "-25", "module": "socialMediaPublisher",
+            "operationType": "textPost", "reason": "Text post", "credits": 25, "balanceBefore": 100, "balanceAfter": 75,
+            "settled": true, "reference": { "type": "socialPost", "id": "p42", "label": "Launch post" },
             "actorUserId": { "_id": "u2", "userName": "staff", "fullName": "Staff Member" },
             "createdAt": "2026-10-04T10:00:00Z" } ],
           "pagination": { "nextCursor": "c2", "previousCursor": null, "hasMore": true, "pageSize": 1 } }
@@ -131,15 +130,15 @@ public class AccountClientRouteTests : IDisposable
         var row = Assert.Single(page.Items);
         Assert.Equal(CreditDirections.Out, row.Direction);
         Assert.Equal(25m, row.Credits);
-        Assert.Equal("storeOrder", row.Reference!.Type);
-        Assert.Equal("ORD-0042", row.Reference.Label);
+        Assert.Equal("socialPost", row.Reference!.Type);
+        Assert.Equal("Launch post", row.Reference.Label);
         Assert.Equal("staff", row.Actor!.UserName);
         Assert.Equal("c2", page.Pagination.NextCursor);
         Assert.True(page.Pagination.HasMore);
     }
 
     [Fact]
-    public async Task GetCreditUsageSummaryAsync_SendsTheFiltersButNotTheStore_AndReadsTheNestedTotals()
+    public async Task GetCreditUsageSummaryAsync_SendsTheFilters_AndReadsTheNestedTotals()
     {
         _server.ResultJson = """
         { "balance": 60, "remaining": 60, "debt": 0, "granted": 100, "purchased": 0, "used": 40,
@@ -148,7 +147,7 @@ public class AccountClientRouteTests : IDisposable
           "range": { "operations": 4, "creditsSpent": 40, "creditsOwed": 0, "creditsAdded": 100 } }
         """;
 
-        var summary = await Client().GetCreditUsageSummaryAsync(new CreditUsageListParams { Kind = CreditUsageKinds.Charge, Settled = true, StoreId = "s1" });
+        var summary = await Client().GetCreditUsageSummaryAsync(new CreditUsageListParams { Kind = CreditUsageKinds.Charge, Settled = true });
 
         Assert.Equal("GET /api/user/current/credit-usage/summary?kind=charge&settled=true", Single());
         Assert.Equal(60m, summary.Balance);
