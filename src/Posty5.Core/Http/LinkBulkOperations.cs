@@ -1,3 +1,4 @@
+using Posty5.Core.Helpers;
 using System.Text.Json;
 using Posty5.Core.Configuration;
 using Posty5.Core.Exceptions;
@@ -158,7 +159,7 @@ public sealed class LinkBulkOperations
     public async Task<LinkBulkJob> GetBulkJobAsync(string id, CancellationToken cancellationToken)
     {
         RequireId(id);
-        var response = await _http.GetAsync<LinkBulkJob>($"{BulkDefaults.BulkJobsPath}/{Uri.EscapeDataString(id)}", cancellationToken: cancellationToken);
+        var response = await _http.GetAsync<LinkBulkJob>($"{BulkDefaults.BulkJobsPath}/{PathSegmentHelper.Escape(id, nameof(id))}", cancellationToken: cancellationToken);
         return response.Result ?? throw new Posty5Exception("The API answered no bulk job.");
     }
 
@@ -167,7 +168,7 @@ public sealed class LinkBulkOperations
     {
         RequireId(id);
         var response = await _http.GetAsync<BulkJobResultUrl>(
-            $"{BulkDefaults.BulkJobsPath}/{Uri.EscapeDataString(id)}/result-url",
+            $"{BulkDefaults.BulkJobsPath}/{PathSegmentHelper.Escape(id, nameof(id))}/result-url",
             new Dictionary<string, object?> { ["file"] = EnumName(file) },
             cancellationToken);
         return response.Result ?? throw new Posty5Exception("The API answered no result link.");
@@ -177,7 +178,7 @@ public sealed class LinkBulkOperations
     public async Task<LinkBulkJob> CancelBulkJobAsync(string id, CancellationToken cancellationToken)
     {
         RequireId(id);
-        var response = await _http.PostAsync<LinkBulkJob>($"{BulkDefaults.BulkJobsPath}/{Uri.EscapeDataString(id)}/cancel", new { }, cancellationToken);
+        var response = await _http.PostAsync<LinkBulkJob>($"{BulkDefaults.BulkJobsPath}/{PathSegmentHelper.Escape(id, nameof(id))}/cancel", new { }, cancellationToken);
         return response.Result ?? throw new Posty5Exception("The API answered no bulk job.");
     }
 

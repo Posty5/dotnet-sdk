@@ -1,3 +1,4 @@
+using Posty5.Core.Helpers;
 using System.Net.Http.Headers;
 using Posty5.Core.Configuration;
 using Posty5.Core.Http;
@@ -75,7 +76,7 @@ public class SocialPublisherWorkspaceClient
         CancellationToken cancellationToken = default)
     {
         var response = await _http.GetAsync<SocialPublisherWorkspaceModel>(
-            $"{BasePath}/{id}",
+            $"{BasePath}/{PathSegmentHelper.Escape(id, nameof(id))}",
             cancellationToken: cancellationToken);
 
         return response.Result ?? throw new InvalidOperationException("Workspace not found");
@@ -110,7 +111,7 @@ public class SocialPublisherWorkspaceClient
         CancellationToken cancellationToken = default)
     {
         var response = await _http.GetAsync<SocialPublisherWorkspaceForNewPostModel>(
-            $"{BasePath}/{id}/for-new-post",
+            $"{BasePath}/{PathSegmentHelper.Escape(id, nameof(id))}/for-new-post",
             cancellationToken: cancellationToken);
 
         return response.Result ?? throw new InvalidOperationException("Workspace not found");
@@ -215,7 +216,7 @@ public class SocialPublisherWorkspaceClient
             hasImage = logoStream != null
         };
 
-        var response = await _http.PutAsync<SocialPublisherWorkspaceCreateResponseModel>($"{BasePath}/{id}", payload, version, cancellationToken);
+        var response = await _http.PutAsync<SocialPublisherWorkspaceCreateResponseModel>($"{BasePath}/{PathSegmentHelper.Escape(id, nameof(id))}", payload, version, cancellationToken);
         var result = response.Result;
 
         // Step 2: Upload image if provided
@@ -239,7 +240,7 @@ public class SocialPublisherWorkspaceClient
         long version,
         CancellationToken cancellationToken = default)
     {
-        var response = await _http.DeleteAsync<DeleteResponse>($"{BasePath}/{id}", version, cancellationToken);
+        var response = await _http.DeleteAsync<DeleteResponse>($"{BasePath}/{PathSegmentHelper.Escape(id, nameof(id))}", version, cancellationToken);
         return response.Result ?? new DeleteResponse { Message = "Deleted" };
     }
 

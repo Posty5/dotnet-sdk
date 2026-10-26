@@ -1,3 +1,4 @@
+using Posty5.Core.Helpers;
 using Posty5.ShortLink.Helpers;
 using Posty5.ShortLink.Models;
 
@@ -34,7 +35,7 @@ public partial class ShortLinkClient
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(id);
         await _http.PostAsync<object>(
-            $"{ShortLinkConst.BasePath}/{id}{ShortLinkConst.HealthCheckPath}", new { }, cancellationToken);
+            $"{ShortLinkConst.BasePath}/{PathSegmentHelper.Escape(id, nameof(id))}{ShortLinkConst.HealthCheckPath}", new { }, cancellationToken);
     }
 
     /// <summary>
@@ -74,7 +75,7 @@ public partial class ShortLinkClient
         ShortLinkRequestBodyHelper.AddRuleSections(data, rules);
         data["templateType"] = ShortLinkConst.TemplateType;
 
-        var response = await _http.PutAsync<ShortLinkModel>($"{ShortLinkConst.BasePath}/{id}", data, version, cancellationToken);
+        var response = await _http.PutAsync<ShortLinkModel>($"{ShortLinkConst.BasePath}/{PathSegmentHelper.Escape(id, nameof(id))}", data, version, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to update short link rules");
     }
 }

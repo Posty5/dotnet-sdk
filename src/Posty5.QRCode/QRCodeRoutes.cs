@@ -1,3 +1,5 @@
+using Posty5.Core.Helpers;
+
 namespace Posty5.QRCode;
 
 /// <summary>
@@ -13,8 +15,8 @@ internal static class QRCodeRoutes
     public const string ScannabilityCheck = Base + "/scannability-check";
 
     /// <summary>A QR code's image.</summary>
-    public static string Render(string id) => $"{Base}/{id}/render";
+    public static string Render(string id) => $"{Base}/{PathSegmentHelper.Escape(id, nameof(id))}/render";
 
     /// <summary>A signed download link for a QR code's image.</summary>
-    public static string ExportUrl(string id) => $"{Base}/{id}/export-url";
+    public static string ExportUrl(string id) => $"{Base}/{PathSegmentHelper.Escape(id, nameof(id))}/export-url";
 }

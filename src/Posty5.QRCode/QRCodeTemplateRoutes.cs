@@ -1,3 +1,5 @@
+using Posty5.Core.Helpers;
+
 namespace Posty5.QRCode;
 
 /// <summary>
@@ -22,8 +24,8 @@ internal static class QRCodeTemplateRoutes
     public const string LogoUploadUrl = Base + "/logo-upload-url";
 
     /// <summary>One template, for read and delete.</summary>
-    public static string Item(string id) => $"{Base}/{id}";
+    public static string Item(string id) => $"{Base}/{PathSegmentHelper.Escape(id, nameof(id))}";
 
     /// <summary>A template's image.</summary>
-    public static string Render(string id) => $"{Base}/{id}/render";
+    public static string Render(string id) => $"{Base}/{PathSegmentHelper.Escape(id, nameof(id))}/render";
 }

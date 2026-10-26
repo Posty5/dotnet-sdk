@@ -497,7 +497,7 @@ public partial class QRCodeClient
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
-        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/freeText/{id}", payload, version, cancellationToken);
+        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/freeText/{PathSegmentHelper.Escape(id, nameof(id))}", payload, version, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to update free text QR code");
     }
 
@@ -556,7 +556,7 @@ public partial class QRCodeClient
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
-        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/email/{id}", payload, version, cancellationToken);
+        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/email/{PathSegmentHelper.Escape(id, nameof(id))}", payload, version, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to update email QR code");
     }
 
@@ -618,7 +618,7 @@ public partial class QRCodeClient
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
-        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/wifi/{id}", payload, version, cancellationToken);
+        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/wifi/{PathSegmentHelper.Escape(id, nameof(id))}", payload, version, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to update WiFi QR code");
     }
 
@@ -675,7 +675,7 @@ public partial class QRCodeClient
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
-        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/call/{id}", payload, version, cancellationToken);
+        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/call/{PathSegmentHelper.Escape(id, nameof(id))}", payload, version, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to update call QR code");
     }
 
@@ -733,7 +733,7 @@ public partial class QRCodeClient
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
-        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/sms/{id}", payload, version, cancellationToken);
+        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/sms/{PathSegmentHelper.Escape(id, nameof(id))}", payload, version, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to update SMS QR code");
     }
 
@@ -789,7 +789,7 @@ public partial class QRCodeClient
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
-        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/url/{id}", payload, version, cancellationToken);
+        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/url/{PathSegmentHelper.Escape(id, nameof(id))}", payload, version, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to update URL QR code");
     }
 
@@ -847,7 +847,7 @@ public partial class QRCodeClient
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
-        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/geolocation/{id}", payload, version, cancellationToken);
+        var response = await _http.PutAsync<QRCodeModel>($"{BasePath}/geolocation/{PathSegmentHelper.Escape(id, nameof(id))}", payload, version, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to update geolocation QR code");
     }
 
@@ -873,7 +873,7 @@ public partial class QRCodeClient
     /// </example>
     public async Task<QRCodeFullDetailsModel> GetAsync(string id, CancellationToken cancellationToken = default)
     {
-        var response = await _http.GetAsync<QRCodeFullDetailsModel>($"{BasePath}/{id}", cancellationToken: cancellationToken);
+        var response = await _http.GetAsync<QRCodeFullDetailsModel>($"{BasePath}/{PathSegmentHelper.Escape(id, nameof(id))}", cancellationToken: cancellationToken);
         return response.Result ?? throw new InvalidOperationException("QR code not found");
     }
 
@@ -994,7 +994,7 @@ public partial class QRCodeClient
     /// <param name="version">The QR code's version as last read, sent as <c>If-Match</c></param>
     public async Task<DeleteResponse> DeleteAsync(string id, long version, CancellationToken cancellationToken = default)
     {
-        var response = await _http.DeleteAsync<DeleteResponse>($"{BasePath}/{id}", version, cancellationToken);
+        var response = await _http.DeleteAsync<DeleteResponse>($"{BasePath}/{PathSegmentHelper.Escape(id, nameof(id))}", version, cancellationToken);
         return response.Result ?? new DeleteResponse { Message = "Deleted" };
     }
 

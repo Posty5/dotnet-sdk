@@ -1,3 +1,4 @@
+using Posty5.Core.Helpers;
 using Posty5.Account.Models;
 using Posty5.Core.Http;
 using Posty5.Core.Models;
@@ -224,7 +225,7 @@ public class AccountClient
     public async Task<CreditTransfer> GetCreditTransferAsync(string id, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("A transfer id is required", nameof(id));
-        var response = await _http.GetAsync<CreditTransfer>($"{AccountRoutes.CreditTransfers}/{Uri.EscapeDataString(id)}", cancellationToken: cancellationToken);
+        var response = await _http.GetAsync<CreditTransfer>($"{AccountRoutes.CreditTransfers}/{PathSegmentHelper.Escape(id, nameof(id))}", cancellationToken: cancellationToken);
         return response.Result ?? throw new InvalidOperationException("The API returned no credit transfer");
     }
 

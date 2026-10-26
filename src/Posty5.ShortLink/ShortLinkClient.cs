@@ -95,7 +95,7 @@ public partial class ShortLinkClient
     /// <returns>Short link full details including populated template, user, API key, and metadata</returns>
     public async Task<ShortLinkFullDetailsModel> GetAsync(string id, CancellationToken cancellationToken = default)
     {
-        var response = await _http.GetAsync<ShortLinkFullDetailsModel>($"{ShortLinkConst.BasePath}/{id}", cancellationToken: cancellationToken);
+        var response = await _http.GetAsync<ShortLinkFullDetailsModel>($"{ShortLinkConst.BasePath}/{PathSegmentHelper.Escape(id, nameof(id))}", cancellationToken: cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Short link not found");
     }
 
@@ -273,7 +273,7 @@ public partial class ShortLinkClient
         data["templateType"] = ShortLinkConst.TemplateType;
         data["createdFrom"] = _http.ResolveCreatedFrom(CreatedFromDefaults.Package);
 
-        var response = await _http.PutAsync<ShortLinkModel>($"{ShortLinkConst.BasePath}/{id}", data, version, cancellationToken);
+        var response = await _http.PutAsync<ShortLinkModel>($"{ShortLinkConst.BasePath}/{PathSegmentHelper.Escape(id, nameof(id))}", data, version, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to update short link");
     }
 
@@ -287,7 +287,7 @@ public partial class ShortLinkClient
     /// <exception cref="Posty5.Core.Exceptions.Posty5ConflictException">The link changed since <paramref name="version"/> was read.</exception>
     public async Task<DeleteResponse> DeleteAsync(string id, long version, CancellationToken cancellationToken = default)
     {
-        var response = await _http.DeleteAsync<DeleteResponse>($"{ShortLinkConst.BasePath}/{id}", version, cancellationToken);
+        var response = await _http.DeleteAsync<DeleteResponse>($"{ShortLinkConst.BasePath}/{PathSegmentHelper.Escape(id, nameof(id))}", version, cancellationToken);
         return response.Result ?? new DeleteResponse { Message = "Deleted" };
     }
 }

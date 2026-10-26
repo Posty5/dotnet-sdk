@@ -1,3 +1,4 @@
+using Posty5.Core.Helpers;
 using Posty5.Core.Http;
 using Posty5.Core.Models;
 using Posty5.SocialPublisherWorkspace.Models;
@@ -117,7 +118,7 @@ public class SocialPublisherAccountClient
             throw new ArgumentException("id is required", nameof(id));
 
         var response = await _http.GetAsync<SocialPublisherAccountDetailsModel>(
-            $"{SocialPublisherAccountRoutes.Base}/{id}",
+            $"{SocialPublisherAccountRoutes.Base}/{PathSegmentHelper.Escape(id, nameof(id))}",
             cancellationToken: cancellationToken);
 
         return response.Result ?? throw new InvalidOperationException("Account not found");

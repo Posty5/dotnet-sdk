@@ -35,12 +35,15 @@ public class Posty5HttpClient : IDisposable
             WriteIndented = false
         };
 
-        // Create HTTP client
-        _httpClient = new System.Net.Http.HttpClient
+        // Create HTTP client. Redirects are not followed: the handler strips only
+        // Authorization on a redirect, so X-API-Key would go to whatever host a
+        // Location header names. The API answers JSON and never redirects.
+        _httpClient = new System.Net.Http.HttpClient(new SocketsHttpHandler { AllowAutoRedirect = false })
         {
             BaseAddress = new Uri(_options.BaseUrl),
             Timeout = TimeSpan.FromSeconds(_options.TimeoutSeconds)
         };
+        WarnOnPlainHttp(_httpClient.BaseAddress);
 
         // Set default headers
         _httpClient.DefaultRequestHeaders.Add("Accept", Posty5HttpDefaults.AcceptJson);
@@ -89,6 +92,20 @@ public class Posty5HttpClient : IDisposable
         _options.ApiKey = apiKey;
         _httpClient.DefaultRequestHeaders.Remove(Posty5HttpDefaults.ApiKeyHeader);
         _httpClient.DefaultRequestHeaders.Add(Posty5HttpDefaults.ApiKeyHeader, apiKey);
+    }
+
+    /// <summary>
+    /// Log a warning when the API key would travel in clear text: a plain-http
+    /// <see cref="Posty5Options.BaseUrl"/> on a host other than loopback.
+    /// </summary>
+    private void WarnOnPlainHttp(Uri baseAddress)
+    {
+        if (_options.Logger == null) return;
+        if (baseAddress.Scheme != Uri.UriSchemeHttp || baseAddress.IsLoopback) return;
+
+        _options.Logger.LogWarning(
+            "Posty5 SDK: BaseUrl {Host} uses plain http, so the API key is sent unencrypted. Use https.",
+            baseAddress.Host);
     }
 
     /// <summary>

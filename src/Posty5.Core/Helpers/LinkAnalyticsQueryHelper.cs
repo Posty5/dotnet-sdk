@@ -21,7 +21,7 @@ public static class LinkAnalyticsQueryHelper
     public static string BuildPath(string basePath, string id)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(id);
-        return $"{basePath}/{Uri.EscapeDataString(id)}/{LinkAnalyticsConst.PathSegment}";
+        return $"{basePath}/{PathSegmentHelper.Escape(id, nameof(id))}/{LinkAnalyticsConst.PathSegment}";
     }
 
     /// <summary>

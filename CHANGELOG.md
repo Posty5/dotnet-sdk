@@ -4,6 +4,27 @@ All notable changes to the Posty5 .NET SDK will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Security hardening - unreleased (ships with Posty5.Core 5.0.0 and the packages' current unreleased versions)
+
+### Security
+
+- **Ids are one path segment.** Every id a client places in a route now goes
+  through the new `Posty5.Core.Helpers.PathSegmentHelper.Escape`: it is
+  percent-encoded, so an id such as `abc/../../user/current` or `abc?x=1` can no
+  longer steer a request (and its API key) to another route, and a blank id,
+  `.` or `..` throws `ArgumentException` before any request is sent. Ids the
+  clients already escaped (Account credit transfers, bulk jobs, analytics,
+  webhook endpoints) use the same helper.
+- **Redirects are not followed.** `Posty5HttpClient` no longer follows a 3xx:
+  .NET removes only `Authorization` on a redirect, so `X-API-Key` was sent to
+  whatever host a `Location` header named. A 3xx now surfaces as
+  `Posty5Exception` with its status code. The API never redirects an SDK route.
+- **Plain http is no longer silent.** A `BaseUrl` using `http://` on a host
+  other than loopback logs a warning through `Posty5Options.Logger`.
+- **Posty5.Webhooks**: a `webhook-timestamp` beyond the calendar's range now
+  fails with `WebhookSignatureException` (`TimestampOutOfRange`) instead of
+  letting `ArgumentOutOfRangeException` escape `WebhookSignature.Verify`.
+
 ## Posty5.Core 5.0.0, Posty5.Account 4.0.0; Posty5.Store removed - unreleased (the store moved to StorVilo)
 
 The Online Store Builder left Posty5 on 2026-10-26 (owner decision D22): it is

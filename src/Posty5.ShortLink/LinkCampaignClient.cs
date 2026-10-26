@@ -1,3 +1,4 @@
+using Posty5.Core.Helpers;
 using Posty5.Core.Configuration;
 using Posty5.Core.Http;
 using Posty5.Core.Models;
@@ -50,7 +51,7 @@ public class LinkCampaignClient
     public async Task<LinkCampaignDetailsModel> GetAsync(string id, CancellationToken cancellationToken = default)
     {
         var response = await _http.GetAsync<LinkCampaignDetailsModel>(
-            $"{ShortLinkConst.LinkCampaignBasePath}/{id}", cancellationToken: cancellationToken);
+            $"{ShortLinkConst.LinkCampaignBasePath}/{PathSegmentHelper.Escape(id, nameof(id))}", cancellationToken: cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Link campaign not found");
     }
 
@@ -94,7 +95,7 @@ public class LinkCampaignClient
             ShortLinkRequestBodyHelper.AddIfSet(data, "utm", request.Utm);
         ShortLinkRequestBodyHelper.AddIfSet(data, "archived", request.Archived);
 
-        var response = await _http.PutAsync<LinkCampaignModel>($"{ShortLinkConst.LinkCampaignBasePath}/{id}", data, version, cancellationToken);
+        var response = await _http.PutAsync<LinkCampaignModel>($"{ShortLinkConst.LinkCampaignBasePath}/{PathSegmentHelper.Escape(id, nameof(id))}", data, version, cancellationToken);
         return response.Result ?? throw new InvalidOperationException("Failed to update link campaign");
     }
 
@@ -105,7 +106,7 @@ public class LinkCampaignClient
     /// <returns>The deleted campaign's id; <see cref="VersionedWriteResult.Version"/> is null after a delete.</returns>
     public async Task<VersionedWriteResult> DeleteAsync(string id, long version, bool detach = false, CancellationToken cancellationToken = default)
     {
-        var path = $"{ShortLinkConst.LinkCampaignBasePath}/{id}" + (detach ? "?detach=true" : string.Empty);
+        var path = $"{ShortLinkConst.LinkCampaignBasePath}/{PathSegmentHelper.Escape(id, nameof(id))}" + (detach ? "?detach=true" : string.Empty);
         var response = await _http.DeleteAsync<object>(path, version, cancellationToken);
         return new VersionedWriteResult { Id = id, Message = response.Message };
     }

@@ -114,7 +114,7 @@ public class HtmlHostingClient
     /// <returns>HTML page full details</returns>
     public async Task<HtmlHostingPageModel> GetAsync(string id, CancellationToken cancellationToken = default)
     {
-        var response = await _http.GetAsync<HtmlHostingPageModel>($"{BasePath}/{id}", cancellationToken: cancellationToken);
+        var response = await _http.GetAsync<HtmlHostingPageModel>($"{BasePath}/{PathSegmentHelper.Escape(id, nameof(id))}", cancellationToken: cancellationToken);
         return response.Result ?? throw new InvalidOperationException("HTML page not found");
     }
 
@@ -195,7 +195,7 @@ public class HtmlHostingClient
     public async Task<List<HtmlHostingFormLookupItemModel>> LookupFormsAsync(string id, CancellationToken cancellationToken = default)
     {
         var response = await _http.GetAsync<List<HtmlHostingFormLookupItemModel>>(
-            $"{BasePath}/lookup-froms/{id}",
+            $"{BasePath}/lookup-froms/{PathSegmentHelper.Escape(id, nameof(id))}",
             cancellationToken: cancellationToken);
         return response.Result ?? new List<HtmlHostingFormLookupItemModel>();
     }
@@ -230,7 +230,7 @@ public class HtmlHostingClient
             isNewFile = true
         };
 
-        var response = await _http.PutAsync<HtmlHostingCreatePageResponseModel>($"{BasePath}/{id}/file", payload, version, cancellationToken);
+        var response = await _http.PutAsync<HtmlHostingCreatePageResponseModel>($"{BasePath}/{PathSegmentHelper.Escape(id, nameof(id))}/file", payload, version, cancellationToken);
         var result = response.Result?.Details ?? throw new InvalidOperationException("Failed to update HTML page");
         var uploadConfig = response.Result?.UploadFileConfig;
 
@@ -275,7 +275,7 @@ public class HtmlHostingClient
             data.AutoSaveInGoogleSheet
         };
 
-        var response = await _http.PutAsync<HtmlHostingCreatePageResponseModel>($"{BasePath}/{id}/github", payload, version, cancellationToken);
+        var response = await _http.PutAsync<HtmlHostingCreatePageResponseModel>($"{BasePath}/{PathSegmentHelper.Escape(id, nameof(id))}/github", payload, version, cancellationToken);
         var result = response.Result?.Details ?? throw new InvalidOperationException("Failed to update HTML page");
 
         return new HtmlHostingPageGithubResponseModel
@@ -296,7 +296,7 @@ public class HtmlHostingClient
     /// <returns>The deleted page's id; <see cref="VersionedWriteResult.Version"/> is null after a delete.</returns>
     public async Task<VersionedWriteResult> DeleteAsync(string id, long version, CancellationToken cancellationToken = default)
     {
-        var response = await _http.DeleteAsync<object>($"{BasePath}/{id}", version, cancellationToken);
+        var response = await _http.DeleteAsync<object>($"{BasePath}/{PathSegmentHelper.Escape(id, nameof(id))}", version, cancellationToken);
         return new VersionedWriteResult { Id = id, Message = response.Message };
     }
 
@@ -307,6 +307,6 @@ public class HtmlHostingClient
     /// <param name="cancellationToken">Cancellation token</param>
     public async Task CleanCacheAsync(string id, CancellationToken cancellationToken = default)
     {
-        await _http.PutAsync<object>($"{BasePath}/{id}/clean-cache", new { }, cancellationToken);
+        await _http.PutAsync<object>($"{BasePath}/{PathSegmentHelper.Escape(id, nameof(id))}/clean-cache", new { }, cancellationToken);
     }
 }

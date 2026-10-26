@@ -108,7 +108,7 @@ public class SocialPublisherPostClient
             throw new ArgumentException("id is required", nameof(id));
 
         var response = await _http.GetAsync<PostStatusFullDetailsResponse>(
-            $"{BasePath}/{id}/status",
+            $"{BasePath}/{PathSegmentHelper.Escape(id, nameof(id))}/status",
             cancellationToken: cancellationToken);
 
         return response.Result ?? throw new InvalidOperationException("Post not found");
@@ -137,7 +137,7 @@ public class SocialPublisherPostClient
         CancellationToken cancellationToken = default)
     {
         var response = await _http.GetAsync<NextPreviousResponse>(
-            $"{BasePath}/{id}/next-previous",
+            $"{BasePath}/{PathSegmentHelper.Escape(id, nameof(id))}/next-previous",
             cancellationToken: cancellationToken);
 
         return response.Result ?? new NextPreviousResponse();
@@ -472,7 +472,7 @@ public class SocialPublisherPostClient
     private async Task<string> CreateToWorkspaceByFileAsync(
         CreateSocialPublisherPostRequest request, string? id, CancellationToken cancellationToken)
     {
-        var path = string.IsNullOrEmpty(id) ? $"{BasePath}/short-video/workspace/by-file" : $"{BasePath}/short-video/workspace/by-file/{id}";
+        var path = string.IsNullOrEmpty(id) ? $"{BasePath}/short-video/workspace/by-file" : $"{BasePath}/short-video/workspace/by-file/{PathSegmentHelper.Escape(id, nameof(id))}";
         var payload = new
         {
             request.WorkspaceId, request.Source, request.Youtube, request.Tiktok,
@@ -490,7 +490,7 @@ public class SocialPublisherPostClient
     private async Task<string> CreateToWorkspaceByUrlAsync(
         CreateSocialPublisherPostRequest request, string? id, CancellationToken cancellationToken)
     {
-        var path = string.IsNullOrEmpty(id) ? $"{BasePath}/short-video/workspace/by-url" : $"{BasePath}/short-video/workspace/by-url/{id}";
+        var path = string.IsNullOrEmpty(id) ? $"{BasePath}/short-video/workspace/by-url" : $"{BasePath}/short-video/workspace/by-url/{PathSegmentHelper.Escape(id, nameof(id))}";
         var payload = new
         {
             request.WorkspaceId, request.Source, request.Youtube, request.Tiktok,
@@ -508,7 +508,7 @@ public class SocialPublisherPostClient
     private async Task<string> CreateToAccountByFileAsync(
         CreateSocialPublisherAccountPostRequest request, string? id, CancellationToken cancellationToken)
     {
-        var path = string.IsNullOrEmpty(id) ? $"{BasePath}/short-video/account/by-file" : $"{BasePath}/short-video/account/by-file/{id}";
+        var path = string.IsNullOrEmpty(id) ? $"{BasePath}/short-video/account/by-file" : $"{BasePath}/short-video/account/by-file/{PathSegmentHelper.Escape(id, nameof(id))}";
         var payload = new
         {
             request.AccountId, request.Source, request.Youtube, request.Tiktok,
@@ -526,7 +526,7 @@ public class SocialPublisherPostClient
     private async Task<string> CreateToAccountByUrlAsync(
         CreateSocialPublisherAccountPostRequest request, string? id, CancellationToken cancellationToken)
     {
-        var path = string.IsNullOrEmpty(id) ? $"{BasePath}/short-video/account/by-url" : $"{BasePath}/short-video/account/by-url/{id}";
+        var path = string.IsNullOrEmpty(id) ? $"{BasePath}/short-video/account/by-url" : $"{BasePath}/short-video/account/by-url/{PathSegmentHelper.Escape(id, nameof(id))}";
         var payload = new
         {
             request.AccountId, request.Source, request.Youtube, request.Tiktok,
@@ -708,7 +708,7 @@ public class SocialPublisherPostClient
         var segment = isFile ? "by-file" : "by-url";
         var path = string.IsNullOrEmpty(postId)
             ? $"{BasePath}/long-video/workspace/{segment}"
-            : $"{BasePath}/long-video/workspace/{segment}/{postId}";
+            : $"{BasePath}/long-video/workspace/{segment}/{PathSegmentHelper.Escape(postId, nameof(postId))}";
 
         var response = await _http.PostAsync<PublishLongVideoResult>(path, body, cancellationToken: cancellationToken);
         return response.Result ?? new PublishLongVideoResult();
@@ -800,7 +800,7 @@ public class SocialPublisherPostClient
         var segment = isFile ? "by-file" : "by-url";
         var path = string.IsNullOrEmpty(postId)
             ? $"{BasePath}/long-video/account/{segment}"
-            : $"{BasePath}/long-video/account/{segment}/{postId}";
+            : $"{BasePath}/long-video/account/{segment}/{PathSegmentHelper.Escape(postId, nameof(postId))}";
 
         var response = await _http.PostAsync<PublishLongVideoResult>(path, body, cancellationToken: cancellationToken);
         return response.Result ?? new PublishLongVideoResult();
@@ -824,7 +824,7 @@ public class SocialPublisherPostClient
         if (string.IsNullOrWhiteSpace(id))
             throw new ArgumentException("id is required", nameof(id));
 
-        var response = await _http.DeleteAsync<object>($"{BasePath}/{id}", version, cancellationToken);
+        var response = await _http.DeleteAsync<object>($"{BasePath}/{PathSegmentHelper.Escape(id, nameof(id))}", version, cancellationToken);
         return new VersionedWriteResult { Id = id, Message = response.Message };
     }
 
@@ -859,7 +859,7 @@ public class SocialPublisherPostClient
             throw new ArgumentException("id is required", nameof(id));
 
         var response = await _http.PostAsync<RemovePostResult>(
-            $"{BasePath}/{id}/remove",
+            $"{BasePath}/{PathSegmentHelper.Escape(id, nameof(id))}/remove",
             new { },
             version,
             cancellationToken);
@@ -900,7 +900,7 @@ public class SocialPublisherPostClient
             ?? throw new ArgumentException("schedule must be a DateTime or the string \"now\"", nameof(schedule));
 
         var response = await _http.PutAsync<object>(
-            $"{BasePath}/{id}",
+            $"{BasePath}/{PathSegmentHelper.Escape(id, nameof(id))}",
             new ReschedulePostRequest { ScheduleType = built.Type, ScheduledAt = built.Type == "schedule" ? built.ScheduledAt : null, Caption = caption },
             version,
             cancellationToken);
@@ -1047,7 +1047,7 @@ public class SocialPublisherPostClient
     {
         var path = string.IsNullOrEmpty(id)
             ? $"{BasePath}/image/workspace"
-            : $"{BasePath}/image/workspace/{id}";
+            : $"{BasePath}/image/workspace/{PathSegmentHelper.Escape(id, nameof(id))}";
 
         var payload = new
         {
@@ -1086,7 +1086,7 @@ public class SocialPublisherPostClient
     {
         var path = string.IsNullOrEmpty(id)
             ? $"{BasePath}/image/account"
-            : $"{BasePath}/image/account/{id}";
+            : $"{BasePath}/image/account/{PathSegmentHelper.Escape(id, nameof(id))}";
 
         var payload = new
         {
@@ -1156,7 +1156,7 @@ public class SocialPublisherPostClient
 
         var path = string.IsNullOrEmpty(id)
             ? $"{BasePath}/text/workspace"
-            : $"{BasePath}/text/workspace/{id}";
+            : $"{BasePath}/text/workspace/{PathSegmentHelper.Escape(id, nameof(id))}";
 
         var payload = new
         {
@@ -1207,7 +1207,7 @@ public class SocialPublisherPostClient
 
         var path = string.IsNullOrEmpty(id)
             ? $"{BasePath}/text/account"
-            : $"{BasePath}/text/account/{id}";
+            : $"{BasePath}/text/account/{PathSegmentHelper.Escape(id, nameof(id))}";
 
         var payload = new
         {

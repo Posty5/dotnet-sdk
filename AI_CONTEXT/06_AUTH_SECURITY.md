@@ -7,6 +7,8 @@
 - HttpClient retry/error behavior is shared by every package.
 - Signed upload URLs and file streams must be disposed and handled without leaking credentials.
 - Public classes/models are NuGet semver contracts.
+- `Posty5HttpClient` does not follow redirects: the handler drops only `Authorization` on a redirect, so `X-API-Key` would reach the host a `Location` names. A plain-http `BaseUrl` off loopback logs a warning through `Posty5Options.Logger`.
+- Every caller-supplied id placed in a route goes through `PathSegmentHelper.Escape(id, nameof(id))` (Core 5.0.0): percent-encoded as one segment, with blank, `.` and `..` refused.
 
 ## Secret handling
 
