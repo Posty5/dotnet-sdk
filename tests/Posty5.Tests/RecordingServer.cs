@@ -14,7 +14,10 @@ namespace Posty5.Tests;
 /// </summary>
 internal sealed class RecordingServer : IDisposable
 {
-    private readonly HttpListener _listener = new();
+    /// <summary>Held while a port is probed and registered, so parallel test classes never pick the same one.</summary>
+    private static readonly object StartLock = new();
+
+    private readonly HttpListener _listener;
     private readonly CancellationTokenSource _stop = new();
 
     public List<(string Method, string PathAndQuery, string Body)> Requests { get; } = new();
@@ -39,15 +42,48 @@ internal sealed class RecordingServer : IDisposable
 
     public RecordingServer()
     {
+        (_listener, BaseUrl) = StartOnFreePort();
+        _ = Task.Run(LoopAsync);
+    }
+
+    /// <summary>
+    /// Starts a listener on a free loopback port. The <see cref="TcpListener"/>
+    /// probe only proposes a port: it is released before http.sys registers the
+    /// prefix, and in that gap the port can be taken ("being used by another
+    /// process") or already registered ("conflicts with an existing
+    /// registration"). A failed start is retried on a freshly probed port.
+    /// </summary>
+    private static (HttpListener Listener, string BaseUrl) StartOnFreePort()
+    {
+        for (var attempt = 1; ; attempt++)
+        {
+            lock (StartLock)
+            {
+                var baseUrl = $"http://127.0.0.1:{ProbeFreePort()}";
+                var listener = new HttpListener();
+                listener.Prefixes.Add($"{baseUrl}/");
+                try
+                {
+                    listener.Start();
+                    return (listener, baseUrl);
+                }
+                catch (HttpListenerException)
+                {
+                    // A listener whose Start failed is closed for good; drop it and probe again.
+                    listener.Close();
+                    if (attempt >= TestConfig.RecordingServerStartAttempts) throw;
+                }
+            }
+        }
+    }
+
+    /// <summary>A port the OS reports free on the loopback address right now.</summary>
+    private static int ProbeFreePort()
+    {
         var probe = new TcpListener(IPAddress.Loopback, 0);
         probe.Start();
-        var port = ((IPEndPoint)probe.LocalEndpoint).Port;
-        probe.Stop();
-
-        BaseUrl = $"http://127.0.0.1:{port}";
-        _listener.Prefixes.Add($"{BaseUrl}/");
-        _listener.Start();
-        _ = Task.Run(LoopAsync);
+        try { return ((IPEndPoint)probe.LocalEndpoint).Port; }
+        finally { probe.Stop(); }
     }
 
     private async Task LoopAsync()

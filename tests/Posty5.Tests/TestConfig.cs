@@ -42,6 +42,15 @@ public static class TestConfig
     // Template ID for testing
     public const string TemplateId = "698a268af42b052d15e8f93c";
 
+    // ─── Local test server (RecordingServer) ─────────────────────────────────
+
+    /// <summary>
+    /// How many freshly probed ports <see cref="RecordingServer"/> tries before
+    /// its constructor gives up. A probed port can be taken before the listener
+    /// registers it; one retry almost always lands.
+    /// </summary>
+    public const int RecordingServerStartAttempts = 10;
+
     /// <summary>
     /// An environment variable from the User scope (like the API key), falling
     /// back to the process scope so CI and non-Windows runs can set it too.
