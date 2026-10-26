@@ -2,7 +2,7 @@
 
 - **Never run `dotnet test` without the user's approval** (workspace `AI_RULES.md` §0): ask in chat which suite and why; one yes covers one run. `dotnet build` is not a test suite.
 - The shared xUnit project references all SDK projects.
-- Several tests require POSTY5_API_KEY and optionally POSTY5_BASE_URL and exercise live endpoints/media. The `Posty5.Tests.Integration` classes are **not** guarded: with a key set and no reachable API at `POSTY5_BASE_URL`, they fail (connection refused) rather than skip.
+- Several tests require POSTY5_API_KEY and POSTY5_BASE_URL and exercise live endpoints/media. Live tests never default to production: with no `POSTY5_BASE_URL` they aim at `http://127.0.0.1:1` (closed), and `[ApiKeyFact]` and the other live facts skip; `POSTY5_TEST_ALLOW_PRODUCTION=true` targets `https://api.posty5.com` on purpose. The `Posty5.Tests.Integration` classes are **not** guarded: with a key set and no reachable API, they fail (connection refused) rather than skip.
 - Run build even when live credentials are unavailable; report skipped integration verification explicitly.
 - Package versions are not fully uniform, so release work must audit every csproj.
 

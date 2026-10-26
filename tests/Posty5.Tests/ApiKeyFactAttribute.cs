@@ -10,7 +10,8 @@ namespace Posty5.Tests;
 /// package-free way to get one.
 /// </summary>
 /// <remarks>
-/// It calls the API at <c>POSTY5_BASE_URL</c> (default production). The routes
+/// It calls the API at <c>POSTY5_BASE_URL</c>, or production only with
+/// <c>POSTY5_TEST_ALLOW_PRODUCTION=true</c>; with neither it skips. The routes
 /// these facts cover exist only on an API that has the mcp-server wave-1
 /// endpoints deployed; against an older API they fail with 404.
 /// </remarks>
@@ -19,9 +20,6 @@ public sealed class ApiKeyFactAttribute : FactAttribute
 {
     public ApiKeyFactAttribute()
     {
-        if (!TestConfig.IsSet(TestConfig.ApiKeyVar))
-        {
-            Skip = $"Live API key not set: {TestConfig.ApiKeyVar}.";
-        }
+        Skip = TestConfig.LiveSkipReason;
     }
 }

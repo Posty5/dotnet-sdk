@@ -41,17 +41,38 @@ public class TransportSecurityTests : IDisposable
 
     // ─── Plain http ─────────────────────────────────────────────────────────
 
+    [Fact]
+    public void APlainHttpBaseUrl_OffLoopback_IsRefused()
+    {
+        var error = Assert.Throws<ArgumentException>(() =>
+            new Posty5HttpClient(new Posty5Options { ApiKey = "test-key", BaseUrl = "http://api.example.test" }));
+
+        Assert.Equal(nameof(Posty5Options.BaseUrl), error.ParamName);
+    }
+
+    [Fact]
+    public void APlainHttpBaseUrl_OffLoopback_WithTheOptIn_IsAllowedAndLogsAWarning()
+    {
+        var logger = new CountingLogger();
+        using var http = new Posty5HttpClient(new Posty5Options
+        {
+            ApiKey = "test-key", BaseUrl = "http://api.example.test", AllowInsecureHttp = true, Logger = logger
+        });
+
+        Assert.Equal(1, logger.Warnings);
+    }
+
     [Theory]
-    [InlineData("http://api.example.test", 1)]
-    [InlineData("https://api.example.test", 0)]
-    [InlineData("http://127.0.0.1:5000", 0)]
-    [InlineData("http://localhost:5000", 0)]
-    public void APlainHttpBaseUrl_OffLoopback_LogsAWarning(string baseUrl, int expectedWarnings)
+    [InlineData("https://api.example.test")]
+    [InlineData("http://127.0.0.1:5000")]
+    [InlineData("http://localhost:5000")]
+    [InlineData("http://[::1]:5000")]
+    public void HttpsOrLoopback_IsAllowedWithoutAWarning(string baseUrl)
     {
         var logger = new CountingLogger();
         using var http = new Posty5HttpClient(new Posty5Options { ApiKey = "test-key", BaseUrl = baseUrl, Logger = logger });
 
-        Assert.Equal(expectedWarnings, logger.Warnings);
+        Assert.Equal(0, logger.Warnings);
     }
 
     // ─── Path segments ──────────────────────────────────────────────────────

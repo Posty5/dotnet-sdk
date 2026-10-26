@@ -45,13 +45,18 @@ set POSTY5_API_KEY=your-api-key-here
 export POSTY5_API_KEY="your-api-key-here"
 ```
 
-### 2. Optional: Custom Base URL
+### 2. API Base URL
 
-If you're using a different API endpoint:
+Live tests call the API at `POSTY5_BASE_URL`. They never fall back to
+production: with it unset, they aim at a closed local port (the integration
+classes fail with "connection refused" and the live facts skip).
 
 ```powershell
-$env:POSTY5_BASE_URL = "https://your-custom-api.com"
+$env:POSTY5_BASE_URL = "http://localhost:<gateway-port>"
 ```
+
+To run them against production on purpose, set
+`POSTY5_TEST_ALLOW_PRODUCTION=true` instead.
 
 ## Running Tests
 

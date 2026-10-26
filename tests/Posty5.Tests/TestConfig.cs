@@ -12,7 +12,7 @@ public static class TestConfig
     {
         // User scope first (as before), then the process scope — the same lookup IsSet uses.
         var apiKey = Env(ApiKeyVar);
-        var baseUrl = Env("POSTY5_BASE_URL") ?? "https://api.posty5.com";
+        var baseUrl = LiveBaseUrl;
 
         if (string.IsNullOrEmpty(apiKey))
         {
@@ -81,6 +81,29 @@ public static class TestConfig
     public const string AllowChargesVar = "POSTY5_TEST_ALLOW_CHARGES";
 
     public static bool AllowCharges => string.Equals(Env(AllowChargesVar), "true", StringComparison.OrdinalIgnoreCase);
+
+    // ─── Live target ─────────────────────────────────────────────────────────
+    // Live tests never reach production by default: with no POSTY5_BASE_URL they
+    // aim at a closed loopback port and fail with "connection refused".
+
+    public const string BaseUrlVar = "POSTY5_BASE_URL";
+    /// <summary><c>true</c> lets live tests run against production when <see cref="BaseUrlVar"/> is not set.</summary>
+    public const string AllowProductionVar = "POSTY5_TEST_ALLOW_PRODUCTION";
+    public const string ProductionBaseUrl = "https://api.posty5.com";
+    /// <summary>A loopback port nothing listens on (TCP port 1).</summary>
+    public const string NoLiveTargetBaseUrl = "http://127.0.0.1:1";
+
+    /// <summary>Whether live tests have an API to call: <see cref="BaseUrlVar"/>, or production by opt-in.</summary>
+    public static bool HasLiveTarget => IsSet(BaseUrlVar) || IsSet(AllowProductionVar);
+
+    public static string LiveBaseUrl =>
+        Env(BaseUrlVar) ?? (IsSet(AllowProductionVar) ? ProductionBaseUrl : NoLiveTargetBaseUrl);
+
+    /// <summary>Why a live fact skips (no key, or no target), or null when it can run.</summary>
+    public static string? LiveSkipReason =>
+        !IsSet(ApiKeyVar) ? $"Live fact: {ApiKeyVar} is not set."
+        : !HasLiveTarget ? $"Live fact: set {BaseUrlVar}, or {AllowProductionVar}=true to run against production."
+        : null;
 
     // ─── Link + QR truth pass (LinkQrTruthPassFact) ──────────────────────────
 

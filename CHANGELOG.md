@@ -19,8 +19,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   .NET removes only `Authorization` on a redirect, so `X-API-Key` was sent to
   whatever host a `Location` header named. A 3xx now surfaces as
   `Posty5Exception` with its status code. The API never redirects an SDK route.
-- **Plain http is no longer silent.** A `BaseUrl` using `http://` on a host
-  other than loopback logs a warning through `Posty5Options.Logger`.
+- **Plain http is refused (breaking, Core 5.0.0).** A `BaseUrl` using `http://`
+  on a host other than loopback now makes the `Posty5HttpClient` constructor
+  throw `ArgumentException`: the API key would travel unencrypted. `localhost`,
+  `127.0.0.1` and `[::1]` stay allowed. The new `Posty5Options.AllowInsecureHttp`
+  opts back in for a private network you trust (a container host name, say);
+  a warning is then logged through `Posty5Options.Logger`.
+- **Live tests no longer default to production.** With no `POSTY5_BASE_URL`, the
+  test project aims at a closed loopback port, and the `[ApiKeyFact]`-style
+  facts skip. `POSTY5_TEST_ALLOW_PRODUCTION=true` runs them against
+  `https://api.posty5.com` on purpose.
 - **Posty5.Webhooks**: a `webhook-timestamp` beyond the calendar's range now
   fails with `WebhookSignatureException` (`TimestampOutOfRange`) instead of
   letting `ArgumentOutOfRangeException` escape `WebhookSignature.Verify`.

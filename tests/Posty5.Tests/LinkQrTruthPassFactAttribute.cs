@@ -14,9 +14,9 @@ public sealed class LinkQrTruthPassFactAttribute : FactAttribute
 {
     public LinkQrTruthPassFactAttribute()
     {
-        if (TestConfig.Env(TestConfig.ApiKeyVar) is null)
+        if (TestConfig.LiveSkipReason is { } reason)
         {
-            Skip = $"Live fact: {TestConfig.ApiKeyVar} is not set.";
+            Skip = reason;
         }
         else if (!TestConfig.ApiHasLinkQrTruthPass)
         {

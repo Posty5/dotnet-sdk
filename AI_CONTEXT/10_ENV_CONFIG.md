@@ -5,7 +5,9 @@
 | Name | Purpose | Source | Category |
 | --- | --- | --- | --- |
 | `POSTY5_API_KEY` | Test/example API key; secret. | `tests/Posty5.Tests/TestConfig.cs` | environment |
-| `POSTY5_BASE_URL` | Test API origin override. | `tests/Posty5.Tests/TestConfig.cs` | environment |
+| `POSTY5_BASE_URL` | Live-test API origin. Unset: live tests aim at a closed loopback port and the live facts skip. | `tests/Posty5.Tests/TestConfig.cs` | environment |
+| `POSTY5_TEST_ALLOW_PRODUCTION` | `true` lets live tests use production when `POSTY5_BASE_URL` is unset. | `tests/Posty5.Tests/TestConfig.cs` | environment |
+| `Posty5Options.AllowInsecureHttp` | Allow a plain-http `BaseUrl` off loopback (refused by default). | `src/Posty5.Core/Configuration/Posty5Options.cs` | runtime |
 | `Posty5Options.BaseUrl` | Per-client API base URL. | `src/Posty5.Core/Configuration/Posty5Options.cs` | runtime |
 | `Posty5Options.ApiKey` | Per-client X-API-Key credential; secret. | `src/Posty5.Core/Configuration/Posty5Options.cs` | runtime |
 | `Posty5Options.Debug` | Debug behavior; avoid sensitive data. | `src/Posty5.Core/Configuration/Posty5Options.cs` | runtime |

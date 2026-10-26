@@ -38,12 +38,13 @@ public class Posty5HttpClient : IDisposable
         // Create HTTP client. Redirects are not followed: the handler strips only
         // Authorization on a redirect, so X-API-Key would go to whatever host a
         // Location header names. The API answers JSON and never redirects.
+        var baseAddress = new Uri(_options.BaseUrl);
+        GuardPlainHttp(baseAddress);
         _httpClient = new System.Net.Http.HttpClient(new SocketsHttpHandler { AllowAutoRedirect = false })
         {
-            BaseAddress = new Uri(_options.BaseUrl),
+            BaseAddress = baseAddress,
             Timeout = TimeSpan.FromSeconds(_options.TimeoutSeconds)
         };
-        WarnOnPlainHttp(_httpClient.BaseAddress);
 
         // Set default headers
         _httpClient.DefaultRequestHeaders.Add("Accept", Posty5HttpDefaults.AcceptJson);
@@ -95,15 +96,20 @@ public class Posty5HttpClient : IDisposable
     }
 
     /// <summary>
-    /// Log a warning when the API key would travel in clear text: a plain-http
-    /// <see cref="Posty5Options.BaseUrl"/> on a host other than loopback.
+    /// Refuse a plain-http <see cref="Posty5Options.BaseUrl"/> on a host other
+    /// than loopback, where the API key would travel in clear text, unless
+    /// <see cref="Posty5Options.AllowInsecureHttp"/> is on; then log a warning.
     /// </summary>
-    private void WarnOnPlainHttp(Uri baseAddress)
+    private void GuardPlainHttp(Uri baseAddress)
     {
-        if (_options.Logger == null) return;
         if (baseAddress.Scheme != Uri.UriSchemeHttp || baseAddress.IsLoopback) return;
 
-        _options.Logger.LogWarning(
+        if (!_options.AllowInsecureHttp)
+            throw new ArgumentException(
+                $"BaseUrl host '{baseAddress.Host}' uses plain http, which would send the API key unencrypted. Use https, or set Posty5Options.AllowInsecureHttp for a private network you trust.",
+                nameof(Posty5Options.BaseUrl));
+
+        _options.Logger?.LogWarning(
             "Posty5 SDK: BaseUrl {Host} uses plain http, so the API key is sent unencrypted. Use https.",
             baseAddress.Host);
     }

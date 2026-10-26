@@ -151,7 +151,8 @@ var httpClient = serviceProvider.GetRequiredService<Posty5HttpClient>();
 | Property         | Type                          | Default                  | Description |
 | ---------------- | ----------------------------- | ------------------------ | ----------- |
 | `ApiKey`         | `string?`                     | `null`                   | Your Posty5 API key, sent as `X-API-Key` (required for every route except the public ones) |
-| `BaseUrl`        | `string`                      | `https://api.posty5.com` | API origin |
+| `BaseUrl`        | `string`                      | `https://api.posty5.com` | API origin. Plain `http://` is refused (`ArgumentException`) except on loopback |
+| `AllowInsecureHttp` | `bool`                     | `false`                  | Allow a plain-http `BaseUrl` off loopback, for a private network you trust. The API key then travels unencrypted; a warning is logged through `Logger` |
 | `Debug`          | `bool`                        | `false`                  | Enable debug logging |
 | `DefaultHeaders` | `Dictionary<string, string>?` | `null`                   | Headers sent on every request. `X-API-Key` is refused (`ArgumentException`); an `X-Posty5-Client` entry replaces the SDK's label; content headers are refused |
 | `CreatedFrom`    | `string?`                     | `null`                   | The `createdFrom` label on every record the clients create. Null keeps the package default (`dotnetPackage`) |
