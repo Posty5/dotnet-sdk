@@ -33,18 +33,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   fails with `WebhookSignatureException` (`TimestampOutOfRange`) instead of
   letting `ArgumentOutOfRangeException` escape `WebhookSignature.Verify`.
 
-## Posty5.Core 5.0.0, Posty5.Account 4.0.0; Posty5.Store removed - unreleased (the store moved to StorVilo)
+## Posty5.Core 5.0.0, Posty5.Account 4.0.0; Posty5.Store removed - unreleased (the store moved to Storvivo)
 
 The Online Store Builder left Posty5 on 2026-10-26 (owner decision D22): it is
-now StorVilo (storvilo.com), a separate platform with its own .NET SDK,
-**`StorVilo.Sdk`** on NuGet. Ships with the Posty5 API release that removes the
-store, which waits for StorVilo's production launch.
+now Storvivo (storvivo.com), a separate platform with its own .NET SDK,
+**`Storvivo.Sdk`** on NuGet. Ships with the Posty5 API release that removes the
+store, which waits for Storvivo's production launch.
 
 ### Removed (breaking)
 
 - **`Posty5.Store`**: the whole package (`StoreClient` with its products,
   orders, tags, customers, shipping and suppliers clients, and their models)
-  moved to `StorVilo.Sdk`. No further `Posty5.Store` version ships, and it is
+  moved to `Storvivo.Sdk`. No further `Posty5.Store` version ships, and it is
   no longer packed by `.github/workflows/publish-nuget.yml`. The Posty5 API stops
   serving the store routes in the same release, so existing `Posty5.Store`
   versions stop working against it.
@@ -62,7 +62,7 @@ The other packages have no API change. Packed from this release, they depend on
 ### Release steps (owner)
 
 - Deprecate every `Posty5.Store` version on NuGet (reason: legacy), naming
-  `StorVilo.Sdk` as the alternate package. Not done by this change.
+  `Storvivo.Sdk` as the alternate package. Not done by this change.
 
 ## Posty5.ShortLink 4.1.0, Posty5.QRCode 4.2.0, Posty5.HtmlHosting 4.1.0, Posty5.SocialPublisherPost 5.1.0, Posty5.Core 4.1.0 - unreleased (list date filters)
 
