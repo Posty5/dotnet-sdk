@@ -4,7 +4,96 @@ All notable changes to the Posty5 .NET SDK will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Posty5.Store 4.1.0 - unreleased (store test mode)
+## Security hardening - unreleased (ships with Posty5.Core 5.0.0 and the packages' current unreleased versions)
+
+### Security
+
+- **Ids are one path segment.** Every id a client places in a route now goes
+  through the new `Posty5.Core.Helpers.PathSegmentHelper.Escape`: it is
+  percent-encoded, so an id such as `abc/../../user/current` or `abc?x=1` can no
+  longer steer a request (and its API key) to another route, and a blank id,
+  `.` or `..` throws `ArgumentException` before any request is sent. Ids the
+  clients already escaped (Account credit transfers, bulk jobs, analytics,
+  webhook endpoints) use the same helper.
+- **Redirects are not followed.** `Posty5HttpClient` no longer follows a 3xx:
+  .NET removes only `Authorization` on a redirect, so `X-API-Key` was sent to
+  whatever host a `Location` header named. A 3xx now surfaces as
+  `Posty5Exception` with its status code. The API never redirects an SDK route.
+- **Plain http is refused (breaking, Core 5.0.0).** A `BaseUrl` using `http://`
+  on a host other than loopback now makes the `Posty5HttpClient` constructor
+  throw `ArgumentException`: the API key would travel unencrypted. `localhost`,
+  `127.0.0.1` and `[::1]` stay allowed. The new `Posty5Options.AllowInsecureHttp`
+  opts back in for a private network you trust (a container host name, say);
+  a warning is then logged through `Posty5Options.Logger`.
+- **Live tests no longer default to production.** With no `POSTY5_BASE_URL`, the
+  test project aims at a closed loopback port, and the `[ApiKeyFact]`-style
+  facts skip. `POSTY5_TEST_ALLOW_PRODUCTION=true` runs them against
+  `https://api.posty5.com` on purpose.
+- **Posty5.Webhooks**: a `webhook-timestamp` beyond the calendar's range now
+  fails with `WebhookSignatureException` (`TimestampOutOfRange`) instead of
+  letting `ArgumentOutOfRangeException` escape `WebhookSignature.Verify`.
+
+## Posty5.Core 5.0.0, Posty5.Account 4.0.0; Posty5.Store removed - unreleased (the store moved to Storvivo)
+
+The Online Store Builder left Posty5 on 2026-10-26 (owner decision D22): it is
+now Storvivo (storvivo.com), a separate platform with its own .NET SDK,
+**`Storvivo.Sdk`** on NuGet. Ships with the Posty5 API release that removes the
+store, which waits for Storvivo's production launch.
+
+### Removed (breaking)
+
+- **`Posty5.Store`**: the whole package (`StoreClient` with its products,
+  orders, tags, customers, shipping and suppliers clients, and their models)
+  moved to `Storvivo.Sdk`. No further `Posty5.Store` version ships, and it is
+  no longer packed by `.github/workflows/publish-nuget.yml`. The Posty5 API stops
+  serving the store routes in the same release, so existing `Posty5.Store`
+  versions stop working against it.
+- **`Posty5.Core` 5.0.0**: `CreatedFromDefaults.StoreOrder` (`"dotnet"`, the
+  label store orders were stamped with) is removed. `CreatedFromDefaults.Package`
+  (`"dotnetPackage"`) is the only package label.
+- **`Posty5.Account` 4.0.0**: `CreditUsageListParams.StoreId` is removed;
+  `GetCreditUsageAsync` no longer sends `storeId` (the API drops that filter).
+  Store wording is gone from the `CreditUsageEntry.Actor` and `CreditReference`
+  docs; the properties are unchanged.
+
+The other packages have no API change. Packed from this release, they depend on
+`Posty5.Core` 5.0.0.
+
+### Release steps (owner)
+
+- Deprecate every `Posty5.Store` version on NuGet (reason: legacy), naming
+  `Storvivo.Sdk` as the alternate package. Not done by this change.
+
+## Posty5.ShortLink 4.1.0, Posty5.QRCode 4.2.0, Posty5.HtmlHosting 4.1.0, Posty5.SocialPublisherPost 5.1.0, Posty5.Core 4.1.0 - unreleased (list date filters)
+
+Additive minors (redesign-dashboards SDK-02). Needs the API release with the
+list date filters (API-03) for short links, QR codes and HTML pages; the post
+list has always accepted them. Against an older API the dates are ignored.
+Each of the four packages needs `Posty5.Core` 4.1.0 (`QueryDateHelper`).
+
+### Added
+
+- `FromDate` / `ToDate` (`DateTime?`) on `QRCodeListParamsModel`,
+  `HtmlHostingListPagesParamsModel` and `ListPostsParams`. `ListAsync` sends
+  them as `fromDate` / `toDate`, `yyyy-MM-dd` (date part only, invariant
+  culture), each only when set. The API applies the created-at window only
+  when both are sent and rounds it to whole UTC days; the SDK does not enforce
+  the pair.
+- `Posty5.Core.Helpers.QueryDateHelper`: `FormatDate(DateTime)` and
+  `AddCreatedAtRange(query, from, to)`, the one place a query date is
+  formatted. The link analytics query now formats its dates through it (same
+  output).
+- Decision: `DateTime?` on all four packages, to match the revived short-link
+  pair and keep one type across them. `Posty5.Account`'s `string?`
+  `FromDate` / `ToDate` stay as they are.
+
+### Changed
+
+- `ShortLinkListParamsModel.FromDate` / `ToDate` are no longer `[Obsolete]` or
+  `[JsonIgnore]`: `ListAsync` now sends them (they were documented as "never
+  sent" because the API had no date range). Same `DateTime?` type, so code that
+  set them still compiles, and now filters. `Search` stays obsolete.
+
 
 Needs the API's store-test-mode release. Additive minor; no breaking change.
 

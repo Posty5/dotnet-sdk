@@ -11,6 +11,19 @@ public class Posty5Options
     public string BaseUrl { get; set; } = "https://api.posty5.com";
 
     /// <summary>
+    /// Allow a plain-http <see cref="BaseUrl"/> on a host other than loopback.
+    /// </summary>
+    /// <remarks>
+    /// Off by default: over http the API key travels unencrypted, so the
+    /// <see cref="Http.Posty5HttpClient"/> constructor throws
+    /// <see cref="ArgumentException"/> for such a URL. <c>localhost</c> and
+    /// <c>127.0.0.1</c> are always allowed. Turn this on only for a private
+    /// network you trust (a container host name, say); a warning is still
+    /// logged through <see cref="Logger"/>.
+    /// </remarks>
+    public bool AllowInsecureHttp { get; set; } = false;
+
+    /// <summary>
     /// API key for authentication
     /// </summary>
     public string? ApiKey { get; set; }
@@ -52,10 +65,9 @@ public class Posty5Options
     /// accepts any string).
     /// </summary>
     /// <remarks>
-    /// When null or blank, each package keeps the label it has always sent
-    /// (<see cref="CreatedFromDefaults.Package"/> for the tool clients,
-    /// <see cref="CreatedFromDefaults.StoreOrder"/> for store orders). A value set
-    /// on an individual request, where the request model has one, wins over this.
+    /// When null or blank, the clients keep the label they have always sent
+    /// (<see cref="CreatedFromDefaults.Package"/>). A value set on an individual
+    /// request, where the request model has one, wins over this.
     /// </remarks>
     public string? CreatedFrom { get; set; }
 

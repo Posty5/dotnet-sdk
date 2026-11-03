@@ -10,9 +10,9 @@ public static class TestConfig
 {
     public static Posty5Options GetOptions()
     {
-        // User scope first (as before), then the process scope — the same lookup HasStoreFixture uses.
+        // User scope first (as before), then the process scope — the same lookup IsSet uses.
         var apiKey = Env(ApiKeyVar);
-        var baseUrl = Env("POSTY5_BASE_URL") ?? "https://api.posty5.com";
+        var baseUrl = LiveBaseUrl;
 
         if (string.IsNullOrEmpty(apiKey))
         {
@@ -42,6 +42,15 @@ public static class TestConfig
     // Template ID for testing
     public const string TemplateId = "698a268af42b052d15e8f93c";
 
+    // ─── Local test server (RecordingServer) ─────────────────────────────────
+
+    /// <summary>
+    /// How many freshly probed ports <see cref="RecordingServer"/> tries before
+    /// its constructor gives up. A probed port can be taken before the listener
+    /// registers it; one retry almost always lands.
+    /// </summary>
+    public const int RecordingServerStartAttempts = 10;
+
     /// <summary>
     /// An environment variable from the User scope (like the API key), falling
     /// back to the process scope so CI and non-Windows runs can set it too.
@@ -64,36 +73,37 @@ public static class TestConfig
             : value is not null;
     }
 
-    // ─── Store dropshipping fixtures (StoreSuppliersClientTests) ─────────────
-    // Names are constants so a [StoreFixtureFact] can name what it needs.
+    // ─── Live fixtures ([ApiKeyFact], [BulkChargeFact]) ──────────────────────
+    // Names are constants so a fact attribute can name what it needs.
 
     public const string ApiKeyVar = "POSTY5_API_KEY";
-    public const string StoreIdVar = "POSTY5_TEST_STORE_ID";
-    /// <summary>A <b>test</b>-mode supplier connection on that store — no money can move through it.</summary>
-    public const string SupplierIntegrationIdVar = "POSTY5_TEST_SUPPLIER_INTEGRATION_ID";
-    public const string SupplierProductIdVar = "POSTY5_TEST_SUPPLIER_PRODUCT_ID";
-    /// <summary>A merchant product the link tests may claim and release.</summary>
-    public const string ProductIdVar = "POSTY5_TEST_PRODUCT_ID";
-    /// <summary>An order with a part on the test-mode connection (group actions).</summary>
-    public const string OrderIdVar = "POSTY5_TEST_ORDER_ID";
-    /// <summary>That part's key, <c>supplier:&lt;integrationId&gt;</c>.</summary>
-    public const string GroupKeyVar = "POSTY5_TEST_GROUP_KEY";
-    /// <summary><c>true</c> lets the import fact run: it charges credits and creates (then deletes) a draft.</summary>
+    /// <summary><c>true</c> lets a fact that charges credits run (bulk create).</summary>
     public const string AllowChargesVar = "POSTY5_TEST_ALLOW_CHARGES";
-    /// <summary><c>true</c> lets cancel and fulfil-manually run; they end the fixture part's supplier flow.</summary>
-    public const string AllowPartTakeoverVar = "POSTY5_TEST_ALLOW_PART_TAKEOVER";
 
-    public static string StoreId => Env(StoreIdVar) ?? string.Empty;
-    public static string SupplierIntegrationId => Env(SupplierIntegrationIdVar) ?? string.Empty;
-    public static string SupplierProductId => Env(SupplierProductIdVar) ?? string.Empty;
-    public static string ProductId => Env(ProductIdVar) ?? string.Empty;
-    public static string OrderId => Env(OrderIdVar) ?? string.Empty;
-    public static string GroupKey => Env(GroupKeyVar) ?? string.Empty;
     public static bool AllowCharges => string.Equals(Env(AllowChargesVar), "true", StringComparison.OrdinalIgnoreCase);
-    public static bool AllowPartTakeover => string.Equals(Env(AllowPartTakeoverVar), "true", StringComparison.OrdinalIgnoreCase);
 
-    /// <summary>An API key and a fixture store: the minimum for any live store fact.</summary>
-    public static bool HasStoreFixture => Env(ApiKeyVar) is not null && StoreId.Length > 0;
+    // ─── Live target ─────────────────────────────────────────────────────────
+    // Live tests never reach production by default: with no POSTY5_BASE_URL they
+    // aim at a closed loopback port and fail with "connection refused".
+
+    public const string BaseUrlVar = "POSTY5_BASE_URL";
+    /// <summary><c>true</c> lets live tests run against production when <see cref="BaseUrlVar"/> is not set.</summary>
+    public const string AllowProductionVar = "POSTY5_TEST_ALLOW_PRODUCTION";
+    public const string ProductionBaseUrl = "https://api.posty5.com";
+    /// <summary>A loopback port nothing listens on (TCP port 1).</summary>
+    public const string NoLiveTargetBaseUrl = "http://127.0.0.1:1";
+
+    /// <summary>Whether live tests have an API to call: <see cref="BaseUrlVar"/>, or production by opt-in.</summary>
+    public static bool HasLiveTarget => IsSet(BaseUrlVar) || IsSet(AllowProductionVar);
+
+    public static string LiveBaseUrl =>
+        Env(BaseUrlVar) ?? (IsSet(AllowProductionVar) ? ProductionBaseUrl : NoLiveTargetBaseUrl);
+
+    /// <summary>Why a live fact skips (no key, or no target), or null when it can run.</summary>
+    public static string? LiveSkipReason =>
+        !IsSet(ApiKeyVar) ? $"Live fact: {ApiKeyVar} is not set."
+        : !HasLiveTarget ? $"Live fact: set {BaseUrlVar}, or {AllowProductionVar}=true to run against production."
+        : null;
 
     // ─── Link + QR truth pass (LinkQrTruthPassFact) ──────────────────────────
 
@@ -117,9 +127,5 @@ public static class TestConfig
         public static List<string> HtmlHostings { get; } = new();
         public static List<string> Workspaces { get; } = new();
         public static List<string> Posts { get; } = new();
-        /// <summary>Supplier links a live store fact created and must delete.</summary>
-        public static List<string> SupplierLinks { get; } = new();
-        /// <summary>Store products a live store fact created (imports) and must delete.</summary>
-        public static List<string> StoreProducts { get; } = new();
     }
 }

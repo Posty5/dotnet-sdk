@@ -288,7 +288,7 @@ public partial class QRCodeClient
 
         if (version == null)
             throw new ArgumentNullException(nameof(version), "An update needs the QR code's version");
-        var updated = await _http.PutAsync<QRCodeModel>($"{BasePath}/{type}/{id}", payload, version.Value, cancellationToken);
+        var updated = await _http.PutAsync<QRCodeModel>($"{BasePath}/{type}/{PathSegmentHelper.Escape(id, nameof(id))}", payload, version.Value, cancellationToken);
         return updated.Result ?? throw new InvalidOperationException($"Failed to update {type} QR code");
     }
 }

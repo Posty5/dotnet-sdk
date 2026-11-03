@@ -1,3 +1,4 @@
+using Posty5.Core.Helpers;
 using Posty5.Core.Configuration;
 using Posty5.Core.Exceptions;
 using Posty5.Core.Http;
@@ -113,7 +114,7 @@ public class WebhookEndpointClient
     {
         RequireId(deliveryId, nameof(deliveryId));
         var response = await _http.PostAsync<WebhookDelivery>(
-            $"{EndpointPath(id)}/deliveries/{Uri.EscapeDataString(deliveryId)}/redeliver", new { }, cancellationToken);
+            $"{EndpointPath(id)}/deliveries/{PathSegmentHelper.Escape(deliveryId, nameof(deliveryId))}/redeliver", new { }, cancellationToken);
         return response.Result ?? throw new Posty5Exception("The API answered no delivery.");
     }
 
@@ -135,7 +136,7 @@ public class WebhookEndpointClient
     private static string EndpointPath(string id)
     {
         RequireId(id, nameof(id));
-        return $"{WebhookConst.BasePath}/{Uri.EscapeDataString(id)}";
+        return $"{WebhookConst.BasePath}/{PathSegmentHelper.Escape(id, nameof(id))}";
     }
 
     private static void RequireId(string id, string name)

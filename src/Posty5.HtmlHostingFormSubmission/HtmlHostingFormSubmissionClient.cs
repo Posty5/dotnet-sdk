@@ -1,3 +1,4 @@
+using Posty5.Core.Helpers;
 using Posty5.Core.Http;
 using Posty5.Core.Models;
 using Posty5.HtmlHostingFormSubmission.Models;
@@ -32,7 +33,7 @@ public class HtmlHostingFormSubmissionClient
         CancellationToken cancellationToken = default)
     {
         var response = await _http.GetAsync<HtmlHostingFormSubmissionFullDetailsModel>(
-            $"{BasePath}/{id}",
+            $"{BasePath}/{PathSegmentHelper.Escape(id, nameof(id))}",
             cancellationToken: cancellationToken);
 
         return response.Result ?? throw new InvalidOperationException("Form submission not found");
@@ -49,7 +50,7 @@ public class HtmlHostingFormSubmissionClient
         CancellationToken cancellationToken = default)
     {
         var response = await _http.GetAsync<HtmlHostingFormSubmissionNextPreviousResponseModel>(
-            $"{BasePath}/{id}/next-previous",
+            $"{BasePath}/{PathSegmentHelper.Escape(id, nameof(id))}/next-previous",
             cancellationToken: cancellationToken);
 
         return response.Result ?? new HtmlHostingFormSubmissionNextPreviousResponseModel();
@@ -118,7 +119,7 @@ public class HtmlHostingFormSubmissionClient
             throw new ArgumentNullException(nameof(request));
 
         var response = await _http.PutAsync<object>(
-            $"{BasePath}/{id}/status",
+            $"{BasePath}/{PathSegmentHelper.Escape(id, nameof(id))}/status",
             request,
             version,
             cancellationToken);
@@ -138,7 +139,7 @@ public class HtmlHostingFormSubmissionClient
         long version,
         CancellationToken cancellationToken = default)
     {
-        var response = await _http.DeleteAsync<DeleteResponse>($"{BasePath}/{id}", version, cancellationToken);
+        var response = await _http.DeleteAsync<DeleteResponse>($"{BasePath}/{PathSegmentHelper.Escape(id, nameof(id))}", version, cancellationToken);
         return response.Result ?? new DeleteResponse { Message = "Deleted" };
     }
 }

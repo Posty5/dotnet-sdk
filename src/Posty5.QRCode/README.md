@@ -481,6 +481,7 @@ Search and filter QR codes.
   - `Status` (`QRCodeStatusType?`): `New`, `Pending`, `Approved`, `Rejected`
   - `Mode` (`QRCodeMode?`): `Static`, `Dynamic`
   - `IsEnableMonetization` is obsolete and not sent
+  - `FromDate` / `ToDate` (`DateTime?`): Created-at window, sent as `yyyy-MM-dd` (date part only). Applied only when both are set, in whole UTC days.
 - `pagination` (PaginationParams?, optional): `Cursor` and `PageSize`
 
 The `RefId` filter works from the API's link-qr truth pass on (an older API ignored it and returned every record). List items carry the SMS message, `IsEnableLandingPage` and `Status` from the same release.
@@ -498,6 +499,15 @@ foreach (var qr in marketingQRs.Items)
 {
     Console.WriteLine($"{qr.Name} - {qr.QrCodeLandingPageURL}");
 }
+```
+
+```csharp
+// Created in a date window (both bounds; whole UTC days)
+var lastWeekQRs = await qrCodes.ListAsync(new QRCodeListParamsModel
+{
+    FromDate = new DateTime(2026, 10, 1),
+    ToDate = new DateTime(2026, 10, 7)
+});
 ```
 
 ---

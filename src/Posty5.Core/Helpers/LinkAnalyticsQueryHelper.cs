@@ -21,7 +21,7 @@ public static class LinkAnalyticsQueryHelper
     public static string BuildPath(string basePath, string id)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(id);
-        return $"{basePath}/{Uri.EscapeDataString(id)}/{LinkAnalyticsConst.PathSegment}";
+        return $"{basePath}/{PathSegmentHelper.Escape(id, nameof(id))}/{LinkAnalyticsConst.PathSegment}";
     }
 
     /// <summary>
@@ -127,6 +127,5 @@ public static class LinkAnalyticsQueryHelper
     }
 
     /// <summary>The date part only, culture-independent: no time-zone conversion.</summary>
-    private static string FormatDate(DateTime value) =>
-        value.ToString(LinkAnalyticsConst.DateFormat, CultureInfo.InvariantCulture);
+    private static string FormatDate(DateTime value) => QueryDateHelper.FormatDate(value);
 }

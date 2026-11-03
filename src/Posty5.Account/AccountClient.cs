@@ -1,3 +1,4 @@
+using Posty5.Core.Helpers;
 using Posty5.Account.Models;
 using Posty5.Core.Http;
 using Posty5.Core.Models;
@@ -78,8 +79,8 @@ public class AccountClient
     /// (<c>GET /api/user/current/credit-usage</c>).
     /// </summary>
     /// <remarks>
-    /// Lists every row the owner pays for — including operations a store's staff
-    /// performed, which carry <see cref="CreditUsageEntry.Actor"/>.
+    /// Lists every row the owner pays for; a row records who performed the
+    /// operation in <see cref="CreditUsageEntry.Actor"/>.
     /// </remarks>
     /// <param name="filters">Filters; all optional.</param>
     /// <param name="pagination">Cursor and page size; the API's default page size applies when null.</param>
@@ -90,7 +91,7 @@ public class AccountClient
         PaginationParams? pagination = null,
         CancellationToken cancellationToken = default)
     {
-        var queryParams = BuildCreditUsageQuery(filters, includeStore: true);
+        var queryParams = BuildCreditUsageQuery(filters);
 
         if (pagination != null)
         {
@@ -113,9 +114,7 @@ public class AccountClient
     /// (<c>GET /api/user/current/credit-usage/summary</c>).
     /// </summary>
     /// <remarks>
-    /// Takes the same filters as <see cref="GetCreditUsageAsync"/> except
-    /// <see cref="CreditUsageListParams.StoreId"/>, which the summary does not
-    /// apply and this method therefore does not send.
+    /// Takes the same filters as <see cref="GetCreditUsageAsync"/>.
     /// </remarks>
     /// <param name="filters">Filters; all optional.</param>
     /// <param name="cancellationToken">Cancellation token</param>
@@ -126,7 +125,7 @@ public class AccountClient
     {
         var response = await _http.GetAsync<CreditUsageSummary>(
             AccountRoutes.CreditUsageSummary,
-            BuildCreditUsageQuery(filters, includeStore: false),
+            BuildCreditUsageQuery(filters),
             cancellationToken);
 
         return response.Result ?? new CreditUsageSummary();
@@ -226,7 +225,7 @@ public class AccountClient
     public async Task<CreditTransfer> GetCreditTransferAsync(string id, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("A transfer id is required", nameof(id));
-        var response = await _http.GetAsync<CreditTransfer>($"{AccountRoutes.CreditTransfers}/{Uri.EscapeDataString(id)}", cancellationToken: cancellationToken);
+        var response = await _http.GetAsync<CreditTransfer>($"{AccountRoutes.CreditTransfers}/{PathSegmentHelper.Escape(id, nameof(id))}", cancellationToken: cancellationToken);
         return response.Result ?? throw new InvalidOperationException("The API returned no credit transfer");
     }
 
@@ -234,7 +233,7 @@ public class AccountClient
     /// The query string for the credit history and its summary. Booleans go as
     /// the lower-case strings the API reads.
     /// </summary>
-    private static Dictionary<string, object?> BuildCreditUsageQuery(CreditUsageListParams? filters, bool includeStore)
+    private static Dictionary<string, object?> BuildCreditUsageQuery(CreditUsageListParams? filters)
     {
         var queryParams = new Dictionary<string, object?>();
         if (filters == null) return queryParams;
@@ -247,8 +246,6 @@ public class AccountClient
             queryParams["kind"] = filters.Kind;
         if (filters.Settled.HasValue)
             queryParams["settled"] = filters.Settled.Value ? "true" : "false";
-        if (includeStore && !string.IsNullOrEmpty(filters.StoreId))
-            queryParams["storeId"] = filters.StoreId;
         if (!string.IsNullOrEmpty(filters.FromDate))
             queryParams["fromDate"] = filters.FromDate;
         if (!string.IsNullOrEmpty(filters.ToDate))

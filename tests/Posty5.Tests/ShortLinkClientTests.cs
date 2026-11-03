@@ -10,7 +10,6 @@ using Posty5.Core.Configuration;
 using Posty5.Core.Exceptions;
 using Posty5.Core.Http;
 using Posty5.Core.Models;
-using Posty5.Tests.Store;
 
 namespace Posty5.Tests.Integration;
 
@@ -527,8 +526,6 @@ public class ShortLinkClientPayloadTests : IDisposable
             PageInfoTitle = "Spring",
             RefId = "REF-1",
             Search = "ignored",
-            FromDate = new DateTime(2026, 1, 1),
-            ToDate = new DateTime(2026, 2, 1),
             IsEnableMonetization = true
         });
 #pragma warning restore CS0618
@@ -538,7 +535,7 @@ public class ShortLinkClientPayloadTests : IDisposable
         Assert.Contains("pageInfo.title=Spring", path);
         Assert.DoesNotContain("pageinfo.title", path);
         Assert.Contains("refId=REF-1", path);
-        foreach (var key in new[] { "search=", "fromDate=", "toDate=", "isEnableMonetization=" })
+        foreach (var key in new[] { "search=", "isEnableMonetization=" })
         {
             Assert.DoesNotContain(key, path);
         }

@@ -69,7 +69,7 @@ Needs `dotnet add package Posty5.Account` as well.
 
 - Who the API key belongs to, its plan and spendable credits (`AccountClient.GetCurrentAsync`)
 - The live price of an operation (`AccountClient.GetOperationCostsAsync`)
-- The ids other calls take: stores (`StoreClient.ListStoresAsync`), public QR templates
+- The ids other calls take: public QR templates
   (`QRCodeTemplateClient.ListPublicTemplatesAsync`), connected accounts (`SocialPublisherAccountClient.ListAsync`)
 - A text post and an image story by URL to a Facebook Page, then the story's status
 

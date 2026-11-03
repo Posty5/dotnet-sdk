@@ -1,3 +1,4 @@
+using Posty5.Core.Helpers;
 using Posty5.Core.Configuration;
 using Posty5.Core.Http;
 using Posty5.Core.Models;
@@ -80,7 +81,7 @@ public class HtmlHostingVariablesClient
         CancellationToken cancellationToken = default)
     {
         var response = await _http.GetAsync<HtmlHostingVariablesVariableModel>(
-            $"{BasePath}/{id}",
+            $"{BasePath}/{PathSegmentHelper.Escape(id, nameof(id))}",
             cancellationToken: cancellationToken);
         
         return response.Result ?? throw new InvalidOperationException("Variable not found");
@@ -119,7 +120,7 @@ public class HtmlHostingVariablesClient
                 nameof(data));
         }
 
-        var response = await _http.PutAsync<object>($"{BasePath}/{id}", data, version, cancellationToken);
+        var response = await _http.PutAsync<object>($"{BasePath}/{PathSegmentHelper.Escape(id, nameof(id))}", data, version, cancellationToken);
         return new VersionedWriteResult { Id = id, Version = response.Version, Message = response.Message };
     }
 
@@ -142,7 +143,7 @@ public class HtmlHostingVariablesClient
         long version,
         CancellationToken cancellationToken = default)
     {
-        var response = await _http.DeleteAsync<DeleteResponse>($"{BasePath}/{id}", version, cancellationToken);
+        var response = await _http.DeleteAsync<DeleteResponse>($"{BasePath}/{PathSegmentHelper.Escape(id, nameof(id))}", version, cancellationToken);
         return response.Result ?? new DeleteResponse { Message = "Deleted" };
     }
 

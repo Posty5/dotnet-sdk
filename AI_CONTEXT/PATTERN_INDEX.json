@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-05",
+  "generated_at": "2026-10-26",
   "project": "dotnet-sdk",
   "patterns": [
     {
@@ -34,7 +34,7 @@
     },
     {
       "name": "Guarded live facts",
-      "rule": "Live tests use [ApiKeyFact] / [StoreFixtureFact] so a missing fixture reports skipped, never a silent pass.",
+      "rule": "Live tests use [ApiKeyFact] (or a feature fact such as [LinkQrTruthPassFact]) so a missing fixture reports skipped, never a silent pass.",
       "example": "tests/Posty5.Tests/ApiKeyFactAttribute.cs"
     },
     {

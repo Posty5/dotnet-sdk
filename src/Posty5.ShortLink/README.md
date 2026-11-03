@@ -52,7 +52,7 @@ Posty5 empowers businesses, marketers, and developers to streamline their online
 - Needs `Posty5.Core` 3.2.0 (the shared `LinkAnalytics*` / `LinkStatistics*` models).
 - `TemplateId` and `BaseUrl` are now `required` on `ShortLinkCreateRequestModel` and `ShortLinkUpdateRequestModel`. The API refuses an API-key call without a template ID, so code that left it out never succeeded.
 - `IsEnableMonetization` is `[Obsolete]` everywhere and is never sent (the API never accepted it and answered 400).
-- `ShortLinkListParamsModel.Search`, `FromDate` and `ToDate` are `[Obsolete]` and no longer sent: the API ignores them.
+- `ShortLinkListParamsModel.Search`, `FromDate` and `ToDate` are `[Obsolete]` and no longer sent: the API ignores them. (4.1.0 revives `FromDate` / `ToDate`: the API now filters on them.)
 - `PageInfoTitle` is now sent as `pageInfo.title` (3.0.0 sent `pageinfo.title`, which matched nothing).
 - New: `IsEnableLandingPage` on create; `AndroidUrl` / `IosUrl` on create and update (need the API's link-qr truth pass).
 
@@ -241,9 +241,10 @@ Search and filter short links with cursor pagination.
   - `Tag`, `RefId`, `TemplateId`, `ShortLinkId`, `CreatedFrom` (string?): Exact match
   - `Status` (`ShortLinkStatusType?`): `New`, `Pending`, `Approved`, `Rejected`
   - `IsForDeepLink` (bool?)
+  - `FromDate` / `ToDate` (`DateTime?`): Created-at window, sent as `yyyy-MM-dd` (date part only). Applied only when both are set, in whole UTC days.
 - `pagination` (`PaginationParams?`, optional): `Cursor` and `PageSize`
 
-`Search`, `FromDate`, `ToDate` and `IsEnableMonetization` are obsolete: the API has no such filters, so they are not sent.
+`Search` and `IsEnableMonetization` are obsolete: the API has no such filters, so they are not sent.
 
 **Returns:** `Task<PaginationResponse<ShortLinkModel>>` - `Items` plus `Pagination.NextCursor` / `HasMore`. List items carry `NumberOfVisitors`, `IsEnableLandingPage` and `Status` from the API's link-qr truth pass on; deep-link URLs are only returned by `GetAsync`.
 
@@ -259,6 +260,15 @@ foreach (var link in marketingLinks.Items)
 {
     Console.WriteLine($"{link.Name} - {link.ShorterLink}");
 }
+```
+
+```csharp
+// Created in a date window (both bounds; whole UTC days)
+var lastWeekLinks = await shortLinks.ListAsync(new ShortLinkListParamsModel
+{
+    FromDate = new DateTime(2026, 10, 1),
+    ToDate = new DateTime(2026, 10, 7)
+});
 ```
 
 ---

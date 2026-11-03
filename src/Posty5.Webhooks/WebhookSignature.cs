@@ -23,6 +23,9 @@ public static class WebhookSignature
         PropertyNameCaseInsensitive = true
     };
 
+    private static readonly long MinUnixSeconds = DateTimeOffset.MinValue.ToUnixTimeSeconds();
+    private static readonly long MaxUnixSeconds = DateTimeOffset.MaxValue.ToUnixTimeSeconds();
+
     /// <summary>Verifies the delivery against the current clock and returns its event.</summary>
     /// <param name="payload">The raw request body.</param>
     /// <param name="headers">The request headers (names are matched case-insensitively).</param>
@@ -49,6 +52,10 @@ public static class WebhookSignature
 
         if (!long.TryParse(timestamp, out var seconds))
             throw new WebhookSignatureException(WebhookSignatureFailureReason.TimestampOutOfRange, "The webhook timestamp is not a number.");
+        // A number past the year 9999 is not a timestamp; report it like any
+        // other bad timestamp rather than let ArgumentOutOfRangeException escape.
+        if (seconds < MinUnixSeconds || seconds > MaxUnixSeconds)
+            throw new WebhookSignatureException(WebhookSignatureFailureReason.TimestampOutOfRange, "The webhook timestamp is outside the tolerance.");
         var sentAt = DateTimeOffset.FromUnixTimeSeconds(seconds);
         if ((now - sentAt).Duration() > (tolerance ?? WebhookConst.DefaultTolerance))
             throw new WebhookSignatureException(WebhookSignatureFailureReason.TimestampOutOfRange, "The webhook timestamp is outside the tolerance.");

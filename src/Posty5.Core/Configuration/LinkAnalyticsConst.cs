@@ -15,9 +15,6 @@ internal static class LinkAnalyticsConst
     /// <summary>Statistics preset-range key.</summary>
     public const string PeriodKey = "period";
 
-    /// <summary>Format of <c>from</c> / <c>to</c>: an ISO date, no time.</summary>
-    public const string DateFormat = "yyyy-MM-dd";
-
     /// <summary><c>breakdown</c> value asking for every breakdown the plan allows.</summary>
     public const string AllBreakdownsValue = "all";
 

@@ -870,6 +870,21 @@ public class QRCodeListParamsModel
     /// Filter by created from source
     /// </summary>
     public string? CreatedFrom { get; set; }
+
+    /// <summary>
+    /// Created on or after this day, sent as <c>fromDate</c> (<c>yyyy-MM-dd</c>,
+    /// date part only, invariant culture). Applied only together with
+    /// <see cref="ToDate"/>: the API ignores a lone bound, and the SDK does not
+    /// check the pair. Matched on the creation date, in whole UTC days.
+    /// </summary>
+    public DateTime? FromDate { get; set; }
+
+    /// <summary>
+    /// Created on or before this day, sent as <c>toDate</c> (<c>yyyy-MM-dd</c>).
+    /// Applied only together with <see cref="FromDate"/>; the API rounds it to
+    /// the end of its UTC day.
+    /// </summary>
+    public DateTime? ToDate { get; set; }
 }
 
 

@@ -99,6 +99,17 @@ public class WebhookSignatureTests
         Assert.IsType<ShortLinkVisitedEvent>(WebhookSignature.Verify(VisitBody, headers, Secret, TimeSpan.FromMinutes(10), now.AddMinutes(6)));
     }
 
+    [Theory]
+    [InlineData("99999999999999999")]
+    [InlineData("-99999999999999999")]
+    public void Verify_RefusesATimestampPastTheCalendar(string timestamp)
+    {
+        var headers = Headers("msg_1", timestamp, "v1,AAAA");
+        var error = Assert.Throws<WebhookSignatureException>(() =>
+            WebhookSignature.Verify(VisitBody, headers, Secret, null, DateTimeOffset.UtcNow));
+        Assert.Equal(WebhookSignatureFailureReason.TimestampOutOfRange, error.Reason);
+    }
+
     [Fact]
     public void Verify_RefusesMissingHeaders()
     {

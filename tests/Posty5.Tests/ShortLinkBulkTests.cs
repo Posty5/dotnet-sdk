@@ -204,7 +204,7 @@ public sealed class BulkChargeFactAttribute : FactAttribute
 
     public BulkChargeFactAttribute()
     {
-        if (!TestConfig.IsSet(TestConfig.ApiKeyVar) || !TestConfig.AllowCharges || !TestConfig.IsSet(TemplateVar))
-            Skip = $"Needs {TestConfig.ApiKeyVar}, {TestConfig.AllowChargesVar}=true and {TemplateVar}.";
+        if (TestConfig.LiveSkipReason is not null || !TestConfig.AllowCharges || !TestConfig.IsSet(TemplateVar))
+            Skip = $"Needs {TestConfig.ApiKeyVar}, {TestConfig.BaseUrlVar}, {TestConfig.AllowChargesVar}=true and {TemplateVar}.";
     }
 }

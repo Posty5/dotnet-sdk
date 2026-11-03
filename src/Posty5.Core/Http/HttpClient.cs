@@ -35,10 +35,14 @@ public class Posty5HttpClient : IDisposable
             WriteIndented = false
         };
 
-        // Create HTTP client
-        _httpClient = new System.Net.Http.HttpClient
+        // Create HTTP client. Redirects are not followed: the handler strips only
+        // Authorization on a redirect, so X-API-Key would go to whatever host a
+        // Location header names. The API answers JSON and never redirects.
+        var baseAddress = new Uri(_options.BaseUrl);
+        GuardPlainHttp(baseAddress);
+        _httpClient = new System.Net.Http.HttpClient(new SocketsHttpHandler { AllowAutoRedirect = false })
         {
-            BaseAddress = new Uri(_options.BaseUrl),
+            BaseAddress = baseAddress,
             Timeout = TimeSpan.FromSeconds(_options.TimeoutSeconds)
         };
 
@@ -92,6 +96,25 @@ public class Posty5HttpClient : IDisposable
     }
 
     /// <summary>
+    /// Refuse a plain-http <see cref="Posty5Options.BaseUrl"/> on a host other
+    /// than loopback, where the API key would travel in clear text, unless
+    /// <see cref="Posty5Options.AllowInsecureHttp"/> is on; then log a warning.
+    /// </summary>
+    private void GuardPlainHttp(Uri baseAddress)
+    {
+        if (baseAddress.Scheme != Uri.UriSchemeHttp || baseAddress.IsLoopback) return;
+
+        if (!_options.AllowInsecureHttp)
+            throw new ArgumentException(
+                $"BaseUrl host '{baseAddress.Host}' uses plain http, which would send the API key unencrypted. Use https, or set Posty5Options.AllowInsecureHttp for a private network you trust.",
+                nameof(Posty5Options.BaseUrl));
+
+        _options.Logger?.LogWarning(
+            "Posty5 SDK: BaseUrl {Host} uses plain http, so the API key is sent unencrypted. Use https.",
+            baseAddress.Host);
+    }
+
+    /// <summary>
     /// Add <see cref="Posty5Options.DefaultHeaders"/> to every request, refusing
     /// the API-key header and anything that is not a request header.
     /// </summary>
@@ -109,10 +132,22 @@ public class Posty5HttpClient : IDisposable
                     $"{Posty5HttpDefaults.ApiKeyHeader} cannot be set through DefaultHeaders. Use Posty5Options.ApiKey or SetApiKey.",
                     nameof(Posty5Options.DefaultHeaders));
 
-            // Contains() answers false for a name that is not a request header,
-            // where Remove() would throw — the TryAdd below reports that case.
-            if (_httpClient.DefaultRequestHeaders.Contains(name))
-                _httpClient.DefaultRequestHeaders.Remove(name);
+            // Contains() and Remove() throw for a name that is not a request
+            // header: InvalidOperationException ("Misused header name") for a
+            // content header such as Content-Type, FormatException for a
+            // malformed name. Report both as the SDK's own refusal.
+            try
+            {
+                if (_httpClient.DefaultRequestHeaders.Contains(name))
+                    _httpClient.DefaultRequestHeaders.Remove(name);
+            }
+            catch (Exception ex) when (ex is InvalidOperationException or FormatException)
+            {
+                throw new ArgumentException(
+                    $"'{name}' cannot be sent as a default request header: it is a content header or not a valid header name. Content headers are set by the SDK on each request body.",
+                    nameof(Posty5Options.DefaultHeaders),
+                    ex);
+            }
             if (!_httpClient.DefaultRequestHeaders.TryAddWithoutValidation(name, value))
                 throw new ArgumentException(
                     $"'{name}' cannot be sent as a default request header.",

@@ -11,7 +11,6 @@ The SDK is split into multiple packages for modularity:
 - **Posty5.ShortLink** - URL shortener functionality
 - **Posty5.HtmlHosting** - HTML page hosting
 - **Posty5.SocialPublisher** - Social media publishing tools
-- **Posty5.Store** - Online store: catalogue, orders, shipping, dropshipping
 - **Posty5.Account** - Who the API key belongs to, credits, credit history, live operation prices
 
 ## 🚀 Installation
@@ -228,7 +227,7 @@ var options = new Posty5Options
     DefaultHeaders = new() { ["X-Correlation-Id"] = "abc-123" },
 
     // The createdFrom label on everything this client creates. Null keeps the
-    // package defaults ("dotnetPackage"; "dotnet" for store orders).
+    // package default ("dotnetPackage").
     CreatedFrom = "my-crm"
 };
 ```
@@ -246,7 +245,6 @@ failed request is reported, never repeated, so a create is not sent twice.
 | `Posty5.Account` | `AccountClient.GetCreditUsageAsync(filters?, pagination?)` | `GET /api/user/current/credit-usage` |
 | `Posty5.Account` | `AccountClient.GetCreditUsageSummaryAsync(filters?)` | `GET /api/user/current/credit-usage/summary` |
 | `Posty5.Account` | `AccountClient.GetOperationCostsAsync(activeOnly = true)` | `GET /api/plans/operation-costs` |
-| `Posty5.Store` | `StoreClient.ListStoresAsync()`, `LookupStoresAsync(term?)` | `GET /api/store/lookup` |
 | `Posty5.SocialPublisherWorkspace` | `SocialPublisherAccountClient.ListAsync / LookupAsync / GetAsync` | `GET /api/social-publisher-account`, `/lookup`, `/{id}` |
 | `Posty5.QRCode` | `QRCodeTemplateClient.ListUserTemplatesAsync / ListPublicTemplatesAsync` | `GET /api/qr-code-template/user-lookup`, `/public-lookup` |
 | `Posty5.SocialPublisherPost` | `CreateTextPostToWorkspaceAsync / ToAccountAsync` | `POST /api/social-publisher-post/text/workspace\|account[/{id}]` |
@@ -410,8 +408,8 @@ This SDK ecosystem contains the following tool packages:
 
 | Package                                                                    | Description                   | Version | NuGet                                                                       |
 | -------------------------------------------------------------------------- | ----------------------------- | ------- | --------------------------------------------------------------------------- |
-| [Posty5.Core](./src/Posty5.Core)                                           | Core HTTP client and models   | 4.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.Core)                      |
-| [Posty5.Account](./src/Posty5.Account)                                     | Key owner, credits, prices    | 3.2.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.Account)                   |
+| [Posty5.Core](./src/Posty5.Core)                                           | Core HTTP client and models   | 5.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.Core)                      |
+| [Posty5.Account](./src/Posty5.Account)                                     | Key owner, credits, prices    | 4.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.Account)                   |
 | [Posty5.ShortLink](./src/Posty5.ShortLink)                                 | URL shortener client          | 4.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.ShortLink)                 |
 | [Posty5.QRCode](./src/Posty5.QRCode)                                       | QR code generator client      | 4.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.QRCode)                    |
 | [Posty5.HtmlHosting](./src/Posty5.HtmlHosting)                             | HTML hosting client           | 4.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHosting)               |
@@ -419,7 +417,6 @@ This SDK ecosystem contains the following tool packages:
 | [Posty5.HtmlHostingFormSubmission](./src/Posty5.HtmlHostingFormSubmission) | Form submission management    | 4.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.HtmlHostingFormSubmission) |
 | [Posty5.SocialPublisherWorkspace](./src/Posty5.SocialPublisherWorkspace)   | Social workspace management   | 4.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.SocialPublisherWorkspace)  |
 | [Posty5.SocialPublisherPost](./src/Posty5.SocialPublisherPost)             | Social publishing post client | 5.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.SocialPublisherPost)       |
-| [Posty5.Store](./src/Posty5.Store)                                         | Online store client           | 4.0.0   | [📦 NuGet](https://www.nuget.org/packages/Posty5.Store)                     |
 
 ---
 

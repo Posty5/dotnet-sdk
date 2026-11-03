@@ -294,6 +294,7 @@ Search and filter HTML pages with pagination.
   - `IsEnableMonetization` (bool?): Filter by monetization status
   - `AutoSaveInGoogleSheet` (bool?): Filter by Google Sheets integration
   - `IsTemp` (bool?): Filter temporary pages
+  - `FromDate` / `ToDate` (`DateTime?`): Created-at window, sent as `yyyy-MM-dd` (date part only). Applied only when both are set, in whole UTC days.
 - `pagination` (PaginationParams, optional): Pagination options
   - `PageNumber` (int): Page number (default: 1) -- _Note: C# uses PageNumber vs TS 'page'_
   - `PageSize` (int): Items per page (default: 10)
@@ -339,6 +340,15 @@ var filtered = await htmlHosting.ListAsync(new ListHtmlPagesParams
 var myPages = await htmlHosting.ListAsync(new ListHtmlPagesParams
 {
     RefId = "campaign-2024-q1"
+});
+```
+
+```csharp
+// Created in a date window (both bounds; whole UTC days)
+var lastWeekPages = await htmlHosting.ListAsync(new HtmlHostingListPagesParamsModel
+{
+    FromDate = new DateTime(2026, 10, 1),
+    ToDate = new DateTime(2026, 10, 7)
 });
 ```
 

@@ -314,6 +314,7 @@ Search and retrieve publishing posts with pagination and filtering options.
 
 - `listParams` (ListPostsParams?, optional): Filter criteria
   - `WorkspaceId`, `CurrentStatus`, `Tag`, `RefId`, `Caption`, `Numbering`
+  - `FromDate` / `ToDate` (`DateTime?`): Created-at window, sent as `yyyy-MM-dd` (date part only). Applied only when both are set, in whole UTC days.
 - `pagination` (PaginationParams?, optional)
 
 **Returns:** `Task<PaginationResponse<PostModel>>`
@@ -331,6 +332,15 @@ foreach (var post in posts.Data)
 {
     Console.WriteLine($"{post.Numbering}: {post.Caption} - {post.CurrentStatus}");
 }
+```
+
+```csharp
+// Created in a date window (both bounds; whole UTC days)
+var lastWeekPosts = await client.ListAsync(new ListPostsParams
+{
+    FromDate = new DateTime(2026, 10, 1),
+    ToDate = new DateTime(2026, 10, 7)
+});
 ```
 
 ---
