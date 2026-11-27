@@ -1655,6 +1655,13 @@ public readonly record struct SocialPublisherPostStatusType (string Value)
     /// </summary>
     public static readonly SocialPublisherPostStatusType RemoveFailed = new("removeFailed");
 
+    /// <summary>
+    /// The media was deleted from some platforms while at least one copy is
+    /// still live (a per-platform removal, or a platform with no delete API).
+    /// The post can be removed again.
+    /// </summary>
+    public static readonly SocialPublisherPostStatusType PartiallyRemoved = new("partiallyRemoved");
+
     //private static readonly HashSet<string> Allowed = new()
     //{
     //    "pending",

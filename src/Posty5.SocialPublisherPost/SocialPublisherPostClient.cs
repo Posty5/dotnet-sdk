@@ -868,6 +868,41 @@ public class SocialPublisherPostClient
     }
 
     /// <summary>
+    /// Take a published post down from one platform only
+    /// (<c>POST /api/social-publisher-post/{id}/remove</c> with <c>platform</c>).
+    /// The other platforms keep their copies and the post becomes
+    /// <see cref="SocialPublisherPostStatusType.PartiallyRemoved"/>.
+    /// </summary>
+    /// <remarks>
+    /// The post must have been published to <paramref name="platform"/>
+    /// (platform status <c>done</c> or <c>removeFailed</c>), or the API refuses
+    /// the call with <c>Posty5ValidationException</c>. A partly removed post can
+    /// be removed again. Charging and failures work as in
+    /// <see cref="RemovePostAsync(string, long, CancellationToken)"/>. Needs the
+    /// API with per-platform removal.
+    /// </remarks>
+    /// <param name="id">The post id.</param>
+    /// <param name="version">The post's version as last read (<see cref="PostStatusResponse.Version"/>), sent as <c>If-Match</c>.</param>
+    /// <param name="platform">One of <see cref="RemovePlatforms"/>.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The outcome on that platform, with the post's new version.</returns>
+    public async Task<RemovePostResult> RemovePostAsync(string id, long version, string platform, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+            throw new ArgumentException("id is required", nameof(id));
+        if (string.IsNullOrWhiteSpace(platform) || !RemovePlatforms.All.Contains(platform))
+            throw new ArgumentException($"platform must be one of: {string.Join(", ", RemovePlatforms.All)}", nameof(platform));
+
+        var response = await _http.PostAsync<RemovePostResult>(
+            $"{BasePath}/{PathSegmentHelper.Escape(id, nameof(id))}/remove",
+            new { platform },
+            version,
+            cancellationToken);
+
+        return response.Result ?? new RemovePostResult { Id = id };
+    }
+
+    /// <summary>
     /// Re-schedule a post that has not published yet, or send it out now.
     /// Costs no credits.
     /// </summary>

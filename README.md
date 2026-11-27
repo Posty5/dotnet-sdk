@@ -250,6 +250,7 @@ failed request is reported, never repeated, so a create is not sent twice.
 | `Posty5.SocialPublisherPost` | `CreateTextPostToWorkspaceAsync / ToAccountAsync` | `POST /api/social-publisher-post/text/workspace\|account[/{id}]` |
 | `Posty5.SocialPublisherPost` | `CreateStoryPostToWorkspaceAsync / ToAccountAsync` (media by URL) | `POST /api/social-publisher-post/story/workspace\|account` |
 | `Posty5.SocialPublisherPost` | `RemovePostAsync(id)` | `POST /api/social-publisher-post/{id}/remove` |
+| `Posty5.SocialPublisherPost` | `RemovePostAsync(id, version, platform)` | `POST /api/social-publisher-post/{id}/remove` (one platform, 5.2.0) |
 | `Posty5.SocialPublisherPost` | `GetStatusAsync(id)` (route fixed in 4.6.0) | `GET /api/social-publisher-post/{id}/status` |
 
 See [GETTING_STARTED.md](GETTING_STARTED.md#check-the-key-find-the-ids-then-act) for a walk-through.
