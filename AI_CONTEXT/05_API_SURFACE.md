@@ -16,7 +16,7 @@
 | `HtmlHostingVariablesClient` | CreateAsync/GetAsync/UpdateAsync/DeleteAsync/ListAsync. | `src/Posty5.HtmlHostingVariables/HtmlHostingVariablesClient.cs` |
 | `HtmlHostingFormSubmissionClient` | Get/list/navigation/status/delete. | `src/Posty5.HtmlHostingFormSubmission/HtmlHostingFormSubmissionClient.cs` |
 | `SocialPublisherWorkspaceClient` | List/get/get-for-new/create/update/delete. | `src/Posty5.SocialPublisherWorkspace/SocialPublisherWorkspaceClient.cs` |
-| `SocialPublisherPostClient` | List/defaults/status (`GET /{id}/status`, fixed in 4.6.0)/uploads, short/long video and image publish, text posts and stories (`/text|story/workspace|account`), reschedule, `DeletePostAsync` (unpublished), `RemovePostAsync` (`POST /{id}/remove`, published). 5.1.0: list `FromDate` / `ToDate` (D20). | `src/Posty5.SocialPublisherPost/SocialPublisherPostClient.cs` |
+| `SocialPublisherPostClient` | List/defaults/status (`GET /{id}/status`, fixed in 4.6.0)/uploads, short/long video and image publish, text posts and stories (`/text|story/workspace|account`), reschedule, `DeletePostAsync` (unpublished), `RemovePostAsync` (`POST /{id}/remove`, published; 5.2.0 overload with `platform` removes one platform, `RemovePlatforms` constants, `PartiallyRemoved` status). 5.1.0: list `FromDate` / `ToDate` (D20). | `src/Posty5.SocialPublisherPost/SocialPublisherPostClient.cs` |
 
 This is a compatibility surface. Treat exported names, operations, parameter values, types, and behavior as semver-sensitive.
 

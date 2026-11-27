@@ -491,6 +491,7 @@ foreach (var (platform, outcome) in removed.Results)
 | `ReschedulePostAsync(id, schedule, caption?)` | `PUT /api/social-publisher-post/{id}` |
 | `DeletePostAsync(id)` | `DELETE /api/social-publisher-post/{id}` (not yet published) |
 | `RemovePostAsync(id)` | `POST /api/social-publisher-post/{id}/remove` (published) |
+| `RemovePostAsync(id, version, platform)` | Same route with `platform`: one platform only (5.2.0) |
 
 Every create stamps `createdFrom` from `Posty5Options.CreatedFrom`, or
 `dotnetPackage` when it is not set. Prices are not listed here because they

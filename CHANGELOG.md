@@ -4,6 +4,18 @@ All notable changes to the Posty5 .NET SDK will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Posty5.SocialPublisherPost 5.2.0 — Remove from one platform
+
+### Added
+
+- `RemovePostAsync(id, version, platform)`: removes a published post from that
+  platform only (`POST /api/social-publisher-post/{id}/remove` with `platform`).
+  The other platforms keep their copies and the post becomes
+  `SocialPublisherPostStatusType.PartiallyRemoved`, which can be removed again.
+  `platform` is one of the new `RemovePlatforms` constants; any other value
+  throws `ArgumentException` before a request is sent. Needs the API with
+  per-platform removal. The existing overload is unchanged.
+
 ## Security hardening - unreleased (ships with Posty5.Core 5.0.0 and the packages' current unreleased versions)
 
 ### Security
