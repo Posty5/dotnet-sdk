@@ -4,6 +4,22 @@ All notable changes to the Posty5 .NET SDK will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Posty5.SocialPublisherWorkspace 4.1.0 and Posty5.SocialPublisherPost 5.3.0 — Default comments
+
+### Added
+
+- **Workspace default comments** (`SocialPublisherWorkspaceClient`): `GetDefaultCommentsAsync`,
+  `SetDefaultCommentsAsync(id, comments, version)` (at most 10, the whole list, `If-Match`),
+  `GenerateDefaultCommentUploadUrlsAsync`, `UploadDefaultCommentImageAsync` and
+  `ResolveDefaultCommentsAsync(id, postType)`. Each `WorkspaceDefaultCommentModel` has `PostTypes`
+  (`CommentPostTypes`; empty means all) and per-platform flags. `SocialPublisherWorkspaceModel.DefaultComments`.
+- **`AllowPostDefaultComments`** (`bool?`) on every create request and settings model, and as the last optional
+  parameter of the publish methods that take `comments` (last, so positional callers still compile). Null or true:
+  the API adds the workspace's defaults for the post type plus account defaults marked `applyToWorkspacePosts` (or
+  the account's own). **They are charged like any other comment.** False adds none.
+- `CreatePostResult.Warnings` (`DefaultCommentWarning`): defaults dropped at a platform's ceiling.
+- `CommentLimits.MaxPerPostTotal` (30). `CommentLimits.MaxPerPost` is now 10 and means per platform.
+
 ## Posty5.SocialPublisherPost 5.2.0 — Remove from one platform
 
 ### Added

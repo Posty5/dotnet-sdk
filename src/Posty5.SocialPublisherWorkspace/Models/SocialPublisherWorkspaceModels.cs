@@ -90,6 +90,11 @@ public class SocialPublisherWorkspaceModel : Posty5.Core.Models.IVersioned
     /// Workspace logo/image URL
     /// </summary>
     public string? ImageUrl { get; set; }
+
+    /// <summary>
+    /// The comments every new post to this workspace starts with (details only).
+    /// </summary>
+    public List<WorkspaceDefaultCommentModel>? DefaultComments { get; set; }
     
     /// <summary>
     /// Social media accounts associated with this workspace
