@@ -101,7 +101,9 @@ public class PostCommentsTests
     [Fact]
     public void The_limits_match_the_server()
     {
-        Assert.Equal(5, CommentLimits.MaxPerPost);
+        // Per platform since workspace default comments; 30 in all.
+        Assert.Equal(10, CommentLimits.MaxPerPost);
+        Assert.Equal(30, CommentLimits.MaxPerPostTotal);
         Assert.Equal(2200, CommentLimits.MaxLength);
         Assert.Equal(24 * 60, CommentLimits.MaxDelayMinutes);
     }

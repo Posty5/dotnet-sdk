@@ -485,7 +485,7 @@ public class SocialPublisherPostClient
         {
             request.WorkspaceId, request.Source, request.Youtube, request.Tiktok,
             request.Facebook, request.Instagram, request.VideoURL, request.ThumbURL,
-            request.Schedule, request.Comment, request.Comments, request.Tag, request.RefId, createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
+            request.Schedule, request.Comment, request.Comments, request.AllowPostDefaultComments, request.Tag, request.RefId, createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
         var response = await _http.PostAsync<Dictionary<string, object>>(path, payload, cancellationToken);
@@ -503,7 +503,7 @@ public class SocialPublisherPostClient
         {
             request.WorkspaceId, request.Source, request.Youtube, request.Tiktok,
             request.Facebook, request.Instagram, request.VideoURL, request.ThumbURL,
-            request.Schedule, request.Comment, request.Comments, request.Tag, request.RefId, createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
+            request.Schedule, request.Comment, request.Comments, request.AllowPostDefaultComments, request.Tag, request.RefId, createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
         var response = await _http.PostAsync<Dictionary<string, object>>(path, payload, cancellationToken);
@@ -521,7 +521,7 @@ public class SocialPublisherPostClient
         {
             request.AccountId, request.Source, request.Youtube, request.Tiktok,
             request.Facebook, request.Instagram, request.VideoURL, request.ThumbURL,
-            request.Schedule, request.Comment, request.Comments, request.Tag, request.RefId, createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
+            request.Schedule, request.Comment, request.Comments, request.AllowPostDefaultComments, request.Tag, request.RefId, createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
         var response = await _http.PostAsync<Dictionary<string, object>>(path, payload, cancellationToken);
@@ -539,7 +539,7 @@ public class SocialPublisherPostClient
         {
             request.AccountId, request.Source, request.Youtube, request.Tiktok,
             request.Facebook, request.Instagram, request.VideoURL, request.ThumbURL,
-            request.Schedule, request.Comment, request.Comments, request.Tag, request.RefId, createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
+            request.Schedule, request.Comment, request.Comments, request.AllowPostDefaultComments, request.Tag, request.RefId, createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package)
         };
 
         var response = await _http.PostAsync<Dictionary<string, object>>(path, payload, cancellationToken);
@@ -1110,6 +1110,7 @@ public class SocialPublisherPostClient
             request.Schedule,
             request.Comment,
             request.Comments,
+            request.AllowPostDefaultComments,
             request.Tag,
             request.RefId,
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package),
@@ -1149,6 +1150,7 @@ public class SocialPublisherPostClient
             request.Schedule,
             request.Comment,
             request.Comments,
+            request.AllowPostDefaultComments,
             request.Tag,
             request.RefId,
             createdFrom = _http.ResolveCreatedFrom(CreatedFromDefaults.Package),
@@ -1215,6 +1217,7 @@ public class SocialPublisherPostClient
             request.Twitter,
             request.Schedule,
             request.Comments,
+            request.AllowPostDefaultComments,
             request.HashtagGroupIds,
             request.Hashtags,
             request.TrackLinks,
@@ -1266,6 +1269,7 @@ public class SocialPublisherPostClient
             request.Twitter,
             request.Schedule,
             request.Comments,
+            request.AllowPostDefaultComments,
             request.HashtagGroupIds,
             request.Hashtags,
             request.TrackLinks,
