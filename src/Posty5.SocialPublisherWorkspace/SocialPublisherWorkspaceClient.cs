@@ -245,6 +245,111 @@ public class SocialPublisherWorkspaceClient
     }
 
     /// <summary>
+    /// The workspace's default comments, in order.
+    /// </summary>
+    /// <param name="id">Workspace ID</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    public async Task<List<WorkspaceDefaultCommentModel>> GetDefaultCommentsAsync(
+        string id,
+        CancellationToken cancellationToken = default)
+    {
+        var workspace = await GetAsync(id, cancellationToken);
+        return workspace.DefaultComments ?? new List<WorkspaceDefaultCommentModel>();
+    }
+
+    /// <summary>
+    /// Replace the workspace's default comments (at most 10). Send the whole list; an empty one clears it.
+    /// New posts to the workspace then start with them unless the create request sets
+    /// <c>AllowPostDefaultComments = false</c>. Each added comment is charged like any other comment.
+    /// </summary>
+    /// <param name="id">Workspace ID</param>
+    /// <param name="comments">The full list</param>
+    /// <param name="version">The workspace's version as last read, sent as <c>If-Match</c></param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    public async Task<WorkspaceDefaultCommentsResult> SetDefaultCommentsAsync(
+        string id,
+        IEnumerable<WorkspaceDefaultCommentModel> comments,
+        long version,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await _http.PutAsync<List<WorkspaceDefaultCommentModel>>(
+            $"{BasePath}/{PathSegmentHelper.Escape(id, nameof(id))}/default-comments",
+            new { comments = comments.ToList() },
+            version,
+            cancellationToken);
+
+        return new WorkspaceDefaultCommentsResult
+        {
+            Comments = response.Result ?? new List<WorkspaceDefaultCommentModel>(),
+            Version = response.Version,
+        };
+    }
+
+    /// <summary>
+    /// Signed upload slots for default-comment images, one per MIME type (image/jpeg, image/png,
+    /// image/gif, image/webp). Uploading is a paid-plan feature; otherwise give the default an <c>ImageUrl</c>.
+    /// </summary>
+    /// <param name="id">Workspace ID</param>
+    /// <param name="fileTypes">MIME types</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    public async Task<List<DefaultCommentUploadSlotModel>> GenerateDefaultCommentUploadUrlsAsync(
+        string id,
+        IEnumerable<string> fileTypes,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await _http.PostAsync<List<DefaultCommentUploadSlotModel>>(
+            $"{BasePath}/{PathSegmentHelper.Escape(id, nameof(id))}/default-comments/upload-urls",
+            new { fileTypes = fileTypes.ToList() },
+            cancellationToken);
+
+        return response.Result ?? new List<DefaultCommentUploadSlotModel>();
+    }
+
+    /// <summary>
+    /// Upload one default-comment image: a slot, then the bytes. Put the returned slot's
+    /// <c>FileUrl</c> and <c>BucketFilePath</c> on a default as <c>ImageUrl</c> and <c>ImageStorageKey</c>.
+    /// </summary>
+    /// <param name="id">Workspace ID</param>
+    /// <param name="imageStream">The image</param>
+    /// <param name="contentType">Its MIME type</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    public async Task<DefaultCommentUploadSlotModel> UploadDefaultCommentImageAsync(
+        string id,
+        Stream imageStream,
+        string contentType = "image/png",
+        CancellationToken cancellationToken = default)
+    {
+        var slots = await GenerateDefaultCommentUploadUrlsAsync(id, new[] { contentType }, cancellationToken);
+        var slot = slots.FirstOrDefault();
+        if (slot == null || string.IsNullOrEmpty(slot.UploadFileUrl))
+            throw new InvalidOperationException("The API did not return an upload slot.");
+
+        await UploadImageAsync(slot.UploadFileUrl, imageStream, contentType, cancellationToken);
+        return slot;
+    }
+
+    /// <summary>
+    /// The default comments a new post of <paramref name="postType"/> to this workspace would get right now:
+    /// the workspace's own for that type, then account defaults marked <c>applyToWorkspacePosts</c>.
+    /// To publish an edited list, send it as the post's comments with <c>AllowPostDefaultComments = false</c>.
+    /// </summary>
+    /// <param name="id">Workspace ID</param>
+    /// <param name="postType">One of <see cref="CommentPostTypes"/></param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    public async Task<ResolvedDefaultCommentsModel> ResolveDefaultCommentsAsync(
+        string id,
+        string postType,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await _http.GetAsync<ResolvedDefaultCommentsModel>(
+            $"{BasePath}/{PathSegmentHelper.Escape(id, nameof(id))}/default-comments/resolved",
+            new Dictionary<string, object?> { ["postType"] = postType },
+            cancellationToken);
+
+        return response.Result ?? new ResolvedDefaultCommentsModel();
+    }
+
+    /// <summary>
     /// Upload image to R2 storage using pre-signed URL
     /// </summary>
     /// <param name="uploadUrl">Pre-signed R2 upload URL</param>

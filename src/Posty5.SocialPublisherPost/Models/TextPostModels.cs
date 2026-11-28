@@ -53,6 +53,14 @@ public abstract class CreateTextPostRequestBase
     /// </summary>
     public List<CommentRequest>? Comments { get; set; }
 
+    /// <summary>
+    /// Add the saved default comments (null or true: yes). On a workspace post, the workspace's
+    /// defaults for this post type plus account defaults marked <c>applyToWorkspacePosts</c>; on an
+    /// account post, that account's defaults. Added after <see cref="Comments"/> and charged like any
+    /// other comment. False adds none. Nothing is added when the plan does not include comments.
+    /// </summary>
+    public bool? AllowPostDefaultComments { get; set; }
+
     /// <summary>Ids of saved hashtag groups to merge into the text (at most 5; yours only).</summary>
     public List<string>? HashtagGroupIds { get; set; }
 

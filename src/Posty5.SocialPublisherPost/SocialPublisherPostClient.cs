@@ -167,7 +167,8 @@ public class SocialPublisherPostClient
         string? thumbnailContentType = null,
         CommentRequest? comment = null,
         List<CommentRequest>? comments = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        bool? allowPostDefaultComments = null)
     {
         // Build post settings.
         // The server derives which platforms to publish to from the
@@ -187,6 +188,7 @@ public class SocialPublisherPostClient
             Comment = comment,
 #pragma warning restore CS0618
             Comments = comments,
+            AllowPostDefaultComments = allowPostDefaultComments,
             Tag = tag,
             RefId = refId
         };
@@ -241,7 +243,8 @@ public class SocialPublisherPostClient
         string? thumbnailContentType = null,
         CommentRequest? comment = null,
         List<CommentRequest>? comments = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        bool? allowPostDefaultComments = null)
     {
         // Build post settings.
         // The server derives the publish target from the account's platform field;
@@ -259,6 +262,7 @@ public class SocialPublisherPostClient
             Comment = comment,
 #pragma warning restore CS0618
             Comments = comments,
+            AllowPostDefaultComments = allowPostDefaultComments,
             Tag = tag,
             RefId = refId
         };
@@ -333,6 +337,7 @@ public class SocialPublisherPostClient
             Comment = settings.Comment,
 #pragma warning restore CS0618
             Comments = settings.Comments,
+            AllowPostDefaultComments = settings.AllowPostDefaultComments,
             Tag = settings.Tag,
             RefId = settings.RefId
         }, uploadConfig.PostId, cancellationToken);
@@ -377,6 +382,7 @@ public class SocialPublisherPostClient
             Comment = settings.Comment,
 #pragma warning restore CS0618
             Comments = settings.Comments,
+            AllowPostDefaultComments = settings.AllowPostDefaultComments,
             Tag = settings.Tag,
             RefId = settings.RefId
         }, postId, cancellationToken);
@@ -416,6 +422,7 @@ public class SocialPublisherPostClient
             Comment = settings.Comment,
 #pragma warning restore CS0618
             Comments = settings.Comments,
+            AllowPostDefaultComments = settings.AllowPostDefaultComments,
             Tag = settings.Tag,
             RefId = settings.RefId
         }, uploadConfig.PostId, cancellationToken);
@@ -460,6 +467,7 @@ public class SocialPublisherPostClient
             Comment = settings.Comment,
 #pragma warning restore CS0618
             Comments = settings.Comments,
+            AllowPostDefaultComments = settings.AllowPostDefaultComments,
             Tag = settings.Tag,
             RefId = settings.RefId
         }, postId, cancellationToken);
@@ -636,7 +644,8 @@ public class SocialPublisherPostClient
         // After the token rather than beside `resumeFrom`, even though that reads
         // oddly: inserting an optional parameter ahead of an existing one is
         // source-breaking for anyone passing the token positionally.
-        bool terminateOnCancel = false)
+        bool terminateOnCancel = false,
+        bool? allowPostDefaultComments = null)
     {
         if (string.IsNullOrWhiteSpace(workspaceId))
             throw new ArgumentException("workspaceId is required", nameof(workspaceId));
@@ -658,6 +667,7 @@ public class SocialPublisherPostClient
             Comment = comment,
 #pragma warning restore CS0618
             Comments = comments,
+            AllowPostDefaultComments = allowPostDefaultComments,
             Tag = tag,
             RefId = refId,
             Schedule = BuildSchedule(schedule)
@@ -701,6 +711,7 @@ public class SocialPublisherPostClient
             Comment = settings.Comment,
 #pragma warning restore CS0618
             Comments = settings.Comments,
+            AllowPostDefaultComments = settings.AllowPostDefaultComments,
             Tag = settings.Tag,
             RefId = settings.RefId
         };
@@ -744,7 +755,8 @@ public class SocialPublisherPostClient
         // After the token rather than beside `resumeFrom`, even though that reads
         // oddly: inserting an optional parameter ahead of an existing one is
         // source-breaking for anyone passing the token positionally.
-        bool terminateOnCancel = false)
+        bool terminateOnCancel = false,
+        bool? allowPostDefaultComments = null)
     {
         if (string.IsNullOrWhiteSpace(accountId))
             throw new ArgumentException("accountId is required", nameof(accountId));
@@ -793,6 +805,7 @@ public class SocialPublisherPostClient
             Comment = comment,
 #pragma warning restore CS0618
             Comments = comments,
+            AllowPostDefaultComments = allowPostDefaultComments,
             Tag = tag,
             RefId = refId
         };

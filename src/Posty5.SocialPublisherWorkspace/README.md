@@ -299,6 +299,26 @@ var details = await accounts.GetAsync(page.Items[0].Id);                  // + p
 
 ---
 
+## 💬 Default comments (4.1.0)
+
+A workspace keeps up to 10 default comments. Every new post to it starts with the active ones whose `PostTypes`
+match the post (empty means all), plus account defaults marked `applyToWorkspacePosts`. **Each added comment is
+charged like any other comment**; set `AllowPostDefaultComments = false` on a create request to add none.
+
+```csharp
+var ws = await workspaces.GetAsync("workspace-id");
+
+await workspaces.SetDefaultCommentsAsync("workspace-id", new[]
+{
+    new WorkspaceDefaultCommentModel { Text = "Full video on our channel", PostTypes = { CommentPostTypes.ShortVideo } },
+    new WorkspaceDefaultCommentModel { Text = "Thanks for watching!", DelayMinutes = 60 },
+}, ws.Version);
+
+var preview = await workspaces.ResolveDefaultCommentsAsync("workspace-id", CommentPostTypes.Image);
+```
+
+A post copies its defaults when it is created; editing a default later never changes an existing post.
+
 ## 🔒 Error Handling
 
 Methods throw exceptions from `Posty5.Core.Exceptions`.

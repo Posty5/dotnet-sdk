@@ -299,8 +299,11 @@ public class CommentRequest
 /// </summary>
 public static class CommentLimits
 {
-    /// <summary>At most this many comments may ride on one post.</summary>
-    public const int MaxPerPost = 5;
+    /// <summary>At most this many comments one post may send to ONE platform.</summary>
+    public const int MaxPerPost = 10;
+
+    /// <summary>At most this many comments one post may carry in all.</summary>
+    public const int MaxPerPostTotal = 30;
 
     /// <summary>Longest a comment may be, in characters.</summary>
     public const int MaxLength = 2200;
@@ -784,6 +787,14 @@ public class PostSettings
     public List<CommentRequest>? Comments { get; set; }
 
     /// <summary>
+    /// Add the saved default comments (null or true: yes). On a workspace post, the workspace's
+    /// defaults for this post type plus account defaults marked <c>applyToWorkspacePosts</c>; on an
+    /// account post, that account's defaults. Added after <see cref="Comments"/> and charged like any
+    /// other comment. False adds none. Nothing is added when the plan does not include comments.
+    /// </summary>
+    public bool? AllowPostDefaultComments { get; set; }
+
+    /// <summary>
     /// Custom tag for filtering
     /// </summary>
     public string? Tag { get; set; }
@@ -867,6 +878,14 @@ public class CreateSocialPublisherPostRequest
     public List<CommentRequest>? Comments { get; set; }
 
     /// <summary>
+    /// Add the saved default comments (null or true: yes). On a workspace post, the workspace's
+    /// defaults for this post type plus account defaults marked <c>applyToWorkspacePosts</c>; on an
+    /// account post, that account's defaults. Added after <see cref="Comments"/> and charged like any
+    /// other comment. False adds none. Nothing is added when the plan does not include comments.
+    /// </summary>
+    public bool? AllowPostDefaultComments { get; set; }
+
+    /// <summary>
     /// Custom tag
     /// </summary>
     public string? Tag { get; set; }
@@ -947,6 +966,14 @@ public class CreateSocialPublisherAccountPostRequest
     /// charged per comment that actually posts.</para>
     /// </summary>
     public List<CommentRequest>? Comments { get; set; }
+
+    /// <summary>
+    /// Add the saved default comments (null or true: yes). On a workspace post, the workspace's
+    /// defaults for this post type plus account defaults marked <c>applyToWorkspacePosts</c>; on an
+    /// account post, that account's defaults. Added after <see cref="Comments"/> and charged like any
+    /// other comment. False adds none. Nothing is added when the plan does not include comments.
+    /// </summary>
+    public bool? AllowPostDefaultComments { get; set; }
 
     /// <summary>
     /// Custom tag
@@ -1065,6 +1092,14 @@ public class CreateImagePostToWorkspaceRequest
     /// </summary>
     public List<CommentRequest>? Comments { get; set; }
 
+    /// <summary>
+    /// Add the saved default comments (null or true: yes). On a workspace post, the workspace's
+    /// defaults for this post type plus account defaults marked <c>applyToWorkspacePosts</c>; on an
+    /// account post, that account's defaults. Added after <see cref="Comments"/> and charged like any
+    /// other comment. False adds none. Nothing is added when the plan does not include comments.
+    /// </summary>
+    public bool? AllowPostDefaultComments { get; set; }
+
     public string? Tag { get; set; }
     public string? RefId { get; set; }
 }
@@ -1107,6 +1142,14 @@ public class CreateImagePostToAccountRequest
     /// charged per comment that actually posts.</para>
     /// </summary>
     public List<CommentRequest>? Comments { get; set; }
+
+    /// <summary>
+    /// Add the saved default comments (null or true: yes). On a workspace post, the workspace's
+    /// defaults for this post type plus account defaults marked <c>applyToWorkspacePosts</c>; on an
+    /// account post, that account's defaults. Added after <see cref="Comments"/> and charged like any
+    /// other comment. False adds none. Nothing is added when the plan does not include comments.
+    /// </summary>
+    public bool? AllowPostDefaultComments { get; set; }
 
     public string? Tag { get; set; }
     public string? RefId { get; set; }

@@ -35,6 +35,12 @@ public class CreatePostResult
     public List<string>? TruncatedTargets { get; set; }
 
     /// <summary>
+    /// Default comments left off because a platform (or the post) was at its comment ceiling.
+    /// Null when none were.
+    /// </summary>
+    public List<DefaultCommentWarning>? Warnings { get; set; }
+
+    /// <summary>
     /// Per platform, the hashtags the API merged into the text, as it reports
     /// them. Present only when hashtags were requested.
     /// </summary>
@@ -72,4 +78,15 @@ public class PlatformRemovalResult
 
     /// <summary>Why the removal failed, when it did.</summary>
     public string? Error { get; set; }
+}
+
+/// <summary>Why some default comments were not added to a post.</summary>
+public class DefaultCommentWarning
+{
+    /// <summary><c>DEFAULT_COMMENTS_TRUNCATED</c>.</summary>
+    public string Code { get; set; } = string.Empty;
+    /// <summary>The platform whose ceiling was hit, or <c>all</c>.</summary>
+    public string Platform { get; set; } = string.Empty;
+    /// <summary>How many were dropped.</summary>
+    public int Dropped { get; set; }
 }
